@@ -1,0 +1,86 @@
+[
+  {
+    "id": "coup-1792871861592",
+    "code": "OSTAZMOHAMMED",
+    "discountType": "PERCENTAGE",
+    "discountValue": 10,
+    "minOrderAmount": 200,
+    "maxUsageCount": 100,
+    "usedCount": 0,
+    "isActive": true,
+    "expiryDate": "2026-12-31",
+    "notes": "كوبون خاص مخصص للعميل (cust-sarah-demo)"
+  },
+  {
+    "id": "coup-1792850943649",
+    "code": "AUTOTEST-VIP50",
+    "discountType": "PERCENTAGE",
+    "discountValue": 50,
+    "minOrderAmount": 0,
+    "maxUsageCount": 100,
+    "usedCount": 0,
+    "isActive": true,
+    "expiryDate": "2026-12-31",
+    "notes": "كوبون خاص مخصص للعميل (cust-sarah-demo)"
+  },
+  {
+    "id": "coup-1792848610073",
+    "code": "VIP-TEST-618",
+    "discountType": "PERCENTAGE",
+    "discountValue": 35,
+    "minOrderAmount": 100,
+    "maxUsageCount": 100,
+    "usedCount": 0,
+    "isActive": true,
+    "expiryDate": "2026-12-31",
+    "notes": "كوبون خاص مخصص للعميل (cust-sarah-demo)"
+  },
+  {
+    "id": "coup-1",
+    "code": "SULAF10",
+    "discountType": "PERCENTAGE",
+    "discountValue": 10,
+    "minOrderAmount": 300,
+    "maxUsageCount": 500,
+    "usedCount": 42,
+    "isActive": true,
+    "expiryDate": "2026-12-31",
+    "notes": "خصم 10% بمناسبة إطلاق البراند"
+  },
+  {
+    "id": "coup-2",
+    "code": "ROUGH50",
+    "discountType": "FIXED",
+    "discountValue": 50,
+    "minOrderAmount": 400,
+    "maxUsageCount": 200,
+    "usedCount": 28,
+    "isActive": true,
+    "expiryDate": "2026-11-30",
+    "notes": "خصم 50 ج.م على مستحضر سلاف رف أواي"
+  },
+  {
+    "id": "coup-3",
+    "code": "VIP20",
+    "discountType": "PERCENTAGE",
+    "discountValue": 20,
+    "minOrderAmount": 800,
+    "maxUsageCount": 100,
+    "usedCount": 15,
+    "isActive": true,
+    "expiryDate": "2026-12-31",
+    "notes": "خصم كبار العملاء للطلبات فوق 800 ج"
+  },
+  {
+    "id": "coup-sarah-vip25",
+    "code": "SARAH-VIP25",
+    "discountType": "PERCENTAGE",
+    "discountValue": 25,
+    "minOrderAmount": 0,
+    "maxUsageCount": 100,
+    "usedCount": 0,
+    "isActive": true,
+    "expiryDate": "2026-12-31",
+    "notes": "كوبون مخصص لعميلة سلاف المميزة (سارة)"
+  }
+]

@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Almarai:wght@400;700;800&family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-amiri: 'Amiri', 'Traditional Arabic', serif;
+  --font-cormorant: 'Cormorant Garamond', serif;
+  --font-cairo: 'Cairo', 'Almarai', 'Segoe UI', Tahoma, Arial, sans-serif;
+  --font-plex: 'Cairo', 'Almarai', 'Segoe UI', Tahoma, Arial, sans-serif;
+}
+
+@layer base {
+  :root {
+    --background: #f6f9e6;
+    --foreground: #1c2616;
+
+    --primary: #3d502d;
+    --primary-foreground: #f6f9e6;
+    --primary-dark: #233019;
+    --primary-light: #526b3c;
+
+    --cream: #f6f9e6;
+    --cream-dark: #e8ecd0;
+
+    --burgundy: #610b0d;
+    --burgundy-dark: #400708;
+    --burgundy-light: #831215;
+
+    --pink-soft: #f3a5a1;
+    --pink-soft-light: #fae1df;
+
+    --red-accent: #ca384a;
+    --red-accent-dark: #a82637;
+
+    --gold: #d4af37;
+    --gold-light: #f3e5ab;
+    --gold-dark: #aa820a;
+
+    --border: #dbe2bd;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: 'Cairo', 'Almarai', 'Segoe UI', Tahoma, Arial, sans-serif !important;
+    font-weight: 500;
+    letter-spacing: normal !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  /* High-clarity explicit Arabic typography */
+  .font-cairo {
+    font-family: 'Cairo', 'Almarai', 'Segoe UI', Tahoma, Arial, sans-serif !important;
+    letter-spacing: normal !important;
+  }
+
+  .font-amiri {
+    font-family: 'Amiri', 'Traditional Arabic', serif !important;
+    letter-spacing: normal !important;
+  }
+
+  .font-cormorant {
+    font-family: 'Cormorant Garamond', serif !important;
+  }
+}
+
+/* Custom Luxury Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f6f9e6;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3d502d;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #233019;
+}
+
+/* Lenis Recommended Smooth Scroll Base */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
