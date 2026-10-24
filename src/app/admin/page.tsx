@@ -16,6 +16,7 @@ import {
   DEFAULT_ELEMENT_VISIBILITY,
   HomepageSectionKey,
   DEFAULT_HOMEPAGE_SECTIONS_ORDER,
+  CustomGovernorateShippingRate,
 } from "@/lib/settings/store-settings";
 import {
   ShieldCheck,
@@ -59,6 +60,10 @@ import {
   ArrowUpRight,
   Sliders,
   BadgeCheck,
+  Calendar,
+  MapPin,
+  Percent,
+  Heart,
   FlaskConical,
   Award,
   Gift,
@@ -74,6 +79,14 @@ import {
   Globe,
   BookOpen,
 } from "lucide-react";
+
+
+const ALL_EGYPT_GOVERNORATES = [
+  "القاهرة", "الجيزة", "الإسكندرية", "البحيرة", "الدقهلية", "الغربية", "الشرقية", "المنوفية",
+  "القليوبية", "كفر الشيخ", "دمياط", "بورسعيد", "الإسماعيلية", "السويس", "الفيوم", "بني سويف",
+  "المنيا", "أسيوط", "سوهاج", "قنا", "الأقصر", "أسوان", "البحر الأحمر", "مطروح",
+  "جنوب سيناء", "شمال سيناء", "الوادي الجديد"
+];
 
 const HOMEPAGE_SECTION_META: Record<
   HomepageSectionKey,
@@ -651,12 +664,23 @@ export default function AdminPage() {
   });
 
   // Settings Edit State
+    const [newGovName, setNewGovName] = useState("أسوان");
+  const [newGovFee, setNewGovFee] = useState(65);
   const [settingsForm, setSettingsForm] = useState({
     whatsapp: "",
     instapay: "",
     vodafone: "",
     shippingFeeCairo: 45,
     shippingFeeGov: 65,
+    shippingUnifiedRate: 45,
+    customGovernorateRates: [] as CustomGovernorateShippingRate[],
+    multiPromoEnabled: true,
+    multiPromoMinQty: 2,
+    multiPromoDiscountType: "PERCENTAGE" as "PERCENTAGE" | "FIXED",
+    multiPromoDiscountValue: 10,
+    multiPromoFreeShipping: true,
+    showBirthdateField: true,
+    showClosePersonField: true,
     freeThreshold: 800,
     depositAmount: 100,
     announcementText: "",
@@ -704,6 +728,15 @@ export default function AdminPage() {
         vodafone: settings.payment?.vodafoneCash || "01099887766",
         shippingFeeCairo: settings.shipping?.cairoGiza || 45,
         shippingFeeGov: settings.shipping?.alexDelta || 65,
+        shippingUnifiedRate: settings.shipping?.defaultUnifiedRate ?? 45,
+        customGovernorateRates: settings.shipping?.customGovernorateRates || [],
+        multiPromoEnabled: settings.multiProductPromo?.enabled ?? true,
+        multiPromoMinQty: settings.multiProductPromo?.minQuantity ?? 2,
+        multiPromoDiscountType: settings.multiProductPromo?.discountType ?? "PERCENTAGE",
+        multiPromoDiscountValue: settings.multiProductPromo?.discountValue ?? 10,
+        multiPromoFreeShipping: settings.multiProductPromo?.freeShippingEnabled ?? true,
+        showBirthdateField: settings.checkoutFields?.showBirthdate ?? true,
+        showClosePersonField: settings.checkoutFields?.showClosePerson ?? true,
         freeThreshold: settings.shipping?.freeShippingThreshold || 800,
         depositAmount: settings.payment?.depositAmount || 100,
         announcementText: settings.announcement?.text || "شحن مجاني وسريع لكافة المحافظات على الطلبات فوق 800 ج",
@@ -1331,6 +1364,38 @@ export default function AdminPage() {
   // ----------------------------------------------------------------
   // Settings & Paymob Diagnostics
   // ----------------------------------------------------------------
+  
+  function handleAddCustomGovernorate() {
+    if (!newGovName) return;
+    if (settingsForm.customGovernorateRates.some((r) => r.governorate === newGovName)) {
+      showToast("هذه المحافظة مستثناة بالفعل في القائمة أدناه", "error");
+      return;
+    }
+    const updated: CustomGovernorateShippingRate[] = [
+      ...settingsForm.customGovernorateRates,
+      { governorate: newGovName, rate: Number(newGovFee) || 0, shippingFee: Number(newGovFee) || 0 },
+    ];
+    setSettingsForm({ ...settingsForm, customGovernorateRates: updated });
+    const available = ALL_EGYPT_GOVERNORATES.filter((g) => !updated.some((r) => r.governorate === g));
+    if (available.length > 0) {
+      setNewGovName(available[0]);
+    }
+    showToast(`تمت إضافة استثناء لمحافظة ${newGovName} بقيمة ${newGovFee} ج`);
+  }
+
+  function handleRemoveCustomGovernorate(govName: string) {
+    const updated = settingsForm.customGovernorateRates.filter((r) => r.governorate !== govName);
+    setSettingsForm({ ...settingsForm, customGovernorateRates: updated });
+    showToast(`تمت إزالة الاستثناء لمحافظة ${govName} والعودة للسعر الموحد`);
+  }
+
+  function handleUpdateCustomGovernorateFee(govName: string, fee: number) {
+    const updated: CustomGovernorateShippingRate[] = settingsForm.customGovernorateRates.map((r) =>
+      r.governorate === govName ? { ...r, rate: fee, shippingFee: fee } : r
+    );
+    setSettingsForm({ ...settingsForm, customGovernorateRates: updated });
+  }
+
   async function handleSaveSettings(e: React.FormEvent) {
     e.preventDefault();
     try {
@@ -1358,6 +1423,19 @@ export default function AdminPage() {
           cairoGiza: Number(settingsForm.shippingFeeCairo),
           alexDelta: Number(settingsForm.shippingFeeGov),
           freeShippingThreshold: Number(settingsForm.freeThreshold),
+          defaultUnifiedRate: Number(settingsForm.shippingUnifiedRate),
+          customGovernorateRates: settingsForm.customGovernorateRates,
+        },
+        multiProductPromo: {
+          enabled: settingsForm.multiPromoEnabled,
+          minQuantity: Number(settingsForm.multiPromoMinQty),
+          discountType: settingsForm.multiPromoDiscountType,
+          discountValue: Number(settingsForm.multiPromoDiscountValue),
+          freeShippingEnabled: settingsForm.multiPromoFreeShipping,
+        },
+        checkoutFields: {
+          showBirthdate: settingsForm.showBirthdateField,
+          showClosePerson: settingsForm.showClosePersonField,
         },
         announcement: {
           ...settings.announcement,
@@ -2249,6 +2327,16 @@ export default function AdminPage() {
                         <span className="font-bold text-gray-500 block">بيانات العميل المستلم:</span>
                         <span className="font-black text-sm text-gray-900 block mt-1">{invoiceModalOrder.customerName}</span>
                         <span className="font-mono font-bold text-gray-700 block mt-0.5">{invoiceModalOrder.customerPhone}</span>
+                        {(invoiceModalOrder.birthdate || invoiceModalOrder.closePersonName) && (
+                          <div className="mt-2 pt-2 border-t border-gray-200 space-y-1">
+                            {invoiceModalOrder.birthdate && (
+                              <div className="text-[11px] text-amber-900 font-bold">🎂 تاريخ الميلاد: {invoiceModalOrder.birthdate}</div>
+                            )}
+                            {invoiceModalOrder.closePersonName && (
+                              <div className="text-[11px] text-rose-900 font-bold">❤️ شخص مقرب: {invoiceModalOrder.closePersonName}</div>
+                            )}
+                          </div>
+                        )}
                       </div>
                       <div>
                         <span className="font-bold text-gray-500 block">عنوان الشحن والتوصيل:</span>
@@ -2341,6 +2429,18 @@ export default function AdminPage() {
                         <span className="font-bold text-gray-500">العنوان:</span>
                         <span className="font-semibold text-gray-900">{orderDetailsModal.governorate} • {orderDetailsModal.city} - {orderDetailsModal.street}</span>
                       </div>
+                      {orderDetailsModal.birthdate && (
+                        <div className="flex justify-between py-1 border-b border-gray-100">
+                          <span className="font-bold text-gray-500">🎂 تاريخ الميلاد:</span>
+                          <span className="font-bold text-[#3d502d]">{orderDetailsModal.birthdate}</span>
+                        </div>
+                      )}
+                      {orderDetailsModal.closePersonName && (
+                        <div className="flex justify-between py-1 border-b border-gray-100">
+                          <span className="font-bold text-gray-500">❤️ شخص مقرب:</span>
+                          <span className="font-bold text-[#610b0d]">{orderDetailsModal.closePersonName}</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-2 bg-[#fcfdfa] p-4 rounded-2xl border border-gray-200">
@@ -2608,6 +2708,20 @@ export default function AdminPage() {
                               <div className="inline-block mt-1 px-2 py-0.5 bg-gray-100 text-gray-700 rounded-md text-[11px] font-semibold">
                                 {order.governorate} • {order.city}
                               </div>
+                              {(order.birthdate || order.closePersonName) && (
+                                <div className="flex items-center gap-1.5 flex-wrap mt-1 text-[10px]">
+                                  {order.birthdate && (
+                                    <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200 font-bold">
+                                      🎂 {order.birthdate}
+                                    </span>
+                                  )}
+                                  {order.closePersonName && (
+                                    <span className="px-1.5 py-0.5 rounded bg-rose-50 text-rose-900 border border-rose-200 font-bold">
+                                      ❤️ {order.closePersonName}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </td>
 
                             {/* Products */}
@@ -6769,52 +6883,362 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* 2. Shipping & WhatsApp */}
-                <div className="bg-white p-6 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-4">
-                  <h3 className="font-bold text-base text-[#3d502d] flex items-center gap-2">
-                    <Truck className="w-5 h-5" />
-                    <span>إعدادات الشحن والتواصل</span>
-                  </h3>
+                {/* 2. Multi-Product Promotion (خصم وشحن مجاني عند شراء أكثر من منتج) */}
+                <div className="bg-white p-6 rounded-3xl border-2 border-emerald-300 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-800">
+                        <Percent className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-base text-[#3d502d]">
+                          عروض شراء أكثر من منتج (خصم الكمية وإعفاء الشحن)
+                        </h3>
+                        <p className="text-xs text-gray-500 font-semibold">
+                          تشجيع العميل على زيادة حجم السلة بالحصول على خصم وشحن مجاني تلقائي
+                        </p>
+                      </div>
+                    </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer text-xs font-black px-4 py-2 rounded-xl bg-emerald-50 text-emerald-950 border border-emerald-200 select-none">
+                      <input
+                        type="checkbox"
+                        checked={settingsForm.multiPromoEnabled}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, multiPromoEnabled: e.target.checked })}
+                        className="rounded text-[#3d502d] w-4 h-4 cursor-pointer"
+                      />
+                      <span>تفعيل العرض في المتجر</span>
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
                     <div>
-                      <label className="block text-xs font-bold text-gray-800 mb-2">شحن القاهرة والجيزة (ج.م)</label>
+                      <label className="block text-xs font-bold text-gray-800 mb-2">
+                        الحد الأدنى لعدد المنتجات لتطبيق العرض
+                      </label>
                       <input
                         type="number"
-                        value={settingsForm.shippingFeeCairo}
-                        onChange={(e) => setSettingsForm({ ...settingsForm, shippingFeeCairo: Number(e.target.value) })}
+                        min={2}
+                        value={settingsForm.multiPromoMinQty}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, multiPromoMinQty: Math.max(2, Number(e.target.value)) })}
                         className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm font-semibold text-gray-900 focus:border-[#3d502d] focus:outline-none"
                       />
+                      <span className="text-[11px] text-gray-500 block mt-1 font-semibold">مثال: 2 منتجات أو أكثر</span>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-gray-800 mb-2">شحن باقي المحافظات (ج.م)</label>
-                      <input
-                        type="number"
-                        value={settingsForm.shippingFeeGov}
-                        onChange={(e) => setSettingsForm({ ...settingsForm, shippingFeeGov: Number(e.target.value) })}
-                        className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm font-semibold text-gray-900 focus:border-[#3d502d] focus:outline-none"
-                      />
+                      <label className="block text-xs font-bold text-gray-800 mb-2">
+                        نوع الخصم
+                      </label>
+                      <select
+                        value={settingsForm.multiPromoDiscountType}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, multiPromoDiscountType: e.target.value as any })}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm font-semibold text-gray-900 focus:border-[#3d502d] focus:outline-none bg-white cursor-pointer"
+                      >
+                        <option value="PERCENTAGE">نسبة مئوية (%)</option>
+                        <option value="FIXED">مبلغ خصم ثابت (ج.م)</option>
+                      </select>
+                      <span className="text-[11px] text-gray-500 block mt-1 font-semibold">تخفيض نسبي أو رقمي مباشر</span>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-gray-800 mb-2">الحد الأدنى للشحن المجاني (ج.م)</label>
+                      <label className="block text-xs font-bold text-gray-800 mb-2">
+                        قيمة الخصم ({settingsForm.multiPromoDiscountType === "PERCENTAGE" ? "%" : "ج.م"})
+                      </label>
                       <input
                         type="number"
+                        min={0}
+                        value={settingsForm.multiPromoDiscountValue}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, multiPromoDiscountValue: Number(e.target.value) })}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm font-semibold text-gray-900 focus:border-[#3d502d] focus:outline-none"
+                      />
+                      <span className="text-[11px] text-gray-500 block mt-1 font-semibold">
+                        {settingsForm.multiPromoDiscountType === "PERCENTAGE" ? "مثال: 10 تعني خصم 10%" : "مثال: 50 تعني خصم 50 ج.م"}
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-800 mb-2">
+                        إعفاء مصاريف الشحن
+                      </label>
+                      <label className="flex items-center gap-2 px-4 py-3 rounded-xl border border-gray-300 bg-gray-50 cursor-pointer text-xs font-bold text-gray-900 select-none hover:bg-gray-100 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={settingsForm.multiPromoFreeShipping}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, multiPromoFreeShipping: e.target.checked })}
+                          className="rounded text-[#3d502d] w-4 h-4 cursor-pointer"
+                        />
+                        <span>شحن مجاني للعميل</span>
+                      </label>
+                      <span className="text-[11px] text-gray-500 block mt-1 font-semibold">إلغاء مصاريف الشحن بالكامل</span>
+                    </div>
+                  </div>
+
+                  {/* Visual Preview Banner */}
+                  <div className="p-4 rounded-2xl bg-[#f6f9e6] border border-[#dbe2bd] text-xs font-semibold text-[#3d502d] flex items-center gap-3">
+                    <Sparkles className="w-5 h-5 text-amber-600 shrink-0" />
+                    <div>
+                      <span className="font-black block text-sm mb-0.5">معاينة تأثير هذا الإعداد على سلة العميل:</span>
+                      <span>
+                        {settingsForm.multiPromoEnabled
+                          ? `إذا أضاف العميل ${settingsForm.multiPromoMinQty} منتجات أو أكثر، سيحصل فوراً على خصم ${settingsForm.multiPromoDiscountValue}${settingsForm.multiPromoDiscountType === "PERCENTAGE" ? "%" : " ج.م"}${settingsForm.multiPromoFreeShipping ? " + شحن مجاني تماماً 🎁" : ""}.`
+                          : "العرض معطل حالياً ولن يتم تطبيقه في صفحة الدفع."}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Egyptian Governorates Shipping Rates Manager */}
+                <div className="bg-white p-6 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-6">
+                  <div className="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-gray-100">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 rounded-2xl bg-[#e8ecd0] flex items-center justify-center text-[#3d502d]">
+                        <Truck className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-base text-[#3d502d]">
+                          إدارة تسعير شحن محافظات مصر (سعر موحد + استثناءات)
+                        </h3>
+                        <p className="text-xs text-gray-500 font-semibold">
+                          سعر موحد افتراضي لجميع المحافظات الـ 27 مع إمكانية استثناء محافظات معينة وتحديد سعر خاص لها
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs px-3 py-1 rounded-full bg-gray-100 font-bold text-gray-700">
+                        {settingsForm.customGovernorateRates.length} محافظات مستثناة
+                      </span>
+                      <span className="text-xs px-3 py-1 rounded-full bg-emerald-100 font-bold text-emerald-800">
+                        {27 - settingsForm.customGovernorateRates.length} محافظة بالسعر الموحد
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Unified Default Rate & General Controls */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-[#fcfdfa] p-4 rounded-2xl border-2 border-[#3d502d]/20">
+                      <label className="block text-xs font-black text-gray-900 mb-2">
+                        سعر الشحن الموحد لكافة المحافظات (ج.م)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={settingsForm.shippingUnifiedRate}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, shippingUnifiedRate: Number(e.target.value) })}
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-base font-bold text-gray-900 focus:border-[#3d502d] focus:outline-none"
+                      />
+                      <span className="text-[11px] text-gray-500 block mt-1 font-semibold">
+                        السعر الافتراضي العام لأي محافظة لم تُستثن أدناه
+                      </span>
+                    </div>
+
+                    <div className="bg-[#fcfdfa] p-4 rounded-2xl border border-gray-200">
+                      <label className="block text-xs font-bold text-gray-800 mb-2">
+                        الحد الأدنى للشحن المجاني العام (ج.م)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
                         value={settingsForm.freeThreshold}
                         onChange={(e) => setSettingsForm({ ...settingsForm, freeThreshold: Number(e.target.value) })}
-                        className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm font-semibold text-gray-900 focus:border-[#3d502d] focus:outline-none"
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm font-semibold text-gray-900 focus:border-[#3d502d] focus:outline-none"
                       />
+                      <span className="text-[11px] text-gray-500 block mt-1 font-semibold">
+                        إذا وصل مجموع سلة العميل لهذا المبلغ يُعفى من الشحن
+                      </span>
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-bold text-gray-800 mb-2">واتساب خدمة العملاء</label>
+                    <div className="bg-[#fcfdfa] p-4 rounded-2xl border border-gray-200">
+                      <label className="block text-xs font-bold text-gray-800 mb-2">
+                        واتساب خدمة العملاء
+                      </label>
                       <input
                         type="text"
                         value={settingsForm.whatsapp}
                         onChange={(e) => setSettingsForm({ ...settingsForm, whatsapp: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm font-semibold text-gray-900 focus:border-[#3d502d] focus:outline-none"
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm font-semibold text-gray-900 focus:border-[#3d502d] focus:outline-none"
                       />
+                      <span className="text-[11px] text-gray-500 block mt-1 font-semibold">
+                        الرقم الظاهر للعملاء للتواصل السريع والمساعدة
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Add Governorate Exclusion Form */}
+                  <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200 space-y-3">
+                    <h4 className="font-bold text-xs text-gray-900 flex items-center gap-2">
+                      <Plus className="w-4 h-4 text-emerald-700" />
+                      <span>إضافة محافظة جديدة للاستثناء بتسعير خاص:</span>
+                    </h4>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                      <div className="flex-1">
+                        <select
+                          value={newGovName}
+                          onChange={(e) => setNewGovName(e.target.value)}
+                          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-xs sm:text-sm font-semibold bg-white text-gray-900 focus:border-[#3d502d] focus:outline-none"
+                        >
+                          {ALL_EGYPT_GOVERNORATES.filter(
+                            (g) => !settingsForm.customGovernorateRates.some((r: any) => r.governorate === g)
+                          ).map((gov) => (
+                            <option key={gov} value={gov}>
+                              {gov}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="w-full sm:w-40 flex items-center gap-2">
+                        <input
+                          type="number"
+                          min={0}
+                          value={newGovFee}
+                          onChange={(e) => setNewGovFee(Number(e.target.value))}
+                          placeholder="سعر الشحن ج"
+                          className="w-full px-3 py-2.5 rounded-xl border border-gray-300 text-xs sm:text-sm font-bold text-gray-900 focus:border-[#3d502d] focus:outline-none"
+                        />
+                        <span className="text-xs font-bold text-gray-600 shrink-0">ج.م</span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleAddCustomGovernorate}
+                        className="px-5 py-2.5 rounded-xl bg-[#3d502d] hover:bg-[#2d3b21] text-white font-bold text-xs flex items-center justify-center gap-2 shadow cursor-pointer transition-all shrink-0"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>استثناء المحافظة</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Excluded Governorates List */}
+                  <div>
+                    <h4 className="font-bold text-xs text-gray-700 mb-3 flex items-center justify-between">
+                      <span>قائمة المحافظات المستثناة بتسعير خاص ({settingsForm.customGovernorateRates.length}):</span>
+                      <span className="text-[11px] text-gray-500 font-normal">
+                        يمكنك تعديل السعر مباشرة أو حذف الاستثناء للعودة للسعر الموحد ({settingsForm.shippingUnifiedRate} ج)
+                      </span>
+                    </h4>
+
+                    {settingsForm.customGovernorateRates.length === 0 ? (
+                      <div className="py-6 text-center text-xs font-bold text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
+                        لا توجد محافظات مستثناة حالياً. جميع محافظات مصر تعمل بالسعر الموحد ({settingsForm.shippingUnifiedRate} ج.م).
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {settingsForm.customGovernorateRates.map((item: any) => (
+                          <div
+                            key={item.governorate}
+                            className="p-3.5 rounded-2xl border border-emerald-200 bg-emerald-50/40 flex items-center justify-between gap-3 shadow-2xs"
+                          >
+                            <div className="flex items-center gap-2">
+                              <MapPin className="w-4 h-4 text-emerald-700 shrink-0" />
+                              <div>
+                                <span className="font-black text-xs text-gray-900 block">{item.governorate}</span>
+                                <span className="text-[10px] text-emerald-800 font-bold block">مستثناة بتسعير خاص</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-gray-200">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  value={item.rate ?? item.shippingFee ?? 0}
+                                  onChange={(e) => handleUpdateCustomGovernorateFee(item.governorate, Number(e.target.value))}
+                                  className="w-14 text-center font-bold text-xs text-gray-900 focus:outline-none"
+                                />
+                                <span className="text-[10px] text-gray-500 font-bold">ج.م</span>
+                              </div>
+
+                              <button
+                                type="button"
+                                title="إلغاء الاستثناء وإعادتها للسعر الموحد"
+                                onClick={() => handleRemoveCustomGovernorate(item.governorate)}
+                                className="p-1.5 rounded-xl text-rose-600 hover:bg-rose-100 hover:text-rose-800 transition-colors cursor-pointer"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 4. Checkout Fields Visibility Control */}
+                <div className="bg-white p-6 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-4">
+                  <div className="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-gray-100">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-900">
+                        <Sliders className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-base text-[#3d502d]">
+                          التحكم في حقول صفحة إتمام الطلب (Checkout Page Fields)
+                        </h3>
+                        <p className="text-xs text-gray-500 font-semibold">
+                          اختر الحقول الاختيارية التي ترغب في إظهارها أو إخفائها للعملاء عند إنهاء الطلب
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                    {/* Birthdate Field Toggle */}
+                    <div className="p-4 rounded-2xl border border-gray-200 bg-[#fcfdfa] flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
+                          <Calendar className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="font-black text-sm text-gray-900 block">
+                            حقل تاريخ الميلاد (Customer Birthdate)
+                          </span>
+                          <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                            يتيح للعميل إدخال تاريخ ميلاده لتقديم هدايا وعروض ترويجية وخصومات خاصة في شهر ميلاده.
+                          </p>
+                        </div>
+                      </div>
+
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                        <input
+                          type="checkbox"
+                          checked={settingsForm.showBirthdateField}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, showBirthdateField: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#3d502d]"></div>
+                      </label>
+                    </div>
+
+                    {/* Close Person Name Field Toggle */}
+                    <div className="p-4 rounded-2xl border border-gray-200 bg-[#fcfdfa] flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-800 flex items-center justify-center shrink-0 mt-0.5">
+                          <Heart className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="font-black text-sm text-gray-900 block">
+                            حقل اسم شخص مقرب ليك (Loved One Name)
+                          </span>
+                          <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                            يتيح للعميل كتابة اسم شخص مقرب أو عزيز عليه لتخصيص الطلب أو إرفاق بطاقة إهداء لطيفة.
+                          </p>
+                        </div>
+                      </div>
+
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                        <input
+                          type="checkbox"
+                          checked={settingsForm.showClosePersonField}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, showClosePersonField: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#3d502d]"></div>
+                      </label>
                     </div>
                   </div>
                 </div>

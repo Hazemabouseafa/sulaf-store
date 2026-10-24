@@ -303,6 +303,25 @@ export interface CustomContentSettings {
   termsInspectionText?: string;
 }
 
+export interface CustomGovernorateShippingRate {
+  governorate: string;
+  rate: number;
+  shippingFee?: number;
+}
+
+export interface MultiProductPromotionSettings {
+  enabled: boolean;
+  minQuantity: number;
+  discountType: "PERCENTAGE" | "FIXED";
+  discountValue: number;
+  freeShippingEnabled: boolean;
+}
+
+export interface CheckoutFieldsSettings {
+  showBirthdate: boolean;
+  showClosePerson: boolean;
+}
+
 export interface StoreSettings {
   brandName: string;
   brandTagline: string;
@@ -361,12 +380,17 @@ export interface StoreSettings {
   };
 
   shipping: {
-    cairoGiza: number;
-    alexDelta: number;
-    canal: number;
-    upperEgypt: number;
+    defaultUnifiedRate?: number;
     freeShippingThreshold: number;
+    customGovernorateRates?: CustomGovernorateShippingRate[];
+    cairoGiza?: number;
+    alexDelta?: number;
+    canal?: number;
+    upperEgypt?: number;
   };
+
+  multiProductPromo?: MultiProductPromotionSettings;
+  checkoutFields?: CheckoutFieldsSettings;
 
   contacts: {
     whatsapp: string;
@@ -564,11 +588,33 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   },
 
   shipping: {
+    defaultUnifiedRate: 45,
+    freeShippingThreshold: 800,
+    customGovernorateRates: [
+      { governorate: "أسوان", rate: 65 },
+      { governorate: "الوادي الجديد", rate: 75 },
+      { governorate: "مطروح", rate: 70 },
+      { governorate: "شمال سيناء", rate: 80 },
+      { governorate: "جنوب سيناء", rate: 80 },
+      { governorate: "البحر الأحمر", rate: 75 },
+    ],
     cairoGiza: 45,
     alexDelta: 55,
     canal: 60,
     upperEgypt: 70,
-    freeShippingThreshold: 800,
+  },
+
+  multiProductPromo: {
+    enabled: true,
+    minQuantity: 2,
+    discountType: "PERCENTAGE",
+    discountValue: 10,
+    freeShippingEnabled: true,
+  },
+
+  checkoutFields: {
+    showBirthdate: true,
+    showClosePerson: true,
   },
 
   contacts: {
@@ -610,6 +656,19 @@ export function getClientSettings(): StoreSettings {
       elementsVisibility: { ...DEFAULT_ELEMENT_VISIBILITY, ...(parsed.elementsVisibility || {}) },
       customContent: { ...(parsed.customContent || {}) },
       customContentEn: { ...(parsed.customContentEn || {}) },
+      shipping: {
+        ...DEFAULT_STORE_SETTINGS.shipping,
+        ...(parsed.shipping || {}),
+        customGovernorateRates: parsed.shipping?.customGovernorateRates || DEFAULT_STORE_SETTINGS.shipping.customGovernorateRates,
+      },
+      multiProductPromo: {
+        ...DEFAULT_STORE_SETTINGS.multiProductPromo,
+        ...(parsed.multiProductPromo || {}),
+      },
+      checkoutFields: {
+        ...DEFAULT_STORE_SETTINGS.checkoutFields,
+        ...(parsed.checkoutFields || {}),
+      },
     };
   } catch (e) {
     return DEFAULT_STORE_SETTINGS;

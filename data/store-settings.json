@@ -150,11 +150,31 @@
     "iframeId": "847291"
   },
   "shipping": {
+    "defaultUnifiedRate": 45,
+    "freeShippingThreshold": 800,
+    "customGovernorateRates": [
+      { "governorate": "أسوان", "rate": 65 },
+      { "governorate": "الوادي الجديد", "rate": 75 },
+      { "governorate": "مطروح", "rate": 70 },
+      { "governorate": "شمال سيناء", "rate": 80 },
+      { "governorate": "جنوب سيناء", "rate": 80 },
+      { "governorate": "البحر الأحمر", "rate": 75 }
+    ],
     "cairoGiza": 45,
     "alexDelta": 55,
     "canal": 60,
-    "upperEgypt": 70,
-    "freeShippingThreshold": 800
+    "upperEgypt": 70
+  },
+  "multiProductPromo": {
+    "enabled": true,
+    "minQuantity": 2,
+    "discountType": "PERCENTAGE",
+    "discountValue": 10,
+    "freeShippingEnabled": true
+  },
+  "checkoutFields": {
+    "showBirthdate": true,
+    "showClosePerson": true
   },
   "contacts": {
     "whatsapp": "+201099887766",

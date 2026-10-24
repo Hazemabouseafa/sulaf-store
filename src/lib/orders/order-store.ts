@@ -37,6 +37,8 @@ export interface OrderRecord {
   receiptVerifiedAt?: string;
   stoxTrackingNumber?: string;
   stoxStatus?: string;
+  birthdate?: string;
+  closePersonName?: string;
   createdAt: string;
 }
 

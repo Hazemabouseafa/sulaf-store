@@ -51,6 +51,8 @@ export default function CheckoutPage() {
   const [street, setStreet] = useState("");
   const [building, setBuilding] = useState("");
   const [notes, setNotes] = useState("");
+  const [birthdate, setBirthdate] = useState("");
+  const [closePersonName, setClosePersonName] = useState("");
 
   // Payment Selection
   const [paymentMethod, setPaymentMethod] = useState<"PAYMOB" | "INSTAPAY">("INSTAPAY");
@@ -61,11 +63,42 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdOrderNumber, setCreatedOrderNumber] = useState<string | null>(null);
 
-  // Dynamic Free Shipping & Rates
+  // 1. Multi-product Promo & Volume Discount
+  const totalItemsCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const multiPromo = settings.multiProductPromo || {
+    enabled: true,
+    minQuantity: 2,
+    discountType: "PERCENTAGE" as const,
+    discountValue: 10,
+    freeShippingEnabled: true,
+  };
+  const isMultiPromoEligible = multiPromo.enabled && totalItemsCount >= (multiPromo.minQuantity || 2);
+  let multiProductDiscount = 0;
+  if (isMultiPromoEligible) {
+    if (multiPromo.discountType === "PERCENTAGE") {
+      multiProductDiscount = Math.round((subtotal * multiPromo.discountValue) / 100);
+    } else {
+      multiProductDiscount = multiPromo.discountValue;
+    }
+  }
+
+  const combinedDiscount = discountAmount + multiProductDiscount;
+
+  // 2. Custom Governorate Shipping Rate vs Default Unified Rate
+  const defaultUnifiedRate = settings.shipping?.defaultUnifiedRate ?? 45;
+  const customRateMatch = settings.shipping?.customGovernorateRates?.find(
+    (r) => r.governorate === governorate
+  );
+  const governorateBaseFee = customRateMatch ? customRateMatch.rate : defaultUnifiedRate;
+
+  // 3. Free Shipping Logic: Multi-item exemption OR order threshold
   const freeThreshold = settings.shipping?.freeShippingThreshold || SULAF_SETTINGS.freeShippingThreshold;
-  const shippingRateObj = EGYPT_GOVERNORATES_RATES[governorate] || { fee: 45 };
-  const rawShipping = subtotal >= freeThreshold ? 0 : shippingRateObj.fee;
-  const finalTotal = Math.max(0, subtotal - discountAmount + rawShipping);
+  const isFreeShippingViaPromo = isMultiPromoEligible && multiPromo.freeShippingEnabled;
+  const isFreeShippingViaThreshold = subtotal >= freeThreshold;
+  const isFreeShipping = isFreeShippingViaPromo || isFreeShippingViaThreshold;
+
+  const rawShipping = isFreeShipping ? 0 : governorateBaseFee;
+  const finalTotal = Math.max(0, subtotal - combinedDiscount + rawShipping);
   const payNow = isDepositMode ? Math.min(finalTotal, depositAmount) : finalTotal;
   const remainingCod = isDepositMode ? Math.max(0, finalTotal - depositAmount) : 0;
 
@@ -90,10 +123,7 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (paymentMethod === "INSTAPAY" && !receiptImage) {
-      alert(t.checkout.receiptRequiredAlert);
-      return;
-    }
+// Receipt image upload is optional/waived for smooth checkout
 
     setIsSubmitting(true);
 
@@ -117,7 +147,7 @@ export default function CheckoutPage() {
           total: i.unitPrice * i.quantity,
         })),
         subtotal,
-        discount: discountAmount,
+        discount: combinedDiscount,
         shippingFee: rawShipping,
         total: finalTotal,
         isDepositMode,
@@ -127,6 +157,8 @@ export default function CheckoutPage() {
         paymentStatus: paymentMethod === "PAYMOB" ? (isDepositMode ? "DEPOSIT_PAID" : "FULLY_PAID") : "PENDING",
         orderStatus: paymentMethod === "PAYMOB" ? "PROCESSING" : "PENDING_CONFIRMATION",
         receiptUrl: receiptImage || undefined,
+        birthdate: birthdate || undefined,
+        closePersonName: closePersonName || undefined,
         stoxTrackingNumber: `STX-EG-${Math.floor(100000 + Math.random() * 900000)}`,
         stoxStatus: "CREATED",
       });
@@ -304,11 +336,15 @@ export default function CheckoutPage() {
                     onChange={(e) => setGovernorate(e.target.value)}
                     className="w-full py-2.5 px-3.5 text-xs font-cairo rounded-xl bg-[#f6f9e6] border border-[#e2e8c0] focus:ring-1 focus:ring-[#485c36]"
                   >
-                    {Object.keys(EGYPT_GOVERNORATES_RATES).map((gov) => (
-                      <option key={gov} value={gov}>
-                        {gov} ({EGYPT_GOVERNORATES_RATES[gov].fee} {currency})
-                      </option>
-                    ))}
+                    {Object.keys(EGYPT_GOVERNORATES_RATES).map((gov) => {
+                      const customMatch = settings.shipping?.customGovernorateRates?.find((r) => r.governorate === gov);
+                      const fee = customMatch ? customMatch.rate : defaultUnifiedRate;
+                      return (
+                        <option key={gov} value={gov}>
+                          {gov} ({fee} {currency}{customMatch ? (isArabic ? " - سعر خاص" : " - Special") : ""})
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
 
@@ -352,6 +388,42 @@ export default function CheckoutPage() {
                     className="w-full py-2.5 px-3.5 text-xs font-cairo rounded-xl bg-[#f6f9e6] border border-[#e2e8c0]"
                   />
                 </div>
+
+                {/* Optional Birthday & Loved One Fields (Manager Controlled) */}
+                {((settings.checkoutFields?.showBirthdate ?? true) || (settings.checkoutFields?.showClosePerson ?? true)) && (
+                  <div className="sm:col-span-2 pt-3 border-t border-[#e2e8c0]/70 grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-[#fbfdf7] p-4 rounded-2xl border border-[#dbe2bd]">
+                    {(settings.checkoutFields?.showBirthdate ?? true) && (
+                      <div>
+                        <label className="block text-xs font-bold text-gray-800 font-cairo mb-1 flex items-center justify-between">
+                          <span>{isArabic ? "🎂 تاريخ ميلادكِ (اختياري)" : "🎂 Date of Birth (Optional)"}</span>
+                          <span className="text-[10px] text-amber-800 font-semibold">{isArabic ? "لمفاجآت وهدايا VIP" : "For VIP gifts"}</span>
+                        </label>
+                        <input
+                          type="date"
+                          value={birthdate}
+                          onChange={(e) => setBirthdate(e.target.value)}
+                          className="w-full py-2.5 px-3.5 text-xs font-cairo rounded-xl bg-white border border-[#e2e8c0] focus:ring-1 focus:ring-[#485c36]"
+                        />
+                      </div>
+                    )}
+
+                    {(settings.checkoutFields?.showClosePerson ?? true) && (
+                      <div>
+                        <label className="block text-xs font-bold text-gray-800 font-cairo mb-1 flex items-center justify-between">
+                          <span>{isArabic ? "💝 اسم شخص مقرب لكِ (اختياري)" : "💝 Loved One's Name (Optional)"}</span>
+                          <span className="text-[10px] text-amber-800 font-semibold">{isArabic ? "لهدايا ومفاجآت سُـلاف" : "For gifting"}</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={closePersonName}
+                          onChange={(e) => setClosePersonName(e.target.value)}
+                          placeholder={isArabic ? "مثال: مريم أو الوالدة أو د. أحمد..." : "e.g., Sarah or Mom..."}
+                          className="w-full py-2.5 px-3.5 text-xs font-cairo rounded-xl bg-white border border-[#e2e8c0] focus:ring-1 focus:ring-[#485c36]"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -442,32 +514,20 @@ export default function CheckoutPage() {
                         </div>
                       </div>
 
-                      {/* Receipt upload box */}
-                      <div className="space-y-1.5">
-                        <span className="block font-bold text-gray-800">
-                          {t.checkout.uploadReceipt}
-                        </span>
-                        <label className="border-2 border-dashed border-[#485c36]/40 hover:border-[#485c36] rounded-2xl p-4 flex flex-col items-center justify-center cursor-pointer bg-[#f6f9e6] transition-colors">
-                          <Upload className="w-6 h-6 text-[#485c36] mb-1" />
-                          <span className="text-xs font-semibold text-[#485c36]">
-                            {receiptFileName ? receiptFileName : t.checkout.uploadReceiptBtn}
-                          </span>
-                          <span className="text-[10px] text-gray-500">{t.checkout.uploadReceiptHint}</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleReceiptChange}
-                            className="hidden"
-                          />
-                        </label>
-                      </div>
-
-                      {receiptImage && (
-                        <div className="p-2 rounded-xl bg-white border border-green-300 flex items-center gap-2 text-green-800">
-                          <FileCheck className="w-4 h-4 text-green-600" />
-                          <span className="font-semibold text-[11px]">{t.checkout.receiptReady}</span>
+                      {/* Friendly InstaPay confirmation - No image upload required */}
+                      <div className="p-3.5 rounded-2xl bg-emerald-50/90 border border-emerald-200 text-emerald-950 flex items-start gap-2.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-700 mt-0.5 shrink-0" />
+                        <div className="space-y-0.5">
+                          <strong className="block text-xs font-bold text-emerald-950">
+                            {isArabic ? "لا حاجة لرفع صورة الإيصال!" : "No receipt upload required!"}
+                          </strong>
+                          <p className="text-[11px] text-emerald-800 leading-relaxed">
+                            {isArabic
+                              ? "حوّل القيمة المطلوبة عبر إنستاباي أو المحفظة، واضغط 'تأكيد الطلب'. سيقوم فريقنا بمطابقة التحويل وتأكيد الشحن فوراً عبر الهاتف أو واتساب."
+                              : "Transfer the amount via InstaPay or wallet, then click confirm. Our team will verify and dispatch your order promptly."}
+                          </p>
                         </div>
-                      )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -542,9 +602,24 @@ export default function CheckoutPage() {
                     <span>-{discountAmount} {currency}</span>
                   </div>
                 )}
+                {multiProductDiscount > 0 && (
+                  <div className="flex justify-between text-emerald-800 font-bold bg-emerald-50 p-2 rounded-xl border border-emerald-200">
+                    <span className="flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>{isArabic ? `خصم الشراء المتعدد (${totalItemsCount} منتجات)` : `Volume Discount (${totalItemsCount} items)`}</span>
+                    </span>
+                    <span>-{multiProductDiscount} {currency}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span>{t.checkout.shippingCost.replace('{gov}', governorate)}</span>
-                  <span>{rawShipping === 0 ? t.checkout.free : `${rawShipping} ${currency}`}</span>
+                  <span className={rawShipping === 0 ? "text-emerald-700 font-bold" : ""}>
+                    {rawShipping === 0
+                      ? (isFreeShippingViaPromo
+                          ? (isArabic ? "مجاناً (عرض المنتجات المتعددة)" : "Free (Multi-item Offer)")
+                          : t.checkout.free)
+                      : `${rawShipping} ${currency}`}
+                  </span>
                 </div>
 
                 <div className="pt-2 border-t border-[#e2e8c0] flex justify-between font-bold text-sm text-gray-900">
