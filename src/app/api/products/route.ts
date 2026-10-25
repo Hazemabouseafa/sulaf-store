@@ -7,7 +7,14 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const products = readJsonFile<ProductData[]>("products.json", []);
-    return NextResponse.json({ success: true, count: products.length, products });
+    return NextResponse.json(
+      { success: true, count: products.length, products },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        },
+      }
+    );
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }

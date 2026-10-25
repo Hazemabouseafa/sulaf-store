@@ -33,7 +33,14 @@ function writeStoredSettings(settings: StoreSettings) {
 
 export async function GET() {
   const settings = readStoredSettings();
-  return NextResponse.json({ success: true, settings });
+  return NextResponse.json(
+    { success: true, settings },
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+      },
+    }
+  );
 }
 
 export async function POST(req: Request) {
