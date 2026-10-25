@@ -3,13 +3,30 @@
 import React from "react";
 import { useStoreSettings } from "@/lib/settings/store-settings-context";
 import { DEFAULT_HOMEPAGE_SECTIONS_ORDER, HomepageSectionKey } from "@/lib/settings/store-settings";
+import dynamic from "next/dynamic";
 import { HeroSection } from "@/components/home/HeroSection";
-import { HomeAboutSection } from "@/components/home/HomeAboutSection";
-import { CosmeceuticalsArtSection } from "@/components/home/CosmeceuticalsArtSection";
 import { HorizontalGallerySection } from "@/components/home/HorizontalGallerySection";
-import { ClinicalStorySection } from "@/components/home/ClinicalStorySection";
-import { DoctorReviewsSection } from "@/components/home/DoctorReviewsSection";
-import { ConsultationBanner } from "@/components/home/ConsultationBanner";
+
+const HomeAboutSection = dynamic(
+  () => import("@/components/home/HomeAboutSection").then((mod) => mod.HomeAboutSection),
+  { loading: () => <div className="min-h-[200px]" /> }
+);
+const CosmeceuticalsArtSection = dynamic(
+  () => import("@/components/home/CosmeceuticalsArtSection").then((mod) => mod.CosmeceuticalsArtSection),
+  { loading: () => <div className="min-h-[200px]" /> }
+);
+const ClinicalStorySection = dynamic(
+  () => import("@/components/home/ClinicalStorySection").then((mod) => mod.ClinicalStorySection),
+  { loading: () => <div className="min-h-[200px]" /> }
+);
+const DoctorReviewsSection = dynamic(
+  () => import("@/components/home/DoctorReviewsSection").then((mod) => mod.DoctorReviewsSection),
+  { loading: () => <div className="min-h-[200px]" /> }
+);
+const ConsultationBanner = dynamic(
+  () => import("@/components/home/ConsultationBanner").then((mod) => mod.ConsultationBanner),
+  { loading: () => <div className="min-h-[160px]" /> }
+);
 
 const SECTION_COMPONENTS: Record<HomepageSectionKey, React.ComponentType> = {
   heroSection: HeroSection,
