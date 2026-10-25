@@ -153,12 +153,30 @@
     "defaultUnifiedRate": 45,
     "freeShippingThreshold": 800,
     "customGovernorateRates": [
-      { "governorate": "أسوان", "rate": 65 },
-      { "governorate": "الوادي الجديد", "rate": 75 },
-      { "governorate": "مطروح", "rate": 70 },
-      { "governorate": "شمال سيناء", "rate": 80 },
-      { "governorate": "جنوب سيناء", "rate": 80 },
-      { "governorate": "البحر الأحمر", "rate": 75 }
+      {
+        "governorate": "أسوان",
+        "rate": 65
+      },
+      {
+        "governorate": "الوادي الجديد",
+        "rate": 75
+      },
+      {
+        "governorate": "مطروح",
+        "rate": 70
+      },
+      {
+        "governorate": "شمال سيناء",
+        "rate": 80
+      },
+      {
+        "governorate": "جنوب سيناء",
+        "rate": 80
+      },
+      {
+        "governorate": "البحر الأحمر",
+        "rate": 75
+      }
     ],
     "cairoGiza": 45,
     "alexDelta": 55,
@@ -175,6 +193,15 @@
   "checkoutFields": {
     "showBirthdate": true,
     "showClosePerson": true
+  },
+  "themeColors": {
+    "primary": "#485c36",
+    "primaryHover": "#38492a",
+    "secondary": "#610b0d",
+    "gold": "#d4af37",
+    "background": "#f6f9e6",
+    "surface": "#ffffff",
+    "text": "#1c2616"
   },
   "contacts": {
     "whatsapp": "+201099887766",

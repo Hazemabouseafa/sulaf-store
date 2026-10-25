@@ -322,6 +322,220 @@ export interface CheckoutFieldsSettings {
   showClosePerson: boolean;
 }
 
+export interface ThemeColorsSettings {
+  primary: string;         // اللون الرئيسي (أخضر سُلاف الزيتوني: #485c36)
+  primaryHover?: string;    // درجة التحويم للأزرار: #38492a
+  secondary: string;       // اللون الثانوي / الأكسنت (بورجوندي عنابي: #610b0d)
+  gold: string;            // اللون الذهبي الملكي: #d4af37
+  background: string;      // لون خلفية المتجر: #f6f9e6
+  surface: string;         // لون كروت المحتوى: #ffffff
+  text: string;            // لون النصوص: #1c2616
+}
+
+export const DEFAULT_THEME_COLORS: ThemeColorsSettings = {
+  primary: "#485c36",
+  primaryHover: "#38492a",
+  secondary: "#610b0d",
+  gold: "#d4af37",
+  background: "#f6f9e6",
+  surface: "#ffffff",
+  text: "#1c2616",
+};
+
+export interface ThemePreset {
+  id: string;
+  nameAr: string;
+  nameEn: string;
+  descAr: string;
+  colors: ThemeColorsSettings;
+}
+
+export const LUXURY_THEME_PRESETS: ThemePreset[] = [
+  {
+    id: "sulaf_signature",
+    nameAr: "سُـلاف الأندلسي الملكي (الأصلي)",
+    nameEn: "Sulaf Signature Andalusian",
+    descAr: "الزيتوني الأندلسي العريق مع الرق العاجي والذهب المعتق والعنابي القرطبي",
+    colors: {
+      primary: "#485c36",
+      primaryHover: "#38492a",
+      secondary: "#610b0d",
+      gold: "#d4af37",
+      background: "#f6f9e6",
+      surface: "#ffffff",
+      text: "#1c2616",
+    },
+  },
+  {
+    id: "emerald_pharma",
+    nameAr: "الزمرد الصيدلاني النقي",
+    nameEn: "Pharmaceutical Emerald",
+    descAr: "طابع علمي سريري فاخر بظلال الزمرد العميقة مع خلفية قطنية ناصعة",
+    colors: {
+      primary: "#1b4d3e",
+      primaryHover: "#13382d",
+      secondary: "#85263a",
+      gold: "#c5a059",
+      background: "#f4f8f5",
+      surface: "#ffffff",
+      text: "#11221b",
+    },
+  },
+  {
+    id: "velvet_ruby",
+    nameAr: "الياقوت المخملي والورد",
+    nameEn: "Velvet Ruby & Rose",
+    descAr: "طابع أنثوي مفعم بالفخامة والجاذبية بنفحات الياقوت الإمبراطوري",
+    colors: {
+      primary: "#5e1922",
+      primaryHover: "#471018",
+      secondary: "#2c4826",
+      gold: "#d4af37",
+      background: "#faf5f5",
+      surface: "#ffffff",
+      text: "#221114",
+    },
+  },
+  {
+    id: "royal_sapphire",
+    nameAr: "اللازورد والذهب الملوكي",
+    nameEn: "Midnight Royal Sapphire",
+    descAr: "الأزرق الملكي الدوائي مع بريق الذهب ووضوح سريري فائق",
+    colors: {
+      primary: "#193554",
+      primaryHover: "#11243a",
+      secondary: "#7e1528",
+      gold: "#dfb15b",
+      background: "#f3f6fa",
+      surface: "#ffffff",
+      text: "#0f1c2b",
+    },
+  },
+  {
+    id: "warm_cashmere",
+    nameAr: "الكشمير والتوابل الأندلسية",
+    nameEn: "Warm Cashmere & Amber",
+    descAr: "دفء رمال الأندلس ونعومة الكشمير مع العنبر الذهبي الخالص",
+    colors: {
+      primary: "#5c3d22",
+      primaryHover: "#432b17",
+      secondary: "#7c221a",
+      gold: "#dca238",
+      background: "#fbf7f0",
+      surface: "#ffffff",
+      text: "#24180e",
+    },
+  },
+];
+
+export function adjustHexBrightness(hex: string, percent: number): string {
+  const clean = hex.replace("#", "");
+  if (clean.length !== 6) return hex;
+  const num = parseInt(clean, 16);
+  let r = (num >> 16) + Math.round((255 * percent) / 100);
+  let g = ((num >> 8) & 0x00ff) + Math.round((255 * percent) / 100);
+  let b = (num & 0x0000ff) + Math.round((255 * percent) / 100);
+  r = Math.min(255, Math.max(0, r));
+  g = Math.min(255, Math.max(0, g));
+  b = Math.min(255, Math.max(0, b));
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
+export function generateThemeCss(colors: ThemeColorsSettings = DEFAULT_THEME_COLORS): string {
+  const primary = colors.primary || DEFAULT_THEME_COLORS.primary;
+  const primaryHover = colors.primaryHover || adjustHexBrightness(primary, -15);
+  const secondary = colors.secondary || DEFAULT_THEME_COLORS.secondary;
+  const gold = colors.gold || DEFAULT_THEME_COLORS.gold;
+  const goldLight = adjustHexBrightness(gold, 25);
+  const background = colors.background || DEFAULT_THEME_COLORS.background;
+  const surface = colors.surface || DEFAULT_THEME_COLORS.surface;
+  const text = colors.text || DEFAULT_THEME_COLORS.text;
+  const border = adjustHexBrightness(background, -10);
+
+  return [
+    ':root {',
+    `  --primary: ${primary};`,
+    `  --primary-dark: ${primaryHover};`,
+    `  --primary-light: ${adjustHexBrightness(primary, 15)};`,
+    `  --burgundy: ${secondary};`,
+    `  --gold: ${gold};`,
+    `  --gold-light: ${goldLight};`,
+    `  --background: ${background};`,
+    `  --cream: ${background};`,
+    `  --foreground: ${text};`,
+    `  --border: ${border};`,
+    `  --sulaf-primary: ${primary};`,
+    `  --sulaf-primary-hover: ${primaryHover};`,
+    `  --sulaf-secondary: ${secondary};`,
+    `  --sulaf-gold: ${gold};`,
+    `  --sulaf-bg: ${background};`,
+    `  --sulaf-surface: ${surface};`,
+    `  --sulaf-text: ${text};`,
+    `  --sulaf-border: ${border};`,
+    '}',
+    'body {',
+    `  background-color: ${background} !important;`,
+    `  color: ${text} !important;`,
+    '}',
+    '/* Primary Brand Overrides */',
+    '.bg-\\[\\#485c36\\], .bg-\\[\\#3d502d\\], .bg-\\[\\#3a4d2c\\], .bg-\\[\\#3a4a2b\\] {',
+    `  background-color: ${primary} !important;`,
+    '}',
+    '.text-\\[\\#485c36\\], .text-\\[\\#3d502d\\], .text-\\[\\#3a4d2c\\] {',
+    `  color: ${primary} !important;`,
+    '}',
+    '.border-\\[\\#485c36\\], .border-\\[\\#3d502d\\] {',
+    `  border-color: ${primary} !important;`,
+    '}',
+    '.hover\\:bg-\\[\\#3d502d\\]:hover, .hover\\:bg-\\[\\#2d3b21\\]:hover, .hover\\:bg-\\[\\#233019\\]:hover, .hover\\:bg-\\[\\#2c3821\\]:hover, .hover\\:bg-\\[\\#38482a\\]:hover {',
+    `  background-color: ${primaryHover} !important;`,
+    '}',
+    '.hover\\:text-\\[\\#485c36\\]:hover, .hover\\:text-\\[\\#3d502d\\]:hover {',
+    `  color: ${primary} !important;`,
+    '}',
+    '/* Gold / Luxury Accent Overrides */',
+    '.text-\\[\\#d4af37\\], .text-\\[\\#aa820a\\] {',
+    `  color: ${gold} !important;`,
+    '}',
+    '.bg-\\[\\#d4af37\\] {',
+    `  background-color: ${gold} !important;`,
+    '}',
+    '.border-\\[\\#d4af37\\], .border-\\[\\#aa820a\\] {',
+    `  border-color: ${gold} !important;`,
+    '}',
+    '/* Secondary / Burgundy Overrides */',
+    '.text-\\[\\#610b0d\\], .text-\\[\\#ca384a\\] {',
+    `  color: ${secondary} !important;`,
+    '}',
+    '.bg-\\[\\#610b0d\\], .bg-\\[\\#ca384a\\] {',
+    `  background-color: ${secondary} !important;`,
+    '}',
+    '.border-\\[\\#610b0d\\] {',
+    `  border-color: ${secondary} !important;`,
+    '}',
+    '/* Background / Canvas Overrides */',
+    '.bg-\\[\\#f6f9e6\\] {',
+    `  background-color: ${background} !important;`,
+    '}',
+    '.bg-\\[\\#fafcf3\\], .bg-\\[\\#fbf9f0\\], .bg-\\[\\#fcfdfa\\] {',
+    `  background-color: ${surface} !important;`,
+    '}',
+    '.border-\\[\\#dbe2bd\\], .border-\\[\\#e2e8c0\\] {',
+    `  border-color: ${border} !important;`,
+    '}',
+    '/* Scrollbars */',
+    '::-webkit-scrollbar-track {',
+    `  background: ${background} !important;`,
+    '}',
+    '::-webkit-scrollbar-thumb {',
+    `  background: ${primary} !important;`,
+    '}',
+    '::-webkit-scrollbar-thumb:hover {',
+    `  background: ${primaryHover} !important;`,
+    '}',
+  ].join('\n');
+}
+
 export interface StoreSettings {
   brandName: string;
   brandTagline: string;
@@ -391,6 +605,7 @@ export interface StoreSettings {
 
   multiProductPromo?: MultiProductPromotionSettings;
   checkoutFields?: CheckoutFieldsSettings;
+  themeColors?: ThemeColorsSettings;
 
   contacts: {
     whatsapp: string;
@@ -617,6 +832,8 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
     showClosePerson: true,
   },
 
+  themeColors: DEFAULT_THEME_COLORS,
+
   contacts: {
     whatsapp: "+201099887766",
     phone: "19876",
@@ -668,6 +885,10 @@ export function getClientSettings(): StoreSettings {
       checkoutFields: {
         ...DEFAULT_STORE_SETTINGS.checkoutFields,
         ...(parsed.checkoutFields || {}),
+      },
+      themeColors: {
+        ...DEFAULT_THEME_COLORS,
+        ...(parsed.themeColors || {}),
       },
     };
   } catch (e) {

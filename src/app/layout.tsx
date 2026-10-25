@@ -7,6 +7,8 @@ import { CustomerAuthProvider } from "@/lib/auth/customer-auth";
 import { StoreSettingsProvider } from "@/lib/settings/store-settings-context";
 import { LanguageProvider } from "@/lib/i18n/language-context";
 import { StorefrontShell } from "@/components/layout/StorefrontShell";
+import { ThemeStyleInjector } from "@/components/theme/ThemeStyleInjector";
+import { generateThemeCss, DEFAULT_THEME_COLORS } from "@/lib/settings/store-settings";
 import fs from "fs";
 import path from "path";
 
@@ -137,6 +139,9 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const serverSettings = getServerSettings();
+  const ssrThemeCss = generateThemeCss(serverSettings?.themeColors || DEFAULT_THEME_COLORS);
+
   return (
     <html
       lang="ar"
@@ -150,6 +155,11 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Almarai:wght@400;700;800&family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&display=swap"
           rel="stylesheet"
         />
+        {/* SSR Theme Colors: Injected before paint for 0ms flicker */}
+        <style
+          id="sulaf-ssr-theme"
+          dangerouslySetInnerHTML={{ __html: ssrThemeCss }}
+        />
         {/* Schema.org Structured Data */}
         <script
           type="application/ld+json"
@@ -159,7 +169,8 @@ export default function RootLayout({
       <body className="min-h-screen flex flex-col bg-[#f6f9e6] text-[#222b1a]">
         <LanguageProvider>
           {/* Pass live server settings to provider for zero-delay SSR */}
-          <StoreSettingsProvider initialSettings={getServerSettings()}>
+          <StoreSettingsProvider initialSettings={serverSettings}>
+            <ThemeStyleInjector />
             <LenisProvider>
               <CartProvider>
                 <CustomerAuthProvider>

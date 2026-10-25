@@ -17,6 +17,11 @@ import {
   HomepageSectionKey,
   DEFAULT_HOMEPAGE_SECTIONS_ORDER,
   CustomGovernorateShippingRate,
+  DEFAULT_THEME_COLORS,
+  LUXURY_THEME_PRESETS,
+  ThemeColorsSettings,
+  ThemePreset,
+  adjustHexBrightness,
 } from "@/lib/settings/store-settings";
 import {
   ShieldCheck,
@@ -60,6 +65,7 @@ import {
   ArrowUpRight,
   Sliders,
   BadgeCheck,
+  Palette,
   Calendar,
   MapPin,
   Percent,
@@ -434,7 +440,7 @@ export default function AdminPage() {
 
   // Navigation Tab
   const [activeTab, setActiveTab] = useState<
-    "overview" | "orders" | "products" | "coupons" | "customers" | "customerPerks" | "pages" | "analytics" | "cms" | "settings"
+    "overview" | "orders" | "products" | "coupons" | "customers" | "customerPerks" | "pages" | "analytics" | "cms" | "theme" | "settings"
   >("overview");
 
   // Data Stores
@@ -467,6 +473,7 @@ export default function AdminPage() {
   const [cmsTargetLang, setCmsTargetLang] = useState<"ar" | "en">("ar");
   const [cmsSubTab, setCmsSubTab] = useState<string>("hero");
   const [isCmsSaving, setIsCmsSaving] = useState(false);
+  const [isThemeSaving, setIsThemeSaving] = useState(false);
 
   // Sync CMS states when settings update from server
   useEffect(() => {
@@ -681,6 +688,12 @@ export default function AdminPage() {
     multiPromoFreeShipping: true,
     showBirthdateField: true,
     showClosePersonField: true,
+    themePrimary: DEFAULT_THEME_COLORS.primary,
+    themeSecondary: DEFAULT_THEME_COLORS.secondary,
+    themeGold: DEFAULT_THEME_COLORS.gold,
+    themeBackground: DEFAULT_THEME_COLORS.background,
+    themeSurface: DEFAULT_THEME_COLORS.surface,
+    themeText: DEFAULT_THEME_COLORS.text,
     freeThreshold: 800,
     depositAmount: 100,
     announcementText: "",
@@ -737,6 +750,12 @@ export default function AdminPage() {
         multiPromoFreeShipping: settings.multiProductPromo?.freeShippingEnabled ?? true,
         showBirthdateField: settings.checkoutFields?.showBirthdate ?? true,
         showClosePersonField: settings.checkoutFields?.showClosePerson ?? true,
+        themePrimary: settings.themeColors?.primary || DEFAULT_THEME_COLORS.primary,
+        themeSecondary: settings.themeColors?.secondary || DEFAULT_THEME_COLORS.secondary,
+        themeGold: settings.themeColors?.gold || DEFAULT_THEME_COLORS.gold,
+        themeBackground: settings.themeColors?.background || DEFAULT_THEME_COLORS.background,
+        themeSurface: settings.themeColors?.surface || DEFAULT_THEME_COLORS.surface,
+        themeText: settings.themeColors?.text || DEFAULT_THEME_COLORS.text,
         freeThreshold: settings.shipping?.freeShippingThreshold || 800,
         depositAmount: settings.payment?.depositAmount || 100,
         announcementText: settings.announcement?.text || "شحن مجاني وسريع لكافة المحافظات على الطلبات فوق 800 ج",
@@ -1396,6 +1415,55 @@ export default function AdminPage() {
     setSettingsForm({ ...settingsForm, customGovernorateRates: updated });
   }
 
+  
+  function handleApplyThemePreset(preset: ThemePreset) {
+    setSettingsForm((prev) => ({
+      ...prev,
+      themePrimary: preset.colors.primary,
+      themeSecondary: preset.colors.secondary,
+      themeGold: preset.colors.gold,
+      themeBackground: preset.colors.background,
+      themeSurface: preset.colors.surface,
+      themeText: preset.colors.text,
+    }));
+    showToast(`تم تطبيق نسق "${preset.nameAr}" في المعاينة`);
+  }
+
+  function handleResetThemeToDefault() {
+    setSettingsForm((prev) => ({
+      ...prev,
+      themePrimary: DEFAULT_THEME_COLORS.primary,
+      themeSecondary: DEFAULT_THEME_COLORS.secondary,
+      themeGold: DEFAULT_THEME_COLORS.gold,
+      themeBackground: DEFAULT_THEME_COLORS.background,
+      themeSurface: DEFAULT_THEME_COLORS.surface,
+      themeText: DEFAULT_THEME_COLORS.text,
+    }));
+    showToast("تمت استعادة ألوان سُلاف الأصلية");
+  }
+
+  async function handleSaveThemeDirectly() {
+    setIsThemeSaving(true);
+    try {
+      await updateSettings({
+        themeColors: {
+          primary: settingsForm.themePrimary,
+          primaryHover: adjustHexBrightness(settingsForm.themePrimary, -15),
+          secondary: settingsForm.themeSecondary,
+          gold: settingsForm.themeGold,
+          background: settingsForm.themeBackground,
+          surface: settingsForm.themeSurface,
+          text: settingsForm.themeText,
+        },
+      });
+      showToast("تم حفظ وتطبيق الألوان السائدة على واجهة المتجر بنجاح ✓");
+    } catch {
+      showToast("فشل حفظ إعدادات الألوان.", "error");
+    } finally {
+      setIsThemeSaving(false);
+    }
+  }
+
   async function handleSaveSettings(e: React.FormEvent) {
     e.preventDefault();
     try {
@@ -1436,6 +1504,15 @@ export default function AdminPage() {
         checkoutFields: {
           showBirthdate: settingsForm.showBirthdateField,
           showClosePerson: settingsForm.showClosePersonField,
+        },
+        themeColors: {
+          primary: settingsForm.themePrimary,
+          primaryHover: adjustHexBrightness(settingsForm.themePrimary, -15),
+          secondary: settingsForm.themeSecondary,
+          gold: settingsForm.themeGold,
+          background: settingsForm.themeBackground,
+          surface: settingsForm.themeSurface,
+          text: settingsForm.themeText,
         },
         announcement: {
           ...settings.announcement,
@@ -2049,6 +2126,24 @@ export default function AdminPage() {
               </div>
               <span className="shrink-0 ms-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-700 text-emerald-100">
                 CMS
+              </span>
+            </button>
+
+            {/* 7.5 Theme & Dominant Colors Studio */}
+            <button
+              onClick={() => setActiveTab("theme")}
+              className={`shrink-0 md:w-full flex items-center justify-between px-3.5 py-2.5 sm:py-3 rounded-2xl font-bold text-xs lg:text-sm transition-all overflow-hidden cursor-pointer ${
+                activeTab === "theme"
+                  ? "bg-[#3d502d] text-white shadow-md ring-2 ring-emerald-400/40"
+                  : "text-gray-300 hover:bg-[#233019] hover:text-white"
+              }`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Palette className="w-4 h-4 shrink-0 text-amber-300" />
+                <span className="truncate">{adminLang === "ar" ? "ألوان وهوية المتجر" : "Theme & Colors"}</span>
+              </div>
+              <span className="shrink-0 ms-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                PRO
               </span>
             </button>
 
@@ -6829,6 +6924,519 @@ export default function AdminPage() {
                   );
                 })()}
 
+              </div>
+            </div>
+          )}
+
+          {activeTab === "theme" && (
+            <div className="space-y-8 w-full min-w-0">
+              {/* Header Box */}
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#dbe2bd] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold mb-2">
+                    <Palette className="w-3.5 h-3.5 text-amber-700" />
+                    <span>{adminLang === "ar" ? "استوديو الألوان وهوية المتجر البصرية" : "Theme & Brand Identity Studio"}</span>
+                  </div>
+                  <h2 className="font-bold text-2xl text-gray-900">
+                    {adminLang === "ar" ? "التحكم في الألوان السائدة لواجهة الموقع" : "Storefront Dominant Colors Control"}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1 font-semibold">
+                    {adminLang === "ar"
+                      ? "تحكم كامل في اللون الرئيسي، الثانوي، الذهبي، ولون الخلفيات والكروت. يمكنك اختيار نمط جاهز أو تخصيص الألوان يدوياً مع معاينة حية فورية."
+                      : "Customize brand primary, secondary, gold, canvas, and card colors with one-click luxury presets and live preview."}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handleResetThemeToDefault}
+                    className="px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-bold text-xs hover:bg-gray-100 transition-colors cursor-pointer flex items-center gap-1.5"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>{adminLang === "ar" ? "استعادة ألوان سُلاف الأصلية" : "Reset to Sulaf Default"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSaveThemeDirectly}
+                    disabled={isThemeSaving}
+                    className="px-6 py-2.5 rounded-xl bg-[#3d502d] hover:bg-[#2b3a1f] text-white font-bold text-xs transition-all shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                    <span>{isThemeSaving ? (adminLang === "ar" ? "جاري الحفظ..." : "Saving...") : (adminLang === "ar" ? "حفظ وتطبيق الألوان فوراً ✓" : "Save & Apply Colors ✓")}</span>
+                  </button>
+
+                  <Link
+                    href="/"
+                    target="_blank"
+                    className="px-4 py-2.5 rounded-xl bg-[#e8ecd0] hover:bg-[#dbe2bd] text-[#233019] font-bold text-xs transition-colors flex items-center gap-1.5"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>{adminLang === "ar" ? "معاينة المتجر" : "Preview Store"}</span>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Section 1: Ready-made Luxury Palettes (أنماط لونية فاخرة جاهزة) */}
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-4">
+                <div className="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-gray-100">
+                  <div>
+                    <h3 className="font-bold text-lg text-[#233019] flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-amber-500" />
+                      <span>{adminLang === "ar" ? "1. أنماط وقوالب لونية ملكية جاهزة بلمسة واحدة" : "1. Ready-Made Luxury Color Palettes"}</span>
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {adminLang === "ar"
+                        ? "مجموعات متناسقة صُممت بعناية وفق أرقى معايير تصميم براندات الـ Cosmeceuticals الفاخرة."
+                        : "Carefully calibrated color schemes matching world-class cosmeceuticals design standards."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 pt-2">
+                  {LUXURY_THEME_PRESETS.map((preset) => {
+                    const isSelected =
+                      settingsForm.themePrimary.toLowerCase() === preset.colors.primary.toLowerCase() &&
+                      settingsForm.themeBackground.toLowerCase() === preset.colors.background.toLowerCase();
+
+                    return (
+                      <div
+                        key={preset.id}
+                        onClick={() => handleApplyThemePreset(preset)}
+                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative flex flex-col justify-between gap-3 text-right ${
+                          isSelected
+                            ? "border-[#3d502d] ring-2 ring-[#3d502d]/30 bg-[#f6f9e6]/50 shadow-sm"
+                            : "border-gray-200 hover:border-gray-400 bg-white hover:shadow-xs"
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="font-black text-xs text-gray-900 block line-clamp-1">
+                              {adminLang === "ar" ? preset.nameAr : preset.nameEn}
+                            </span>
+                            {isSelected && (
+                              <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-gray-500 leading-relaxed line-clamp-2">
+                            {preset.descAr}
+                          </p>
+                        </div>
+
+                        {/* Color Swatch Bars */}
+                        <div className="space-y-1.5 pt-2 border-t border-gray-100">
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className="w-5 h-5 rounded-full shadow-2xs border border-black/10 shrink-0"
+                              style={{ backgroundColor: preset.colors.primary }}
+                              title="الرئيسي"
+                            />
+                            <span
+                              className="w-5 h-5 rounded-full shadow-2xs border border-black/10 shrink-0"
+                              style={{ backgroundColor: preset.colors.secondary }}
+                              title="الثانوي"
+                            />
+                            <span
+                              className="w-5 h-5 rounded-full shadow-2xs border border-black/10 shrink-0"
+                              style={{ backgroundColor: preset.colors.gold }}
+                              title="الذهبي"
+                            />
+                            <span
+                              className="w-5 h-5 rounded-full shadow-2xs border border-black/10 shrink-0"
+                              style={{ backgroundColor: preset.colors.background }}
+                              title="الخلفية"
+                            />
+                            <span
+                              className="w-5 h-5 rounded-full shadow-2xs border border-black/10 shrink-0"
+                              style={{ backgroundColor: preset.colors.surface }}
+                              title="الكروت"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            className={`w-full py-1.5 rounded-lg text-[11px] font-bold transition-all text-center ${
+                              isSelected
+                                ? "bg-[#3d502d] text-white"
+                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                            }`}
+                          >
+                            {isSelected ? (adminLang === "ar" ? "النسق المطبق حالياً ✓" : "Active ✓") : (adminLang === "ar" ? "تطبيق هذا النسق" : "Apply Palette")}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Section 2: Custom Color Pickers (منتقيات الألوان المخصصة) */}
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-5">
+                <div className="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-gray-100">
+                  <div>
+                    <h3 className="font-bold text-lg text-[#233019] flex items-center gap-2">
+                      <Sliders className="w-5 h-5 text-[#485c36]" />
+                      <span>{adminLang === "ar" ? "2. تخصيص درجات الألوان السائدة بدقة (Custom Color Controls)" : "2. Custom Color Controls"}</span>
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {adminLang === "ar"
+                        ? "يمكنك الضغط على أي لون لتفتح منتقي الألوان أو كتابة كود الـ HEX المفضل لديك مباشرة."
+                        : "Click any color swatch to open the color picker or directly type a custom HEX code."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
+                  {/* 1. Primary Color */}
+                  <div className="p-4 rounded-2xl border border-gray-200 bg-[#fcfdfa] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-black text-xs sm:text-sm text-gray-900">
+                        {adminLang === "ar" ? "اللون الرئيسي للعلامة (Primary Brand)" : "Primary Brand Color"}
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900">
+                        أساسي
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-500">
+                      {adminLang === "ar" ? "الأزرار الرئيسية، الهيدر، أزرار الشراء، الشارات النشطة." : "Primary buttons, headers, action CTAs, active tags."}
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-gray-300 shadow-2xs shrink-0 cursor-pointer">
+                        <input
+                          type="color"
+                          value={settingsForm.themePrimary}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, themePrimary: e.target.value })}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div
+                          className="w-full h-full"
+                          style={{ backgroundColor: settingsForm.themePrimary }}
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        value={settingsForm.themePrimary}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, themePrimary: e.target.value })}
+                        className="flex-1 px-3 py-2 rounded-xl border border-gray-300 font-mono text-xs font-bold text-gray-900 focus:outline-none focus:border-[#3d502d]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 2. Secondary Color (Burgundy) */}
+                  <div className="p-4 rounded-2xl border border-gray-200 bg-[#fcfdfa] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-black text-xs sm:text-sm text-gray-900">
+                        {adminLang === "ar" ? "اللون الثانوي / الأكسنت (Secondary Accent)" : "Secondary Accent Color"}
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-100 text-rose-900">
+                        تمييز
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-500">
+                      {adminLang === "ar" ? "شارات الأدلة السريرية، أرقام الخصم، الأختام الطبية." : "Clinical evidence badges, discount rates, medical seals."}
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-gray-300 shadow-2xs shrink-0 cursor-pointer">
+                        <input
+                          type="color"
+                          value={settingsForm.themeSecondary}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, themeSecondary: e.target.value })}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div
+                          className="w-full h-full"
+                          style={{ backgroundColor: settingsForm.themeSecondary }}
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        value={settingsForm.themeSecondary}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, themeSecondary: e.target.value })}
+                        className="flex-1 px-3 py-2 rounded-xl border border-gray-300 font-mono text-xs font-bold text-gray-900 focus:outline-none focus:border-[#3d502d]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 3. Gold Accent */}
+                  <div className="p-4 rounded-2xl border border-gray-200 bg-[#fcfdfa] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-black text-xs sm:text-sm text-gray-900">
+                        {adminLang === "ar" ? "اللون الذهبي المعتق (Gold Accent)" : "Luxury Gold Accent"}
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900">
+                        فخامة
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-500">
+                      {adminLang === "ar" ? "الإطارات الذهبية، نجوم التقييم، شارات الـ VIP، الخطوط الزخرفية." : "Golden borders, review stars, VIP badges, filigree lines."}
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-gray-300 shadow-2xs shrink-0 cursor-pointer">
+                        <input
+                          type="color"
+                          value={settingsForm.themeGold}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, themeGold: e.target.value })}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div
+                          className="w-full h-full"
+                          style={{ backgroundColor: settingsForm.themeGold }}
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        value={settingsForm.themeGold}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, themeGold: e.target.value })}
+                        className="flex-1 px-3 py-2 rounded-xl border border-gray-300 font-mono text-xs font-bold text-gray-900 focus:outline-none focus:border-[#3d502d]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 4. Canvas Background */}
+                  <div className="p-4 rounded-2xl border border-gray-200 bg-[#fcfdfa] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-black text-xs sm:text-sm text-gray-900">
+                        {adminLang === "ar" ? "لون خلفية المتجر العامة (Canvas Background)" : "Canvas Background Color"}
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-800">
+                        خلفية
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-500">
+                      {adminLang === "ar" ? "الخلفية العامة لكافة صفحات المتجر والرق العاجي." : "Main page background tone and parchment layers."}
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-gray-300 shadow-2xs shrink-0 cursor-pointer">
+                        <input
+                          type="color"
+                          value={settingsForm.themeBackground}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, themeBackground: e.target.value })}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div
+                          className="w-full h-full"
+                          style={{ backgroundColor: settingsForm.themeBackground }}
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        value={settingsForm.themeBackground}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, themeBackground: e.target.value })}
+                        className="flex-1 px-3 py-2 rounded-xl border border-gray-300 font-mono text-xs font-bold text-gray-900 focus:outline-none focus:border-[#3d502d]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 5. Surface / Card Color */}
+                  <div className="p-4 rounded-2xl border border-gray-200 bg-[#fcfdfa] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-black text-xs sm:text-sm text-gray-900">
+                        {adminLang === "ar" ? "لون كروت وبطاقات المحتوى (Card Surface)" : "Card Surface Color"}
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-800">
+                        بطاقات
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-500">
+                      {adminLang === "ar" ? "خلفية بطاقات المستحضرات، صناديق المحتوى، القوائم البيضاء." : "Product cards backdrop, modals, dossier surface."}
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-gray-300 shadow-2xs shrink-0 cursor-pointer">
+                        <input
+                          type="color"
+                          value={settingsForm.themeSurface}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, themeSurface: e.target.value })}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div
+                          className="w-full h-full"
+                          style={{ backgroundColor: settingsForm.themeSurface }}
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        value={settingsForm.themeSurface}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, themeSurface: e.target.value })}
+                        className="flex-1 px-3 py-2 rounded-xl border border-gray-300 font-mono text-xs font-bold text-gray-900 focus:outline-none focus:border-[#3d502d]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 6. Text Color */}
+                  <div className="p-4 rounded-2xl border border-gray-200 bg-[#fcfdfa] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-black text-xs sm:text-sm text-gray-900">
+                        {adminLang === "ar" ? "لون النصوص الرئيسي (Typography Text)" : "Typography Text Color"}
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-800">
+                        نصوص
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-500">
+                      {adminLang === "ar" ? "عناوين ونصوص المتجر وتفاصيل التركيبات." : "Headings, body typography, product details."}
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-gray-300 shadow-2xs shrink-0 cursor-pointer">
+                        <input
+                          type="color"
+                          value={settingsForm.themeText}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, themeText: e.target.value })}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div
+                          className="w-full h-full"
+                          style={{ backgroundColor: settingsForm.themeText }}
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        value={settingsForm.themeText}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, themeText: e.target.value })}
+                        className="flex-1 px-3 py-2 rounded-xl border border-gray-300 font-mono text-xs font-bold text-gray-900 focus:outline-none focus:border-[#3d502d]"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 3: Live Interactive Preview Studio (استوديو المعاينة الحية المباشرة) */}
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-4">
+                <div className="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-gray-100">
+                  <div>
+                    <h3 className="font-bold text-lg text-[#233019] flex items-center gap-2">
+                      <Eye className="w-5 h-5 text-emerald-700" />
+                      <span>{adminLang === "ar" ? "3. استوديو المعاينة الحية التفاعلية (Live Storefront Preview)" : "3. Live Interactive Storefront Preview"}</span>
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {adminLang === "ar"
+                        ? "هذه المعاينة تعكس تلقائياً الألوان التي اخترتها بالأعلى في الزمن الحقيقي لتتأكد من تناسقها قبل الحفظ."
+                        : "Real-time preview of how components, cards, buttons, and typography harmonize together."}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Simulated Storefront Container */}
+                <div
+                  className="p-6 sm:p-8 rounded-3xl border-2 transition-all shadow-inner relative overflow-hidden"
+                  style={{
+                    backgroundColor: settingsForm.themeBackground,
+                    borderColor: settingsForm.themeGold,
+                  }}
+                >
+                  <div className="max-w-md mx-auto space-y-5 font-cairo">
+                    {/* Simulated Top Mini Bar */}
+                    <div className="flex items-center justify-between pb-3 border-b border-black/10">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="font-amiri font-bold text-lg"
+                          style={{ color: settingsForm.themePrimary }}
+                        >
+                          سُـلاف | SULAF
+                        </span>
+                      </div>
+                      <span
+                        className="text-[11px] font-bold px-2.5 py-1 rounded-full text-white shadow-2xs"
+                        style={{ backgroundColor: settingsForm.themePrimary }}
+                      >
+                        متجر معتمد ✓
+                      </span>
+                    </div>
+
+                    {/* Simulated Product Card */}
+                    <div
+                      className="p-5 rounded-2xl border shadow-sm space-y-3.5 transition-all"
+                      style={{
+                        backgroundColor: settingsForm.themeSurface,
+                        borderColor: settingsForm.themeGold,
+                      }}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span
+                            className="text-[10px] font-extrabold uppercase tracking-wider block"
+                            style={{ color: settingsForm.themeSecondary }}
+                          >
+                            كوزموسوتيكالز • ترخيص سريري
+                          </span>
+                          <h4
+                            className="font-black text-base mt-0.5"
+                            style={{ color: settingsForm.themeText }}
+                          >
+                            كريم سُلاف لترميم ونعومة البشرة (Absolutes)
+                          </h4>
+                        </div>
+                        <span
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-md text-white shrink-0"
+                          style={{ backgroundColor: settingsForm.themeSecondary }}
+                        >
+                          -20% خصم
+                        </span>
+                      </div>
+
+                      {/* Stars & Rating */}
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <div className="flex items-center text-sm" style={{ color: settingsForm.themeGold }}>
+                          {"★".repeat(5)}
+                        </div>
+                        <span className="font-bold text-[11px]" style={{ color: settingsForm.themeText }}>
+                          4.98 (128 تقييم صيدلاني موثق)
+                        </span>
+                      </div>
+
+                      <p className="text-xs leading-relaxed opacity-80" style={{ color: settingsForm.themeText }}>
+                        تركيبة علاجية متقدمة بيوريا 30% وحمض اللاكتيك والساليسيليك لإعادة النعومة الحريرية بدون احتكاك.
+                      </p>
+
+                      <div className="pt-2 border-t border-black/5 flex items-center justify-between gap-3">
+                        <div>
+                          <span className="text-[10px] text-gray-500 block font-semibold">السعر الرسمي:</span>
+                          <span
+                            className="font-black text-lg"
+                            style={{ color: settingsForm.themeSecondary }}
+                          >
+                            420 ج.م
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          className="px-5 py-2.5 rounded-xl font-bold text-xs text-white shadow-md transition-transform active:scale-95 cursor-pointer"
+                          style={{ backgroundColor: settingsForm.themePrimary }}
+                        >
+                          أضف للسلة الآن 🛍️
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Action Bar */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-[#dbe2bd] shadow-sm">
+                <div className="flex items-center gap-2 text-xs text-gray-600 font-bold">
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <span>{adminLang === "ar" ? "يتم حفظ التعديلات وحقنها مباشرة في الموقع وكافة الصفحات." : "Changes are saved and injected across all site pages instantly."}</span>
+                </div>
+
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={handleResetThemeToDefault}
+                    className="flex-1 sm:flex-initial px-5 py-3 rounded-xl border border-gray-300 text-gray-700 font-bold text-xs hover:bg-gray-100 transition-colors cursor-pointer"
+                  >
+                    {adminLang === "ar" ? "استعادة الافتراضيات" : "Reset Defaults"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSaveThemeDirectly}
+                    disabled={isThemeSaving}
+                    className="flex-1 sm:flex-initial px-8 py-3 rounded-xl bg-[#3d502d] hover:bg-[#2b3a1f] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                    <span>{isThemeSaving ? (adminLang === "ar" ? "جاري الحفظ..." : "Saving...") : (adminLang === "ar" ? "حفظ وتطبيق الألوان الآن ✓" : "Save & Apply Colors ✓")}</span>
+                  </button>
+                </div>
               </div>
             </div>
           )}
