@@ -10,7 +10,6 @@ interface MarblePodiumProps {
   size?: "sm" | "md" | "lg";
   className?: string;
   showOrbs?: boolean;
-  priority?: boolean;
 }
 
 export function MarblePodium({
@@ -18,7 +17,6 @@ export function MarblePodium({
   alt,
   size = "md",
   className = "",
-  priority = false,
 }: MarblePodiumProps) {
   const sizeConfig = {
     sm: { height: "h-40 sm:h-44", podiumW: "w-36 sm:w-40", imgSize: 105 },
@@ -44,8 +42,7 @@ export function MarblePodium({
           width={config.imgSize}
           height={config.imgSize}
           className="object-contain max-h-36 transition-transform duration-500 hover:scale-105"
-          priority={priority}
-          loading={priority ? "eager" : "lazy"}
+          priority
         />
       </motion.div>
 

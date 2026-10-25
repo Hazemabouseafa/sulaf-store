@@ -13,20 +13,20 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
   const [lenis, setLenis] = useState<Lenis | null>(null);
 
   useEffect(() => {
-    // Check user preference for reduced motion or mobile viewport
+    // Check user preference for reduced motion
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const isMobile = window.innerWidth < 768;
-    if (prefersReducedMotion || isMobile) {
+    if (prefersReducedMotion) {
       return;
     }
 
     const lenisInstance = new Lenis({
-      duration: 1.0,
+      duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: "vertical",
       gestureOrientation: "vertical",
       smoothWheel: true,
       wheelMultiplier: 1,
+      touchMultiplier: 1.5,
     });
 
     setLenis(lenisInstance);

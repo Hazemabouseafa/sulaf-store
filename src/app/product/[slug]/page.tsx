@@ -129,7 +129,6 @@ export default function ProductStoryPage() {
                 imageSrc={product.images[0]?.url || "/brand/sulaf-flower-symbol.png"}
                 alt="Absolutes Smoothing Body Cream Front View"
                 size="lg"
-                priority={true}
               />
 
               {vis.productSignaturePoemVis !== false && (
