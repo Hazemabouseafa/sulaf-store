@@ -117,7 +117,7 @@ export default function ProductStoryPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Visual Column: Marble Podium Presentation */}
-            <div className="lg:col-span-6 flex flex-col items-center justify-center p-8 rounded-3xl bg-white/80 border border-[#e2e8c0] shadow-sm relative overflow-hidden">
+            <div className="lg:col-span-6 flex flex-col items-center justify-center p-4 sm:p-8 rounded-3xl bg-white/80 border border-[#e2e8c0] shadow-sm relative overflow-hidden">
               <div className="absolute top-4 start-4 z-20">
                 <span className="px-3.5 py-1 rounded-full text-xs font-bold font-cairo bg-[#ca384a] text-white shadow-sm flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5" />
@@ -247,18 +247,18 @@ export default function ProductStoryPage() {
               </div>
 
               {/* Quantity and Add to Cart Buttons */}
-              <div className="flex items-center gap-4 pt-2">
-                <div className="flex items-center border border-[#e2e8c0] rounded-2xl overflow-hidden bg-white p-1">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-2">
+                <div className="flex items-center justify-between sm:justify-start border border-[#e2e8c0] rounded-2xl overflow-hidden bg-white p-1">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="p-2 hover:bg-black/5 text-[#485c36] cursor-pointer"
+                    className="p-2 sm:p-2.5 hover:bg-black/5 text-[#485c36] cursor-pointer"
                   >
                     <Minus className="w-4 h-4" />
                   </button>
                   <span className="px-4 text-sm font-bold font-cairo">{quantity}</span>
                   <button
                     onClick={() => setQuantity(quantity + 1)}
-                    className="p-2 hover:bg-black/5 text-[#485c36] cursor-pointer"
+                    className="p-2 sm:p-2.5 hover:bg-black/5 text-[#485c36] cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
@@ -266,7 +266,7 @@ export default function ProductStoryPage() {
 
                 <button
                   onClick={handleAddToCart}
-                  className={`flex-1 py-4 px-6 rounded-2xl font-cairo font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 cursor-pointer ${
+                  className={`flex-1 py-3.5 sm:py-4 px-4 sm:px-6 rounded-2xl font-cairo font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 cursor-pointer ${
                     added
                       ? "bg-green-700 text-white"
                       : "bg-[#485c36] hover:bg-[#3a4a2b] text-[#f6f9e6]"
@@ -284,17 +284,17 @@ export default function ProductStoryPage() {
               </div>
 
               {/* Guarantees */}
-              <div className="grid grid-cols-3 gap-2 pt-3 border-t border-[#e2e8c0] text-center font-cairo text-[11px] text-gray-700 font-semibold">
-                <div className="p-2.5 rounded-xl bg-white border border-[#e2e8c0]">
-                  <Truck className="w-4 h-4 text-[#485c36] mx-auto mb-1" />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-3 border-t border-[#e2e8c0] text-center font-cairo text-xs text-gray-700 font-semibold">
+                <div className="p-2.5 rounded-xl bg-white border border-[#e2e8c0] flex sm:flex-col items-center justify-center gap-2 sm:gap-1">
+                  <Truck className="w-4 h-4 text-[#485c36] shrink-0" />
                   <span>{custom.productGuarantee1 || (isArabic ? "شحن سريع لكافة المحافظات" : "Express Nationwide Delivery")}</span>
                 </div>
-                <div className="p-2.5 rounded-xl bg-white border border-[#e2e8c0]">
-                  <ShieldCheck className="w-4 h-4 text-[#485c36] mx-auto mb-1" />
+                <div className="p-2.5 rounded-xl bg-white border border-[#e2e8c0] flex sm:flex-col items-center justify-center gap-2 sm:gap-1">
+                  <ShieldCheck className="w-4 h-4 text-[#485c36] shrink-0" />
                   <span>{custom.productGuarantee2 || (isArabic ? "تحول ملمس الحرير في 7 أيام" : "Silk Skin in 7 Days")}</span>
                 </div>
-                <div className="p-2.5 rounded-xl bg-white border border-[#e2e8c0]">
-                  <CheckCircle2 className="w-4 h-4 text-[#485c36] mx-auto mb-1" />
+                <div className="p-2.5 rounded-xl bg-white border border-[#e2e8c0] flex sm:flex-col items-center justify-center gap-2 sm:gap-1">
+                  <CheckCircle2 className="w-4 h-4 text-[#485c36] shrink-0" />
                   <span>{custom.productGuarantee3 || (isArabic ? "فحص العبوة قبل الاستلام" : "Inspect on Delivery")}</span>
                 </div>
               </div>

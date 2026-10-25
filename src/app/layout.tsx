@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { LenisProvider } from "@/components/motion/LenisProvider";
 import { CartProvider } from "@/lib/cart/cart-context";
@@ -20,6 +20,15 @@ function getServerSettings() {
   } catch (e) {}
   return null;
 }
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover",
+  themeColor: "#3d502d",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://sulaf.com"),

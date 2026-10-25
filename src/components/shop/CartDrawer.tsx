@@ -74,7 +74,7 @@ export function CartDrawer() {
       />
 
       {/* Slide-out Sheet */}
-      <div className={`relative z-10 w-full max-w-md bg-[#fafcf3] text-[#222b1a] h-full shadow-2xl flex flex-col justify-between overflow-hidden animate-in duration-300 ${
+      <div className={`relative z-10 w-full sm:max-w-md bg-[#fafcf3] text-[#222b1a] h-full shadow-2xl flex flex-col justify-between overflow-hidden animate-in duration-300 ${
         isArabic ? "slide-in-from-left" : "slide-in-from-right"
       }`}>
         {/* Drawer Header */}
@@ -209,7 +209,7 @@ export function CartDrawer() {
 
         {/* Footer & Checkout Breakdown */}
         {items.length > 0 && (
-          <div className="p-5 border-t border-[#e2e8c0] bg-white space-y-4 shadow-lg">
+          <div className="p-4 sm:p-5 border-t border-[#e2e8c0] bg-white space-y-3 sm:space-y-4 shadow-lg pb-safe">
             {/* Dual Payment Option Selector (Deposit vs Full) */}
             <div className="p-3 rounded-2xl bg-[#fafcf3] border border-[#e2e8c0] space-y-2">
               <span className="block text-xs font-bold text-[#485c36]">

@@ -290,7 +290,7 @@ export default function CheckoutPage() {
           {/* Main Delivery & Payment Details */}
           <div className="lg:col-span-7 space-y-6">
             {/* Step 1: Delivery Address */}
-            <div className="p-6 rounded-3xl bg-white border border-[#e2e8c0] shadow-sm space-y-4">
+            <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-[#e2e8c0] shadow-sm space-y-4">
               <div className="flex items-center gap-2 border-b border-[#e2e8c0] pb-3">
                 <Truck className="w-5 h-5 text-[#485c36]" />
                 <h3 className="font-amiri text-xl font-bold text-[#222b1a]">
@@ -428,7 +428,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* Step 2: Payment Policy & Methods */}
-            <div className="p-6 rounded-3xl bg-white border border-[#e2e8c0] shadow-sm space-y-4">
+            <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-[#e2e8c0] shadow-sm space-y-4">
               <div className="flex items-center gap-2 border-b border-[#e2e8c0] pb-3">
                 <CreditCard className="w-5 h-5 text-[#485c36]" />
                 <h3 className="font-amiri text-xl font-bold text-[#222b1a]">
@@ -566,7 +566,7 @@ export default function CheckoutPage() {
 
           {/* Sticky Order Summary & Submit Column */}
           <div className="lg:col-span-5 space-y-5 sticky top-28">
-            <div className="p-6 rounded-3xl bg-white border border-[#e2e8c0] shadow-sm space-y-4">
+            <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-[#e2e8c0] shadow-sm space-y-4">
               <h3 className="font-amiri text-xl font-bold text-[#485c36] border-b border-[#e2e8c0] pb-3">
                 {t.checkout.orderSummary.replace('{count}', items.length.toString())}
               </h3>

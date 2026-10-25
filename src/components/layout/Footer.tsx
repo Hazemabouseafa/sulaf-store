@@ -43,7 +43,8 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-[#f6f9e6]/15">
           {/* Col 1: Brand Info */}
           <div className="lg:col-span-2 space-y-4">
-            <SulafLogo size="lg" color="cream" />
+            <SulafLogo size="md" color="cream" className="sm:hidden" />
+            <SulafLogo size="lg" color="cream" className="hidden sm:inline-flex" />
             <p className={`${isArabic ? "font-amiri text-base" : "font-cormorant italic text-sm"} text-[#f3e5ab] font-bold tracking-wide`}>
               {isArabic ? "حيث يلتقي العلم الصيدلاني بالجمال." : "Where Pharmaceutical Science Meets Beauty."}
             </p>
@@ -169,7 +170,7 @@ export function Footer() {
 
         {/* Bottom Bar: Payments & Copyright */}
         <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[#f6f9e6]/70">
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center justify-center md:justify-start gap-2 sm:gap-3 flex-wrap">
             <span className="font-semibold text-white">{isArabic ? "طرق الدفع:" : "Payment:"}</span>
             <span className="bg-white/15 px-2.5 py-1 rounded-md text-[11px]">Paymob Accept</span>
             <span className="bg-white/15 px-2.5 py-1 rounded-md text-[11px]">Visa / Mastercard</span>

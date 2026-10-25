@@ -50,7 +50,7 @@ export function MarblePodium({
       <div className="absolute bottom-5 z-10 w-28 h-5 bg-black/15 rounded-full blur-md transform scale-y-50" />
 
       {/* Luxury White Carrara / Green Marble Tiered Podium */}
-      <div className={`relative z-10 flex flex-col items-center ${config.podiumW}`}>
+      <div className={`relative z-10 flex flex-col items-center max-w-full ${config.podiumW}`}>
         {/* Upper Marble Disk with Gold Bevel */}
         <div className="w-full h-7 rounded-full bg-gradient-to-r from-[#fbfdf7] via-[#f0f4e3] to-[#e6ecd2] border-t-2 border-[#d4af37]/60 shadow-[inset_0_2px_4px_rgba(255,255,255,0.9),0_4px_10px_rgba(72,92,54,0.12)] flex items-center justify-center relative overflow-hidden">
           {/* Subtle Marble Vein Lines */}

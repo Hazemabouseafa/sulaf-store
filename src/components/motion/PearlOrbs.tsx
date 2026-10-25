@@ -296,7 +296,7 @@ export function PearlOrbs({
                 transition={{ duration: 0.7, delay: index * 0.18 }}
                 whileHover={{ scale: 1.04, y: -6 }}
                 onClick={() => setActiveOrb(orb)}
-                className="group relative cursor-pointer flex flex-col items-center text-center p-7 rounded-3xl bg-white/85 backdrop-blur-md border-2 border-[#d4af37]/35 shadow-[0_12px_36px_-6px_rgba(72,92,54,0.15)] hover:shadow-[0_24px_50px_-8px_rgba(72,92,54,0.28)] transition-all duration-500"
+                className="group relative cursor-pointer flex flex-col items-center text-center p-5 sm:p-7 rounded-2xl sm:rounded-3xl bg-white/85 backdrop-blur-md border-2 border-[#d4af37]/35 shadow-[0_12px_36px_-6px_rgba(72,92,54,0.15)] hover:shadow-[0_24px_50px_-8px_rgba(72,92,54,0.28)] transition-all duration-500"
               >
                 {/* Pearl Orb Sphere Visual */}
                 <div className="relative w-32 h-32 mb-5 rounded-full flex items-center justify-center bg-gradient-to-br from-[#ffffff] via-[#f6f9e6] to-[#e4eac4] p-2 shadow-[inset_0_4px_16px_rgba(255,255,255,0.95),0_14px_30px_rgba(72,92,54,0.18)] ring-2 ring-[#d4af37]/40 group-hover:ring-[#d4af37]/90 transition-all duration-500">
@@ -352,10 +352,10 @@ export function PearlOrbs({
                 transition={{ duration: 0.6, delay: 0.3 + index * 0.15 }}
                 whileHover={{ scale: 1.03, y: -4 }}
                 onClick={() => setActiveOrb(orb)}
-                className="group relative cursor-pointer flex flex-col items-center text-center p-6 rounded-3xl bg-white/80 backdrop-blur-md border border-[#e2e8c0] shadow-md hover:shadow-xl transition-all duration-400"
+                className="group relative cursor-pointer flex flex-col items-center text-center p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/80 backdrop-blur-md border border-[#e2e8c0] shadow-md hover:shadow-xl transition-all duration-400"
               >
                 {/* Secondary Orb Sphere */}
-                <div className="relative w-24 h-24 mb-4 rounded-full flex items-center justify-center bg-gradient-to-br from-[#ffffff] via-[#f7f9ee] to-[#dfe5be] p-2 shadow-[inset_0_3px_10px_rgba(255,255,255,0.9),0_10px_20px_rgba(72,92,54,0.12)] ring-1 ring-[#d4af37]/30 group-hover:ring-[#d4af37]/70 transition-all">
+                <div className="relative w-20 sm:w-24 h-20 sm:h-24 mb-4 rounded-full flex items-center justify-center bg-gradient-to-br from-[#ffffff] via-[#f7f9ee] to-[#dfe5be] p-2 shadow-[inset_0_3px_10px_rgba(255,255,255,0.9),0_10px_20px_rgba(72,92,54,0.12)] ring-1 ring-[#d4af37]/30 group-hover:ring-[#d4af37]/70 transition-all">
                   <div className="absolute top-1.5 left-3 w-7 h-3 rounded-full bg-white/90 blur-[0.5px] transform -rotate-45 pointer-events-none" />
                   <div className="relative z-10 transition-transform duration-400 group-hover:scale-110">
                     <MoleculeSvg type={orb.svgType} />
@@ -386,8 +386,8 @@ export function PearlOrbs({
 
       {/* Modal Popup for Selected Orb Mechanism */}
       {activeOrb && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 font-cairo" dir={isArabic ? "rtl" : "ltr"}>
-          <div className="relative w-full max-w-lg p-6 md:p-8 rounded-3xl bg-[#f6f9e6] border-2 border-[#d4af37]/50 shadow-2xl text-[#1c2616]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 font-cairo" dir={isArabic ? "rtl" : "ltr"}>
+          <div className="relative w-full max-w-lg p-5 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl bg-[#f6f9e6] border-2 border-[#d4af37]/50 shadow-2xl text-[#1c2616] max-h-[90dvh] overflow-y-auto">
             {/* Close Button */}
             <button
               onClick={() => setActiveOrb(null)}

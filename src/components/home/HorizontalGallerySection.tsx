@@ -92,13 +92,13 @@ export function HorizontalGallerySection() {
         {/* Horizontal Scrolling Track */}
         <div
           ref={scrollContainerRef}
-          className="flex gap-6 overflow-x-auto pb-6 scrollbar-none snap-x snap-mandatory"
+          className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 scrollbar-none snap-x snap-mandatory px-1"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {getStoredProducts().map((prod) => (
             <div
               key={prod.id}
-              className="w-[280px] sm:w-[320px] md:w-[350px] shrink-0 snap-center"
+              className="w-[82vw] max-w-[300px] sm:w-[320px] md:w-[350px] shrink-0 snap-center"
             >
               <ProductCard
                 product={prod}

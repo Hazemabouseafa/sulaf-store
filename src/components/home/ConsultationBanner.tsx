@@ -44,12 +44,12 @@ export function ConsultationBanner() {
         </p>
       )}
 
-        <div className="pt-2 flex flex-wrap items-center justify-center gap-4">
+        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 max-w-xs sm:max-w-none mx-auto">
           <a
             href={`https://wa.me/${SULAF_SETTINGS.whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`}
             target="_blank"
             rel="noreferrer"
-            className="px-8 py-3.5 rounded-2xl bg-[#485c36] hover:bg-[#3a4a2b] text-[#f6f9e6] font-cairo font-bold text-xs flex items-center gap-2 shadow-lg transition-transform active:scale-95"
+            className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-[#485c36] hover:bg-[#3a4a2b] text-[#f6f9e6] font-cairo font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-95"
           >
             <MessageCircle className="w-4 h-4 text-green-300" />
             <span>{custom.consultationButtonText || t.consultationBanner.whatsappBtn}</span>
@@ -57,7 +57,7 @@ export function ConsultationBanner() {
 
           <Link
             href="/shop"
-            className="px-6 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-cairo font-semibold text-xs border border-white/20 transition-colors"
+            className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-cairo font-semibold text-xs border border-white/20 transition-colors flex items-center justify-center"
           >
             {t.consultationBanner.exploreStore}
           </Link>

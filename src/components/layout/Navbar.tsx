@@ -70,6 +70,18 @@ export function Navbar() {
     setMobileMenuOpen(false);
   }, [pathname]);
 
+  // Lock body scroll on mobile when menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
   // Handle outside click
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -136,10 +148,11 @@ export function Navbar() {
           {/* Brand Logo */}
           <Link
             href="/"
-            className="flex items-center gap-3 shrink-0 group focus:outline-none"
+            className="flex items-center gap-2 sm:gap-3 shrink-0 group focus:outline-none"
             aria-label="سُـلاف | Sulaf"
           >
-            <SulafLogo size="md" color="green" />
+            <SulafLogo size="sm" color="green" className="sm:hidden" />
+            <SulafLogo size="md" color="green" className="hidden sm:inline-flex" />
           </Link>
 
           {/* Desktop Navigation with Dropdowns */}
@@ -338,12 +351,12 @@ export function Navbar() {
           </div>
 
           {/* Action Utilities Area */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            {/* 1. Language Toggle Pill */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
+            {/* 1. Language Toggle Pill (Visible on tablet/desktop, mobile drawer has dedicated switcher) */}
             <button
               type="button"
               onClick={toggleLanguage}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-[#485c36]/30 hover:border-[#485c36] bg-white text-[#2c3821] text-xs font-bold transition-all hover:shadow-xs active:scale-95 cursor-pointer"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-[#485c36]/30 hover:border-[#485c36] bg-white text-[#2c3821] text-xs font-bold transition-all hover:shadow-xs active:scale-95 cursor-pointer"
               title={isArabic ? "Switch website to English" : "تغيير واجهة المتجر إلى العربية"}
               aria-label="Toggle language"
             >
@@ -359,10 +372,10 @@ export function Navbar() {
               </div>
             </button>
 
-            {/* Customer Account Portal Shortcut */}
+            {/* Customer Account Portal Shortcut (Visible on tablet/desktop, inside mobile drawer on small screens) */}
             <Link
               href="/account"
-              className={`inline-flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs ${
+              className={`hidden sm:inline-flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs ${
                 pathname === "/account"
                   ? "bg-[#485c36] text-white border-[#485c36]"
                   : "bg-white border-[#e2e8c0] hover:border-[#485c36] text-[#2c3821]"
@@ -383,7 +396,7 @@ export function Navbar() {
             <button
               type="button"
               onClick={openCart}
-              className="relative inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#485c36] hover:bg-[#38482a] text-[#f6f9e6] font-bold text-xs shadow-md border border-[#d4af37]/40 transition-all active:scale-95 cursor-pointer"
+              className="relative inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 rounded-xl bg-[#485c36] hover:bg-[#38482a] text-[#f6f9e6] font-bold text-xs shadow-md border border-[#d4af37]/40 transition-all active:scale-95 cursor-pointer"
               aria-label={t.nav.cart}
             >
               <ShoppingBag className="w-4 h-4 text-[#f3e5ab]" />
@@ -404,6 +417,7 @@ export function Navbar() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden p-2 rounded-xl text-[#2c3821] bg-white border border-[#e2e8c0] hover:bg-[#f6f9e6] transition-colors cursor-pointer"
               aria-label={mobileMenuOpen ? t.nav.close : t.nav.menu}
+              aria-expanded={mobileMenuOpen}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -415,7 +429,7 @@ export function Navbar() {
       {mobileMenuOpen && (
         <div
           style={{ top: `${headerHeight}px` }}
-          className="lg:hidden fixed inset-x-0 bottom-0 z-50 bg-[#fafcf3]/98 backdrop-blur-2xl border-t border-[#d8dfbe] p-5 overflow-y-auto animate-in slide-in-from-top-4 duration-200"
+          className="lg:hidden fixed inset-x-0 bottom-0 z-50 bg-[#fafcf3]/98 backdrop-blur-2xl border-t border-[#d8dfbe] p-5 pb-safe overflow-y-auto animate-in slide-in-from-top-4 duration-200"
         >
           <div className="flex flex-col space-y-4 max-w-md mx-auto">
             {/* Language Switcher Bar in Mobile Drawer */}
