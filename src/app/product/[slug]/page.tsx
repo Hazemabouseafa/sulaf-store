@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { MOCK_PRODUCTS, ProductData } from "@/lib/data/mock-data";
+import { ReviewItem } from "@/lib/reviews/review-store";
 import { getStoredProducts } from "@/lib/products/product-store";
 import { useCart } from "@/lib/cart/cart-context";
 import { useLanguage } from "@/lib/i18n/language-context";
@@ -29,6 +30,9 @@ import {
   FlaskConical,
   Flame,
   AlertCircle,
+  MessageSquare,
+  Send,
+  UserCheck,
 } from "lucide-react";
 
 export default function ProductStoryPage() {
@@ -76,6 +80,80 @@ export default function ProductStoryPage() {
   const [quantity, setQuantity] = useState(1);
   const [depositChoice, setDepositChoice] = useState<boolean>(true);
   const [added, setAdded] = useState(false);
+
+  // Reviews & Feedback State
+  const [productReviews, setProductReviews] = useState<ReviewItem[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [feedbackRating, setFeedbackRating] = useState<number>(5);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [feedbackName, setFeedbackName] = useState('');
+  const [feedbackRole, setFeedbackRole] = useState('');
+  const [feedbackComment, setFeedbackComment] = useState('');
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackSuccess, setFeedbackSuccess] = useState(false);
+  const [feedbackError, setFeedbackError] = useState('');
+
+  const loadProductReviews = () => {
+    if (!product?.id) return;
+    setReviewsLoading(true);
+    fetch('/api/reviews?status=APPROVED&productId=' + encodeURIComponent(product.id))
+      .then((res) => (res.ok ? res.json() : null))
+      .then((d) => {
+        if (d && Array.isArray(d.reviews)) {
+          setProductReviews(d.reviews);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setReviewsLoading(false));
+  };
+
+  useEffect(() => {
+    loadProductReviews();
+  }, [product.id]);
+
+  const reviewsCount = productReviews.length;
+  const avgRating = reviewsCount > 0
+    ? (productReviews.reduce((acc, r) => acc + (r.rating || 5), 0) / reviewsCount).toFixed(1)
+    : null;
+
+  const handleSubmitFeedback = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!feedbackName.trim() || !feedbackComment.trim()) {
+      setFeedbackError(isArabic ? 'يرجى كتابة اسمك وتفاصيل رأيك.' : 'Please enter your name and review details.');
+      return;
+    }
+
+    setFeedbackLoading(true);
+    setFeedbackError('');
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: product.id,
+          productName,
+          authorName: feedbackName.trim(),
+          authorRole: feedbackRole.trim() || (isArabic ? 'عميلة موثقة' : 'Verified Customer'),
+          rating: feedbackRating,
+          comment: feedbackComment.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setFeedbackSuccess(true);
+        setFeedbackName('');
+        setFeedbackRole('');
+        setFeedbackComment('');
+        setFeedbackRating(5);
+      } else {
+        setFeedbackError(data.error || (isArabic ? 'حدث خطأ أثناء إرسال الرأي.' : 'Failed to submit review.'));
+      }
+    } catch (err: any) {
+      setFeedbackError(err.message || (isArabic ? 'حدث خطأ في الاتصال.' : 'Network error.'));
+    } finally {
+      setFeedbackLoading(false);
+    }
+  };
 
   const selectedVariant =
     product.variants.find((v) => v.id === selectedVariantId) || product.variants[0];
@@ -153,13 +231,28 @@ export default function ProductStoryPage() {
               <div className="flex items-center gap-2 text-xs font-cairo text-amber-600">
                 <div className="flex items-center">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-amber-500 text-amber-500" />
+                    <Star
+                      key={i}
+                      className={`w-4 h-4 ${
+                        reviewsCount > 0 && i < Math.round(Number(avgRating))
+                          ? 'fill-amber-500 text-amber-500'
+                          : 'text-gray-300'
+                      }`}
+                    />
                   ))}
                 </div>
-                <span className="font-bold text-gray-800">4.96</span>
-                <span className="text-gray-500 font-medium">
-                  {custom.productReviewsBadge || (isArabic ? "(128 تقييم سريري معتمد • تقييم أطباء الجلدية)" : "(128 verified clinical reviews • Dermatologist endorsed)")}
-                </span>
+                {reviewsCount > 0 ? (
+                  <>
+                    <span className="font-bold text-gray-800">{avgRating}</span>
+                    <span className="text-gray-500 font-medium">
+                      ({reviewsCount} {isArabic ? 'تقييم معتمد' : 'verified reviews'})
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-gray-500 font-medium">
+                    {isArabic ? '(لا توجد تقييمات منشورة بعد — كوني أول من يقيم)' : '(No verified reviews yet — be first to review)'}
+                  </span>
+                )}
               </div>
 
               <div>
@@ -539,6 +632,263 @@ export default function ProductStoryPage() {
           >
             &ldquo;Never was Sulaf&apos;s gentleness poured into our healing, but that grace triumphed, undefeated.&rdquo;
           </motion.p>
+        </div>
+      </section>
+
+      {/* 6.5 Customer Reviews & Feedback Section */}
+      <section id="reviews" className="py-20 bg-white border-b border-[#e2e8c0]">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#485c36]/10 text-[#485c36] text-xs font-cairo font-bold mb-3">
+              <ShieldCheck className="w-4 h-4" />
+              <span>{isArabic ? 'تجارب موثقة وسريرية' : 'Verified Experiences'}</span>
+            </div>
+            <h2 className="font-amiri text-3xl sm:text-4xl font-bold text-[#485c36]">
+              {isArabic ? 'تقييمات وآراء العملاء' : 'Customer Reviews & Experiences'}
+            </h2>
+            <p className="mt-2 text-xs sm:text-sm text-gray-600 font-cairo">
+              {isArabic
+                ? 'تجارب حقيقية لعميلاتنا بعد استخدام المستحضر معتمدة من إدارة سُلاف'
+                : 'Real experiences approved by Sulaf Store Management'}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Reviews List Column (7 cols) */}
+            <div className="lg:col-span-7 space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-[#e2e8c0]">
+                <h3 className="font-cairo font-bold text-base text-[#1c2616]">
+                  {isArabic ? 'التقييمات المعتمدة' : 'Approved Reviews'}
+                </h3>
+                <span className="text-xs px-2.5 py-1 rounded-full bg-[#f6f9e6] text-[#485c36] font-mono font-bold">
+                  {reviewsCount} {isArabic ? 'رأي معتمد' : 'approved'}
+                </span>
+              </div>
+
+              {reviewsLoading ? (
+                <div className="p-8 text-center text-xs font-cairo text-gray-500 bg-[#f6f9e6]/50 rounded-2xl border border-[#e2e8c0]">
+                  {isArabic ? 'جارِ تحميل التقييمات...' : 'Loading reviews...'}
+                </div>
+              ) : reviewsCount === 0 ? (
+                <div className="p-8 text-center bg-[#f6f9e6]/60 rounded-3xl border border-dashed border-[#ccd6a3] space-y-3">
+                  <div className="w-12 h-12 mx-auto rounded-full bg-[#485c36]/10 flex items-center justify-center text-[#485c36]">
+                    <Star className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-cairo font-bold text-sm text-[#222b1a]">
+                    {isArabic ? 'لا توجد تقييمات منشورة بعد لهذا المنتج' : 'No approved reviews yet for this product'}
+                  </h4>
+                  <p className="font-cairo text-xs text-gray-600 max-w-sm mx-auto leading-relaxed">
+                    {isArabic
+                      ? 'كوني أول من يشارك تجربته مع هذا المستحضر عبر النموذج المجاور!'
+                      : 'Be the first to share your experience using the form on the side!'}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {productReviews.map((rev) => (
+                    <div
+                      key={rev.id}
+                      className="p-5 rounded-2xl bg-[#f6f9e6]/40 border border-[#e2e8c0] shadow-sm text-start space-y-2.5"
+                    >
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-cairo font-bold text-sm text-[#1c2616]">
+                            {rev.authorName}
+                          </span>
+                          {rev.authorRole && (
+                            <span className="px-2 py-0.5 rounded-full text-[11px] font-cairo font-bold bg-[#485c36]/10 text-[#485c36] flex items-center gap-1">
+                              <UserCheck className="w-3 h-3" />
+                              {rev.authorRole}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3.5 h-3.5 ${
+                                i < rev.rating
+                                  ? 'fill-amber-500 text-amber-500'
+                                  : 'text-gray-300'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {rev.title && (
+                        <h5 className="font-cairo font-bold text-xs text-[#485c36]">
+                          {rev.title}
+                        </h5>
+                      )}
+
+                      <p className="font-cairo text-xs sm:text-sm text-gray-800 leading-relaxed whitespace-pre-line">
+                        {rev.comment}
+                      </p>
+
+                      <div className="flex items-center justify-between text-[11px] text-gray-500 font-mono pt-2 border-t border-[#e2e8c0]/60">
+                        <span>
+                          {new Date(rev.createdAt).toLocaleDateString(
+                            isArabic ? 'ar-EG' : 'en-US',
+                            { year: 'numeric', month: 'short', day: 'numeric' }
+                          )}
+                        </span>
+                        {rev.isVerifiedPurchase && (
+                          <span className="text-emerald-700 font-cairo font-bold flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" />
+                            {isArabic ? 'تجربة موثقة' : 'Verified'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Submission Form Column (5 cols) */}
+            <div className="lg:col-span-5 bg-[#f6f9e6] p-6 sm:p-7 rounded-3xl border border-[#e2e8c0] shadow-sm text-start space-y-4">
+              <div className="space-y-1">
+                <span className="text-xs font-bold font-mono uppercase tracking-wider text-[#485c36]">
+                  {isArabic ? 'رأيك يهمنا' : 'Feedback'}
+                </span>
+                <h3 className="font-amiri text-2xl font-bold text-[#1c2616]">
+                  {isArabic ? 'شاركينا تجربتك ورأيك' : 'Share Your Experience'}
+                </h3>
+                <p className="text-xs font-cairo text-gray-600">
+                  {isArabic
+                    ? 'تقييمك يخضع لمراجعة إدارة المتجر قبل النشر لضمان المصداقية.'
+                    : 'Your review is reviewed by management before publishing to ensure authenticity.'}
+                </p>
+              </div>
+
+              {feedbackSuccess ? (
+                <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-2">
+                  <div className="flex items-center gap-2 font-cairo font-bold text-sm">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <span>
+                      {isArabic
+                        ? 'شكراً لمشاركتك الصادقة!'
+                        : 'Thank you for your review!'}
+                    </span>
+                  </div>
+                  <p className="text-xs font-cairo text-emerald-800 leading-relaxed">
+                    {isArabic
+                      ? 'تم استلام رأيك بنجاح، وهو قيد المراجعة والاعتماد من قبل إدارة سُلاف وسيظهر فور الموافقة عليه ✓'
+                      : 'Your review has been received and is pending confirmation by store management before publishing.'}
+                  </p>
+                  <button
+                    onClick={() => setFeedbackSuccess(false)}
+                    className="mt-2 text-xs font-cairo font-bold text-emerald-700 underline cursor-pointer"
+                  >
+                    {isArabic ? 'إرسال تقييم آخر' : 'Submit another review'}
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmitFeedback} className="space-y-4 font-cairo">
+                  {feedbackError && (
+                    <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>{feedbackError}</span>
+                    </div>
+                  )}
+
+                  {/* Rating Selector */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#1c2616] mb-1.5">
+                      {isArabic ? 'التقييم بالنجوم:' : 'Your Rating:'}
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          type="button"
+                          key={star}
+                          onClick={() => setFeedbackRating(star)}
+                          onMouseEnter={() => setHoverRating(star)}
+                          onMouseLeave={() => setHoverRating(0)}
+                          className="p-1 hover:scale-110 transition-transform cursor-pointer"
+                          aria-label={`${star} stars`}
+                        >
+                          <Star
+                            className={`w-6 h-6 ${
+                              (hoverRating || feedbackRating) >= star
+                                ? 'fill-amber-500 text-amber-500'
+                                : 'text-gray-300'
+                            }`}
+                          />
+                        </button>
+                      ))}
+                      <span className="ms-2 text-xs font-bold text-amber-600 font-mono">
+                        {hoverRating || feedbackRating} / 5
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Author Name */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#1c2616] mb-1">
+                      {isArabic ? 'الاسم الكريم *' : 'Your Name *'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={feedbackName}
+                      onChange={(e) => setFeedbackName(e.target.value)}
+                      placeholder={isArabic ? 'مثال: مروة أحمد' : 'e.g. Sarah Smith'}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#e2e8c0] bg-white text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#485c36]"
+                    />
+                  </div>
+
+                  {/* Author Role (Optional) */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#1c2616] mb-1">
+                      {isArabic ? 'صفتك (اختياري)' : 'Role / Title (Optional)'}
+                    </label>
+                    <input
+                      type="text"
+                      value={feedbackRole}
+                      onChange={(e) => setFeedbackRole(e.target.value)}
+                      placeholder={isArabic ? 'مثال: عميلة سُلاف / صيدلانية / طبيبة جلدية' : 'e.g. Dermatologist / Verified Client'}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#e2e8c0] bg-white text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#485c36]"
+                    />
+                  </div>
+
+                  {/* Comment */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#1c2616] mb-1">
+                      {isArabic ? 'رأيك وتفاصيل تجربتك *' : 'Your Review & Experience *'}
+                    </label>
+                    <textarea
+                      required
+                      rows={4}
+                      value={feedbackComment}
+                      onChange={(e) => setFeedbackComment(e.target.value)}
+                      placeholder={
+                        isArabic
+                          ? 'اكتبي تجربتك الصادقة مع المستحضر، التغيير في ملمس البشرة، والمدة التي لاحظتِ فيها النتيجة...'
+                          : 'Describe your experience, texture improvements, and results...'
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#e2e8c0] bg-white text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#485c36] resize-none"
+                    />
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={feedbackLoading}
+                    className="w-full py-3 px-4 rounded-xl font-cairo font-bold text-xs bg-[#485c36] hover:bg-[#3a4a2b] text-white shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>
+                      {feedbackLoading
+                        ? (isArabic ? 'جارِ الإرسال...' : 'Submitting...')
+                        : (isArabic ? 'إرسال التقييم للإدارة للاعتماد' : 'Submit Review for Approval')}
+                    </span>
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
         </div>
       </section>
 

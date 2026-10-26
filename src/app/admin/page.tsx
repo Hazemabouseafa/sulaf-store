@@ -8,6 +8,7 @@ import { ProductData } from "@/lib/data/mock-data";
 import { VisualRichEditor } from "@/components/admin/VisualRichEditor";
 import { HomepageSectionBuilder } from "@/components/admin/HomepageSectionBuilder";
 import { CouponData } from "@/lib/coupons/coupon-store";
+import { ReviewItem } from "@/lib/reviews/review-store";
 import { useStoreSettings } from "@/lib/settings/store-settings-context";
 import {
   SectionVisibilitySettings,
@@ -86,6 +87,7 @@ import {
   Zap,
   Globe,
   BookOpen,
+  Star,
 } from "lucide-react";
 
 
@@ -169,6 +171,7 @@ const ADMIN_I18N = {
       customerPerks: "كوبونات وإشعارات العملاء VIP",
       pages: "تعديل صفحات الموقع",
       analytics: "التقارير والمبيعات",
+      reviews: "تقييمات وآراء العملاء",
       cms: "الأقسام والنصوص (CMS)",
       settings: "إعدادات المتجر والدفع",
     },
@@ -302,6 +305,7 @@ const ADMIN_I18N = {
       customerPerks: "VIP Perks & Notifications",
       pages: "Site Pages Management",
       analytics: "Analytics & Sales",
+      reviews: "Customer Reviews",
       cms: "Sections & CMS",
       settings: "Store Settings",
     },
@@ -442,7 +446,7 @@ export default function AdminPage() {
 
   // Navigation Tab
   const [activeTab, setActiveTab] = useState<
-    "overview" | "orders" | "products" | "coupons" | "customers" | "customerPerks" | "pages" | "analytics" | "cms" | "theme" | "settings"
+    "overview" | "orders" | "products" | "coupons" | "customers" | "customerPerks" | "pages" | "analytics" | "cms" | "theme" | "settings" | "reviews"
   >("overview");
 
   // Data Stores
@@ -568,6 +572,164 @@ export default function AdminPage() {
   const [productSearch, setProductSearch] = useState("");
   const [productFilter, setProductFilter] = useState<string>("ALL");
   const [customerSearch, setCustomerSearch] = useState("");
+
+  // Reviews & Feedback Admin State
+  const [reviewsList, setReviewsList] = useState<ReviewItem[]>([]);
+  const [reviewFilter, setReviewFilter] = useState<"ALL" | "PENDING" | "APPROVED" | "REJECTED">("ALL");
+  const [reviewSearch, setReviewSearch] = useState("");
+  const [addReviewModalOpen, setAddReviewModalOpen] = useState(false);
+  const [manualReviewForm, setManualReviewForm] = useState({
+    productId: "",
+    productName: "Absolutes Smoothing Body Cream",
+    authorName: "",
+    authorRole: "دكتورة صيدلانية",
+    rating: 5,
+    title: "",
+    comment: "",
+    isVerifiedPurchase: true,
+  });
+
+  async function handleApproveReview(id: string) {
+    try {
+      const res = await fetch(`/api/reviews/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "APPROVED" }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setReviewsList((prev) =>
+          prev.map((r) => (r.id === id ? { ...r, status: "APPROVED", approvedAt: new Date().toISOString() } : r))
+        );
+        showToast(adminLang === "ar" ? "تم اعتماد ونشر التقييم بنجاح في المتجر ✓" : "Review approved and published ✓");
+      } else {
+        showToast(data.error || "تعذر اعتماد التقييم", "error");
+      }
+    } catch {
+      showToast("حدث خطأ أثناء اعتماد التقييم", "error");
+    }
+  }
+
+  async function handleRejectReview(id: string) {
+    try {
+      const res = await fetch(`/api/reviews/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "REJECTED" }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setReviewsList((prev) =>
+          prev.map((r) => (r.id === id ? { ...r, status: "REJECTED" } : r))
+        );
+        showToast(adminLang === "ar" ? "تم رفض التقييم وإخفاؤه." : "Review rejected.");
+      } else {
+        showToast(data.error || "تعذر تحديث التقييم", "error");
+      }
+    } catch {
+      showToast("حدث خطأ أثناء رفض التقييم", "error");
+    }
+  }
+
+  async function handleUnapproveReview(id: string) {
+    try {
+      const res = await fetch(`/api/reviews/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "PENDING" }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setReviewsList((prev) =>
+          prev.map((r) => (r.id === id ? { ...r, status: "PENDING" } : r))
+        );
+        showToast(adminLang === "ar" ? "تم إرجاع التقييم لحالة قيد المراجعة." : "Review moved back to pending.");
+      } else {
+        showToast(data.error || "تعذر تحديث التقييم", "error");
+      }
+    } catch {
+      showToast("حدث خطأ أثناء تحديث التقييم", "error");
+    }
+  }
+
+  async function handleDeleteReview(id: string) {
+    if (!confirm(adminLang === "ar" ? "هل أنت متأكد من حذف هذا الرأي / التقييم نهائياً؟" : "Are you sure you want to delete this review?")) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/reviews/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setReviewsList((prev) => prev.filter((r) => r.id !== id));
+        showToast(adminLang === "ar" ? "تم حذف التقييم نهائياً بنجاح ✓" : "Review deleted successfully ✓");
+      } else {
+        showToast(data.error || "تعذر حذف التقييم", "error");
+      }
+    } catch {
+      showToast("حدث خطأ أثناء حذف التقييم", "error");
+    }
+  }
+
+  async function handleAddManualReviewSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!manualReviewForm.authorName.trim() || !manualReviewForm.comment.trim()) {
+      showToast(adminLang === "ar" ? "يرجى كتابة اسم العميل وتفاصيل الرأي." : "Please fill author name and comment.", "error");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          isAdmin: true,
+          productId: manualReviewForm.productId || (products[0]?.id || "prod-absolutes-cream"),
+          productName: manualReviewForm.productName,
+          authorName: manualReviewForm.authorName.trim(),
+          authorRole: manualReviewForm.authorRole.trim(),
+          rating: manualReviewForm.rating,
+          title: manualReviewForm.title.trim(),
+          comment: manualReviewForm.comment.trim(),
+          isVerifiedPurchase: manualReviewForm.isVerifiedPurchase,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setReviewsList((prev) => [data.review, ...prev]);
+        setAddReviewModalOpen(false);
+        setManualReviewForm({
+          productId: "",
+          productName: "Absolutes Smoothing Body Cream",
+          authorName: "",
+          authorRole: "دكتورة صيدلانية",
+          rating: 5,
+          title: "",
+          comment: "",
+          isVerifiedPurchase: true,
+        });
+        showToast(adminLang === "ar" ? "تمت إضافة واعتماد رأي العميل بنجاح ونشره بالمتجر ✓" : "Manual review added and approved ✓");
+      } else {
+        showToast(data.error || "تعذر إضافة التقييم", "error");
+      }
+    } catch {
+      showToast("حدث خطأ أثناء إضافة التقييم", "error");
+    }
+  }
+
+  async function toggleReviewsSectionVisibility() {
+    const current = settings.sectionsVisibility?.reviewsSection !== false;
+    const next = !current;
+    await updateSettings({
+      sectionsVisibility: {
+        ...(settings.sectionsVisibility || DEFAULT_SECTION_VISIBILITY),
+        reviewsSection: next,
+      },
+    });
+    showToast(next
+      ? (adminLang === "ar" ? "تم إظهار وتفعيل قسم آراء العملاء في الصفحة الرئيسية ✓" : "Reviews section enabled on homepage ✓")
+      : (adminLang === "ar" ? "تم إخفاء قسم آراء العملاء من الصفحة الرئيسية ✓" : "Reviews section hidden from homepage ✓")
+    );
+  }
   // Customer VIP Perks & Personalized Notifications State
   const [registeredCustomers, setRegisteredCustomers] = useState<any[]>([]);
   const [selectedPerkCustomerId, setSelectedPerkCustomerId] = useState<string>("ALL");
@@ -2118,6 +2280,30 @@ export default function AdminPage() {
               <span className="shrink-0 ms-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#485c36] text-white">
                 {storePages.length}
               </span>
+            </button>
+
+            {/* 6.8 Reviews & Customer Feedback */}
+            <button
+              onClick={() => setActiveTab("reviews")}
+              className={`shrink-0 md:w-full flex items-center justify-between px-3.5 py-2.5 sm:py-3 rounded-2xl font-bold text-xs lg:text-sm transition-all overflow-hidden cursor-pointer ${
+                activeTab === "reviews"
+                  ? "bg-[#3d502d] text-white shadow-md ring-2 ring-emerald-400/40"
+                  : "text-gray-300 hover:bg-[#233019] hover:text-white"
+              }`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Star className="w-4 h-4 shrink-0 text-amber-300" />
+                <span className="truncate">{ADMIN_I18N[adminLang].tabs.reviews || (adminLang === "ar" ? "تقييمات وآراء العملاء" : "Reviews")}</span>
+              </div>
+              {reviewsList.filter((r) => r.status === "PENDING").length > 0 ? (
+                <span className="shrink-0 ms-2 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-black animate-pulse">
+                  {reviewsList.filter((r) => r.status === "PENDING").length} معلق
+                </span>
+              ) : (
+                <span className="shrink-0 ms-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#485c36] text-white">
+                  {reviewsList.length}
+                </span>
+              )}
             </button>
 
             {/* 7. CMS (Content & Sections) */}
@@ -7988,6 +8174,181 @@ export default function AdminPage() {
               </form>
             </div>
           )}
+        {/* Modal: Add Review Manually by Admin */}
+        {addReviewModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+            <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-gray-200 overflow-hidden text-start font-cairo">
+              <div className="p-6 bg-[#3d502d] text-white flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-lg">
+                    {adminLang === "ar" ? "إضافة رأي عميل أو طبيب يدوياً" : "Add Review Manually"}
+                  </h3>
+                  <p className="text-xs text-emerald-200 mt-0.5">
+                    {adminLang === "ar"
+                      ? "الرأي المضاف سيُنشر كمعتمد وموثق فوراً بالمتجر والصفحة الرئيسية."
+                      : "Manually added reviews are approved and published immediately."}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setAddReviewModalOpen(false)}
+                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleAddManualReviewSubmit} className="p-6 space-y-4">
+                {/* Select Product */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-800 mb-1">
+                    {adminLang === "ar" ? "المستحضر المعني *" : "Target Product *"}
+                  </label>
+                  <select
+                    value={manualReviewForm.productId}
+                    onChange={(e) => {
+                      const selProd = products.find((p) => p.id === e.target.value);
+                      setManualReviewForm({
+                        ...manualReviewForm,
+                        productId: e.target.value,
+                        productName: selProd?.nameAr || selProd?.nameEn || "Absolutes Smoothing Body Cream",
+                      });
+                    }}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3d502d]"
+                  >
+                    <option value="">Absolutes Smoothing Body Cream (الأساسي)</option>
+                    {products.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.nameAr || p.nameEn}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Author Name */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-800 mb-1">
+                      {adminLang === "ar" ? "اسم العميل أو الطبيب *" : "Customer/Doctor Name *"}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={manualReviewForm.authorName}
+                      onChange={(e) => setManualReviewForm({ ...manualReviewForm, authorName: e.target.value })}
+                      placeholder={adminLang === "ar" ? "مثال: د. مروة الشريف" : "e.g. Dr. Sarah"}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3d502d]"
+                    />
+                  </div>
+
+                  {/* Author Role */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-800 mb-1">
+                      {adminLang === "ar" ? "الصفة / اللقب *" : "Role / Title *"}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={manualReviewForm.authorRole}
+                      onChange={(e) => setManualReviewForm({ ...manualReviewForm, authorRole: e.target.value })}
+                      placeholder={adminLang === "ar" ? "مثال: دكتورة جلدية / عميلة موثقة" : "e.g. Dermatologist"}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3d502d]"
+                    />
+                  </div>
+                </div>
+
+                {/* Rating (1-5) */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-800 mb-1">
+                    {adminLang === "ar" ? "التقييم بالنجوم:" : "Rating:"}
+                  </label>
+                  <div className="flex items-center gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        type="button"
+                        key={star}
+                        onClick={() => setManualReviewForm({ ...manualReviewForm, rating: star })}
+                        className="p-1 hover:scale-110 transition-transform cursor-pointer"
+                      >
+                        <Star
+                          className={`w-6 h-6 ${
+                            manualReviewForm.rating >= star
+                              ? "fill-amber-500 text-amber-500"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      </button>
+                    ))}
+                    <span className="ms-2 text-xs font-bold text-amber-600 font-mono">
+                      {manualReviewForm.rating} / 5
+                    </span>
+                  </div>
+                </div>
+
+                {/* Optional Title */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-800 mb-1">
+                    {adminLang === "ar" ? "عنوان التقييم (اختياري)" : "Title (Optional)"}
+                  </label>
+                  <input
+                    type="text"
+                    value={manualReviewForm.title}
+                    onChange={(e) => setManualReviewForm({ ...manualReviewForm, title: e.target.value })}
+                    placeholder={adminLang === "ar" ? "مثال: أفضل تركيبة علاجية كيراتينية استخدمتها" : "e.g. Outstanding results"}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3d502d]"
+                  />
+                </div>
+
+                {/* Comment Body */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-800 mb-1">
+                    {adminLang === "ar" ? "نص وتفاصيل الرأي *" : "Review Comment *"}
+                  </label>
+                  <textarea
+                    required
+                    rows={4}
+                    value={manualReviewForm.comment}
+                    onChange={(e) => setManualReviewForm({ ...manualReviewForm, comment: e.target.value })}
+                    placeholder={adminLang === "ar" ? "اكتب نص رأي العميل أو التقييم بالتفصيل..." : "Write review comment..."}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3d502d] resize-none"
+                  />
+                </div>
+
+                {/* Verified Purchase Checkbox */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="isVerified"
+                    checked={manualReviewForm.isVerifiedPurchase}
+                    onChange={(e) => setManualReviewForm({ ...manualReviewForm, isVerifiedPurchase: e.target.checked })}
+                    className="w-4 h-4 rounded text-[#3d502d] accent-[#3d502d]"
+                  />
+                  <label htmlFor="isVerified" className="text-xs font-bold text-gray-800 cursor-pointer">
+                    {adminLang === "ar" ? "تمييز الرأي كـ (شراء موثق Verified Purchase)" : "Mark as Verified Purchase"}
+                  </label>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setAddReviewModalOpen(false)}
+                    className="px-4 py-2.5 rounded-xl text-gray-600 hover:bg-gray-100 font-bold text-xs cursor-pointer"
+                  >
+                    {adminLang === "ar" ? "إلغاء" : "Cancel"}
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 rounded-xl bg-[#3d502d] hover:bg-[#2e3d22] text-white font-bold text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>{adminLang === "ar" ? "إضافة واعتماد الرأي الآن ✓" : "Add & Publish Now ✓"}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         </main>
       </div>
     </div>

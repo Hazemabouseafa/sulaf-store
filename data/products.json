@@ -52,28 +52,9 @@
       }
     ],
     "activeIngredients": [],
-    "reviews": [
-      {
-        "id": "rev-1",
-        "authorName": "Dr. Iman El-Shennawy (Dermatologist)",
-        "rating": 5,
-        "title": "Architectural reset for keratosis pilaris",
-        "comment": "In my clinical practice, I recommended Absolutes Smoothing Body Cream for patients with chronic Keratosis Pilaris. Within 7 days, follicular erythema and bumps subsided remarkably without irritation.",
-        "date": "2026-10-15",
-        "isVerifiedPurchase": true
-      },
-      {
-        "id": "rev-2",
-        "authorName": "Nadia Mamdouh",
-        "rating": 5,
-        "title": "Transformed rough texture into pure silk",
-        "comment": "The 30% Urea and 10% Ammonium Lactate combination is unmatched. Fast-absorbing, velvet touch, and no sticky residue.",
-        "date": "2026-10-18",
-        "isVerifiedPurchase": true
-      }
-    ],
-    "rating": 4.96,
-    "reviewsCount": 128,
+    "reviews": [],
+    "rating": 5,
+    "reviewsCount": 0,
     "shortDescription": "Architectural Keratolytic Reset: 30% Pure Urea, 10% Ammonium Lactate and 2% Salicylic Acid for rough, bumpy skin. Structural restoration, not friction.",
     "storyTitle": "The Story: Structural Restoration, Not Friction",
     "storyParagraphs": [
@@ -232,8 +213,8 @@
     ],
     "activeIngredients": [],
     "reviews": [],
-    "rating": 4.9,
-    "reviewsCount": 64
+    "rating": 5,
+    "reviewsCount": 0
   },
   {
     "id": "prod-cleansing-balm",
@@ -283,8 +264,8 @@
     ],
     "activeIngredients": [],
     "reviews": [],
-    "rating": 4.88,
-    "reviewsCount": 42
+    "rating": 5,
+    "reviewsCount": 0
   },
   {
     "id": "prod-glycolic-tonic",
@@ -334,7 +315,7 @@
     ],
     "activeIngredients": [],
     "reviews": [],
-    "rating": 4.85,
-    "reviewsCount": 37
+    "rating": 5,
+    "reviewsCount": 0
   }
 ]
