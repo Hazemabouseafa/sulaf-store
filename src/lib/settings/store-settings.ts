@@ -18,7 +18,55 @@ export type HomepageSectionKey =
   | "reviewsSection"
   | "consultationSection";
 
-export const DEFAULT_HOMEPAGE_SECTIONS_ORDER: HomepageSectionKey[] = [
+export type CustomSectionType =
+  | "banner"
+  | "features"
+  | "mediaText"
+  | "faq"
+  | "quote"
+  | "richText";
+
+export interface CustomSectionItem {
+  id: string;
+  titleAr: string;
+  titleEn?: string;
+  descAr?: string;
+  descEn?: string;
+  icon?: string;
+  imageUrl?: string;
+  linkUrl?: string;
+  linkTextAr?: string;
+  linkTextEn?: string;
+}
+
+export interface CustomHomepageSection {
+  id: string;
+  type: CustomSectionType;
+  titleAr: string;
+  titleEn?: string;
+  subtitleAr?: string;
+  subtitleEn?: string;
+  badgeAr?: string;
+  badgeEn?: string;
+  contentAr?: string;
+  contentEn?: string;
+  imageUrl?: string;
+  imagePosition?: "left" | "right" | "center" | "background";
+  ctaTextAr?: string;
+  ctaTextEn?: string;
+  ctaUrl?: string;
+  secondaryCtaTextAr?: string;
+  secondaryCtaTextEn?: string;
+  secondaryCtaUrl?: string;
+  bgStyle?: "default" | "dark" | "gradient" | "glass" | "primary";
+  bgColor?: string;
+  textColor?: string;
+  isVisible: boolean;
+  items?: CustomSectionItem[];
+  createdAt: number;
+}
+
+export const DEFAULT_HOMEPAGE_SECTIONS_ORDER: string[] = [
   "heroSection",
   "aboutSection",
   "artOfCosmeceuticals",
@@ -568,7 +616,8 @@ export interface StoreSettings {
   };
 
   sectionsVisibility: SectionVisibilitySettings;
-  sectionsOrder?: HomepageSectionKey[];
+  sectionsOrder?: string[];
+  customSections?: CustomHomepageSection[];
   elementsVisibility: ElementVisibilitySettings;
   customContent: CustomContentSettings;
   customContentEn?: CustomContentSettings;
@@ -778,6 +827,7 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
 
   sectionsVisibility: DEFAULT_SECTION_VISIBILITY,
   sectionsOrder: DEFAULT_HOMEPAGE_SECTIONS_ORDER,
+  customSections: [],
   elementsVisibility: DEFAULT_ELEMENT_VISIBILITY,
   customContent: {},
   customContentEn: {},
@@ -870,6 +920,8 @@ export function getClientSettings(): StoreSettings {
       ...DEFAULT_STORE_SETTINGS,
       ...parsed,
       sectionsVisibility: { ...DEFAULT_SECTION_VISIBILITY, ...(parsed.sectionsVisibility || {}) },
+      sectionsOrder: Array.isArray(parsed.sectionsOrder) && parsed.sectionsOrder.length > 0 ? parsed.sectionsOrder : DEFAULT_HOMEPAGE_SECTIONS_ORDER,
+      customSections: Array.isArray(parsed.customSections) ? parsed.customSections : [],
       elementsVisibility: { ...DEFAULT_ELEMENT_VISIBILITY, ...(parsed.elementsVisibility || {}) },
       customContent: { ...(parsed.customContent || {}) },
       customContentEn: { ...(parsed.customContentEn || {}) },

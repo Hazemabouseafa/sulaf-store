@@ -6,12 +6,14 @@ import Link from "next/link";
 import { OrderRecord } from "@/lib/orders/order-store";
 import { ProductData } from "@/lib/data/mock-data";
 import { VisualRichEditor } from "@/components/admin/VisualRichEditor";
+import { HomepageSectionBuilder } from "@/components/admin/HomepageSectionBuilder";
 import { CouponData } from "@/lib/coupons/coupon-store";
 import { useStoreSettings } from "@/lib/settings/store-settings-context";
 import {
   SectionVisibilitySettings,
   ElementVisibilitySettings,
   CustomContentSettings,
+  CustomHomepageSection,
   DEFAULT_SECTION_VISIBILITY,
   DEFAULT_ELEMENT_VISIBILITY,
   HomepageSectionKey,
@@ -456,10 +458,13 @@ export default function AdminPage() {
   const [cmsSections, setCmsSections] = useState<SectionVisibilitySettings>(
     () => settings.sectionsVisibility || DEFAULT_SECTION_VISIBILITY
   );
-  const [cmsSectionsOrder, setCmsSectionsOrder] = useState<HomepageSectionKey[]>(
+  const [cmsSectionsOrder, setCmsSectionsOrder] = useState<string[]>(
     () => (settings.sectionsOrder && settings.sectionsOrder.length > 0)
       ? settings.sectionsOrder
       : DEFAULT_HOMEPAGE_SECTIONS_ORDER
+  );
+  const [customSections, setCustomSections] = useState<CustomHomepageSection[]>(
+    () => settings.customSections || []
   );
   const [cmsElements, setCmsElements] = useState<ElementVisibilitySettings>(
     () => settings.elementsVisibility || DEFAULT_ELEMENT_VISIBILITY
@@ -482,6 +487,7 @@ export default function AdminPage() {
       if (settings.elementsVisibility) setCmsElements(settings.elementsVisibility);
       if (settings.customContent) setCmsContent(settings.customContent);
       if (settings.customContentEn) setCmsContentEn(settings.customContentEn);
+      if (settings.customSections) setCustomSections(settings.customSections);
       if (settings.sectionsOrder && Array.isArray(settings.sectionsOrder) && settings.sectionsOrder.length > 0) {
         setCmsSectionsOrder(settings.sectionsOrder);
       }
@@ -519,6 +525,7 @@ export default function AdminPage() {
         customContent: cmsContent,
         customContentEn: cmsContentEn,
         sectionsOrder: cmsSectionsOrder,
+        customSections: customSections,
       });
       showToast(
         adminLang === "ar"
@@ -541,12 +548,14 @@ export default function AdminPage() {
     setCmsElements(DEFAULT_ELEMENT_VISIBILITY);
     setCmsContent({});
     setCmsContentEn({});
+    setCustomSections([]);
     setCmsSectionsOrder(DEFAULT_HOMEPAGE_SECTIONS_ORDER);
     updateSettings({
       sectionsVisibility: DEFAULT_SECTION_VISIBILITY,
       elementsVisibility: DEFAULT_ELEMENT_VISIBILITY,
       customContent: {},
       customContentEn: {},
+      customSections: [],
       sectionsOrder: DEFAULT_HOMEPAGE_SECTIONS_ORDER,
     });
     showToast(adminLang === "ar" ? "تمت استعادة الإعدادات الأصلية والترتيب الافتراضي للأقسام." : "Restored default settings and order for all sections.");
@@ -5887,129 +5896,30 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* SECTION 2: HOMEPAGE SECTIONS REORDER & ARRANGE */}
-              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-5">
-                <div className="flex items-center justify-between flex-wrap gap-2 border-b border-gray-100 pb-4">
-                  <div>
-                    <h3 className="font-bold text-lg text-[#233019] flex items-center gap-2">
-                      <ArrowUpDown className="w-5 h-5 text-[#485c36]" />
-                      <span>
-                        {adminLang === "ar"
-                          ? "2. ترتيب وتبديل أماكن أقسام الواجهة الرئيسية (Reorder Homepage Sections)"
-                          : "2. Reorder Homepage Sections (Drag / Up & Down)"}
-                      </span>
-                    </h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {adminLang === "ar"
-                        ? "تحكم في تسلسل وترتيب ظهور الأقسام في الصفحة الرئيسية. استخدم أزرار [↑ للأعلى] و [↓ للأسفل] لتبديل مكان أي قسم فورياً."
-                        : "Control the sequence and order of sections on the homepage. Use [↑ Move Up] and [↓ Move Down] to swap any section instantly."}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setCmsSectionsOrder(DEFAULT_HOMEPAGE_SECTIONS_ORDER)}
-                      className="px-3.5 py-1.5 rounded-xl border border-gray-300 text-gray-700 font-bold text-xs hover:bg-gray-100 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5 text-gray-500" />
-                      <span>{adminLang === "ar" ? "استعادة الترتيب الافتراضي" : "Reset Default Order"}</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {cmsSectionsOrder.map((secKey, index) => {
-                    const meta = HOMEPAGE_SECTION_META[secKey] || {
-                      nameAr: secKey,
-                      nameEn: secKey,
-                      desc: "",
-                      icon: Layers,
-                    };
-                    const Icon = meta.icon;
-                    const isVisible = (cmsSections as any)[secKey] !== false;
-                    const isFirst = index === 0;
-                    const isLast = index === cmsSectionsOrder.length - 1;
-
-                    return (
-                      <div
-                        key={secKey}
-                        className={`p-4 rounded-2xl border-2 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                          isVisible
-                            ? "bg-[#fafcf3] border-[#dbe2bd] shadow-xs hover:border-[#485c36]"
-                            : "bg-gray-50 border-gray-200 opacity-60"
-                        }`}
-                      >
-                        {/* Section Rank, Icon & Info */}
-                        <div className="flex items-center gap-3.5 min-w-0">
-                          <div className="w-8 h-8 rounded-xl bg-[#485c36] text-white flex items-center justify-center font-mono font-bold text-xs shrink-0 shadow-xs">
-                            #{index + 1}
-                          </div>
-
-                          <div
-                            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                              isVisible ? "bg-emerald-100 text-[#485c36]" : "bg-gray-200 text-gray-500"
-                            }`}
-                          >
-                            <Icon className="w-5 h-5" />
-                          </div>
-
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-bold text-sm text-gray-900 truncate">
-                                {adminLang === "ar" ? meta.nameAr : meta.nameEn}
-                              </h4>
-                              <span
-                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
-                                  isVisible
-                                    ? "bg-emerald-100 text-emerald-800"
-                                    : "bg-gray-200 text-gray-700"
-                                }`}
-                              >
-                                {isVisible
-                                  ? adminLang === "ar"
-                                    ? "معروض بالواجهة"
-                                    : "Visible"
-                                  : adminLang === "ar"
-                                  ? "مخفي"
-                                  : "Hidden"}
-                              </span>
-                            </div>
-                            <p className="text-xs text-gray-500 truncate mt-0.5">
-                              {meta.desc}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Controls: Up, Down */}
-                        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                          <button
-                            type="button"
-                            disabled={isFirst}
-                            onClick={() => moveSectionUp(index)}
-                            className="px-3 py-1.5 rounded-xl border border-gray-300 hover:border-[#485c36] hover:bg-[#485c36] hover:text-white text-gray-700 text-xs font-bold transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer flex items-center gap-1 shadow-2xs"
-                            title={adminLang === "ar" ? "تحريك لأعلى" : "Move Up"}
-                          >
-                            <ArrowUp className="w-3.5 h-3.5" />
-                            <span className="hidden md:inline">{adminLang === "ar" ? "للأعلى" : "Up"}</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            disabled={isLast}
-                            onClick={() => moveSectionDown(index)}
-                            className="px-3 py-1.5 rounded-xl border border-gray-300 hover:border-[#485c36] hover:bg-[#485c36] hover:text-white text-gray-700 text-xs font-bold transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer flex items-center gap-1 shadow-2xs"
-                            title={adminLang === "ar" ? "تحريك لأسفل" : "Move Down"}
-                          >
-                            <ArrowDown className="w-3.5 h-3.5" />
-                            <span className="hidden md:inline">{adminLang === "ar" ? "للأسفل" : "Down"}</span>
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              {/* SECTION 2: HOMEPAGE SECTIONS BUILDER & DEDICATED EDITORS */}
+              <HomepageSectionBuilder
+                sectionsOrder={cmsSectionsOrder}
+                onReorder={setCmsSectionsOrder}
+                cmsSections={cmsSections}
+                onToggleBuiltinVisibility={(key, visible) => {
+                  setCmsSections(prev => ({ ...prev, [key]: visible }));
+                }}
+                customSections={customSections}
+                onUpdateCustomSections={setCustomSections}
+                cmsContent={cmsContent}
+                cmsContentEn={cmsContentEn}
+                cmsElements={cmsElements}
+                onUpdateContent={(content, isEn) => {
+                  if (isEn) {
+                    setCmsContentEn(content);
+                  } else {
+                    setCmsContent(content);
+                  }
+                }}
+                onUpdateElements={setCmsElements}
+                adminLang={adminLang}
+                showToast={showToast}
+              />
 
               {/* SECTION 3: SECTION-BY-SECTION TEXT & ELEMENT CMS EDITOR */}
               <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-6">

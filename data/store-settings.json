@@ -45,6 +45,7 @@
     "reviewsSection",
     "consultationSection"
   ],
+  "customSections": [],
   "elementsVisibility": {
     "announcementBadge": true,
     "announcementText": true,
@@ -77,9 +78,9 @@
     "clinicalDesc": true,
     "clinicalStats": true,
     "clinicalButtons": true,
-    "reviewsBadge": true,
-    "reviewsHeading": true,
-    "reviewsDesc": true,
+    "reviewsBadge": false,
+    "reviewsHeading": false,
+    "reviewsDesc": false,
     "consultationBadge": true,
     "consultationHeading": true,
     "consultationDesc": true,

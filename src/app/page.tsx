@@ -6,6 +6,7 @@ import { DEFAULT_HOMEPAGE_SECTIONS_ORDER, HomepageSectionKey } from "@/lib/setti
 import dynamic from "next/dynamic";
 import { HeroSection } from "@/components/home/HeroSection";
 import { HorizontalGallerySection } from "@/components/home/HorizontalGallerySection";
+import { CustomSectionRenderer } from "@/components/home/CustomSectionRenderer";
 
 const HomeAboutSection = dynamic(
   () => import("@/components/home/HomeAboutSection").then((mod) => mod.HomeAboutSection),
@@ -57,10 +58,22 @@ export default function HomePage() {
   return (
     <div className="flex flex-col w-full">
       {sectionsOrder.map((sectionKey) => {
-        if (vis[sectionKey] === false) return null;
-        const Component = SECTION_COMPONENTS[sectionKey];
-        if (!Component) return null;
-        return <Component key={sectionKey} />;
+        // 1. Built-in Section
+        if (sectionKey in SECTION_COMPONENTS) {
+          if (vis[sectionKey as HomepageSectionKey] === false) return null;
+          const Component = SECTION_COMPONENTS[sectionKey as HomepageSectionKey];
+          if (!Component) return null;
+          return <Component key={sectionKey} />;
+        }
+
+        // 2. Custom Section added by client
+        const customSection = (settings.customSections || []).find((s) => s.id === sectionKey);
+        if (customSection) {
+          if (customSection.isVisible === false) return null;
+          return <CustomSectionRenderer key={customSection.id} section={customSection} />;
+        }
+
+        return null;
       })}
     </div>
   );
