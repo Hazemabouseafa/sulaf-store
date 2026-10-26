@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ProductData } from "@/lib/data/mock-data";
-import { getStoredProducts } from "@/lib/products/product-store";
+import { useProducts } from "@/lib/products/product-store";
 import { ProductCard } from "../shop/ProductCard";
 import { QuickViewModal } from "../shop/QuickViewModal";
 import { useLanguage } from "@/lib/i18n/language-context";
@@ -23,10 +23,12 @@ import {
 export function HorizontalGallerySection() {
   const [selectedQuickView, setSelectedQuickView] = useState<ProductData | null>(null);
   const [activeCategory, setActiveCategory] = useState<"all" | "urea" | "barrier">("all");
+  const [activeStage, setActiveStage] = useState<0 | 1 | 2>(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { isArabic, t } = useLanguage();
   const { settings } = useStoreSettings();
+  const allProducts = useProducts();
   const vis = settings.elementsVisibility || {
     galleryBadge: true,
     galleryHeading: true,
@@ -64,7 +66,6 @@ export function HorizontalGallerySection() {
     });
   }
 
-  const allProducts = getStoredProducts();
   const filteredProducts = allProducts.filter((p) => {
     if (activeCategory === "all") return true;
     if (activeCategory === "urea") {
@@ -170,6 +171,213 @@ export function HorizontalGallerySection() {
             </p>
           </motion.div>
         </div>
+
+        {/* Interactive 3-Stage Clinical Texture Transformation Visualizer */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="mb-14 rounded-3xl bg-[#485c36] text-[#f6f9e6] p-6 sm:p-8 md:p-10 shadow-xl border border-[#f3a5a1]/30 relative overflow-hidden"
+        >
+          <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-[#ca384a]/20 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-[#610b0d]/35 blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            <div className="lg:col-span-5 space-y-3 text-start">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#610b0d] border border-[#f3a5a1]/40 text-[#f3a5a1] text-[11px] font-bold">
+                <Sparkles className="w-3.5 h-3.5 text-[#ca384a]" />
+                <span>
+                  {isArabic ? "آلية التحول الهيكلي ثلاثية المراحل" : "3-Stage Structural Skin Reset"}
+                </span>
+              </div>
+              <h3 className="font-amiri text-2xl sm:text-3xl font-bold text-[#f6f9e6] leading-snug">
+                {isArabic
+                  ? "كيف تعيد تركيبات سُـلاف بناء ملمس البشرة الحريري؟"
+                  : "How Sulaf Formulas Rebuild Silky Skin Architecture"}
+              </h3>
+              <p className="text-xs sm:text-sm text-[#f6f9e6]/85 leading-relaxed">
+                {isArabic
+                  ? "اضغطي على كل مرحلة لاستكشاف التفاعل الحيوي المتكامل بين اليوريا النقية وحمض اللاكتيك والسيراميدات."
+                  : "Select each stage to explore the clinical synergy between Pure Urea, Lactic Acid, and Ceramides."}
+              </p>
+
+              {/* Stage Selector Buttons */}
+              <div className="flex flex-wrap gap-2 pt-2">
+                {[
+                  {
+                    idx: 0 as const,
+                    badge: "01",
+                    labelAr: "تفكيك التقرن (30% Urea)",
+                    labelEn: "Keratolytic Reset",
+                  },
+                  {
+                    idx: 1 as const,
+                    badge: "02",
+                    labelAr: "صقل المسام (10% Lactate)",
+                    labelEn: "Pore Resurfacing",
+                  },
+                  {
+                    idx: 2 as const,
+                    badge: "03",
+                    labelAr: "إغلاق الحاجز (Ceramides)",
+                    labelEn: "Lipid Barrier Lock",
+                  },
+                ].map((st) => {
+                  const active = activeStage === st.idx;
+                  return (
+                    <button
+                      key={st.idx}
+                      type="button"
+                      onClick={() => setActiveStage(st.idx)}
+                      className={`px-3.5 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                        active
+                          ? "bg-[#ca384a] text-[#f6f9e6] shadow-md scale-[1.02]"
+                          : "bg-[#f6f9e6]/10 text-[#f6f9e6] hover:bg-[#f6f9e6]/20 border border-[#f6f9e6]/15"
+                      }`}
+                    >
+                      <span className="font-mono text-[10px] px-1.5 py-0.5 rounded-md bg-[#610b0d] text-[#f3a5a1]">
+                        {st.badge}
+                      </span>
+                      <span>{isArabic ? st.labelAr : st.labelEn}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Interactive Stage Visualization Card */}
+            <div className="lg:col-span-7">
+              <AnimatePresence mode="wait">
+                {activeStage === 0 && (
+                  <motion.div
+                    key="stage-0"
+                    initial={{ opacity: 0, x: 15 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -15 }}
+                    transition={{ duration: 0.3 }}
+                    className="p-6 sm:p-7 rounded-3xl bg-[#f6f9e6] text-[#485c36] border-2 border-[#f3a5a1] shadow-lg space-y-4 text-start"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="px-3 py-1 rounded-full bg-[#485c36] text-[#f6f9e6] text-xs font-bold">
+                        {isArabic ? "المرحلة الأولى • الإذابة الكيراتينية" : "Stage 01 • Keratolytic Dissolution"}
+                      </span>
+                      <span className="font-mono text-sm font-black text-[#ca384a]">30% UREA USP</span>
+                    </div>
+                    <h4 className="font-amiri text-2xl font-bold text-[#610b0d]">
+                      {isArabic
+                        ? "إذابة السدادات الكيراتينية المسببة لجلد الوزة والشعر تحت الجلد"
+                        : "Dissolving Hardened Keratin Plugs & Ingrown Hairs"}
+                    </h4>
+                    <p className="text-xs sm:text-sm text-[#485c36] leading-relaxed">
+                      {isArabic
+                        ? "يتغلغل تركيز 30% يوريا طبية نقية داخل الطبقة المتقرنة لتفكيك الروابط الجزيئية الخشنة بهدوء تام دون أي مقشرات فيزيائية قاسية، مما يحرر المسام المحتجزة منذ الاستعمالات الأولى."
+                        : "Clinical 30% Urea penetrates the stratum corneum to gently break down rough molecular bonds without harsh physical scrubs, freeing trapped follicles."}
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 pt-2">
+                      <div className="p-3 rounded-2xl bg-[#485c36]/10 border border-[#485c36]/20 text-center">
+                        <span className="block font-mono text-sm font-black text-[#610b0d]">0%</span>
+                        <span className="text-[11px] font-bold text-[#485c36]">{isArabic ? "خدوش مجهرية" : "Micro-tears"}</span>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-[#ca384a]/10 border border-[#ca384a]/25 text-center">
+                        <span className="block font-mono text-sm font-black text-[#ca384a]">30%</span>
+                        <span className="text-[11px] font-bold text-[#610b0d]">{isArabic ? "يوريا علاجية" : "Pure Urea"}</span>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-[#610b0d] text-[#f6f9e6] text-center">
+                        <span className="block font-mono text-sm font-black text-[#f3a5a1]">pH 5.2</span>
+                        <span className="text-[11px] font-bold text-[#f6f9e6]">{isArabic ? "توازن فسيولوجي" : "Balanced pH"}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {activeStage === 1 && (
+                  <motion.div
+                    key="stage-1"
+                    initial={{ opacity: 0, x: 15 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -15 }}
+                    transition={{ duration: 0.3 }}
+                    className="p-6 sm:p-7 rounded-3xl bg-[#f6f9e6] text-[#485c36] border-2 border-[#ca384a] shadow-lg space-y-4 text-start"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="px-3 py-1 rounded-full bg-[#ca384a] text-[#f6f9e6] text-xs font-bold">
+                        {isArabic ? "المرحلة الثانية • التجديد الخلوي" : "Stage 02 • Cellular Resurfacing"}
+                      </span>
+                      <span className="font-mono text-sm font-black text-[#610b0d]">10% AMMONIUM LACTATE</span>
+                    </div>
+                    <h4 className="font-amiri text-2xl font-bold text-[#610b0d]">
+                      {isArabic
+                        ? "توحيد لون المسام الداكنة وصقل الملمس السطحي للبشرة"
+                        : "Refining Dark Follicular Dots & Surface Texture"}
+                    </h4>
+                    <p className="text-xs sm:text-sm text-[#485c36] leading-relaxed">
+                      {isArabic
+                        ? "يعمل أمونيوم لاكتات بتركيز 10% على تحفيز التجدد الطبيعي للخلايا السطحية وإزالة التصبغات الناتجة عن احتباس الشعر، مع جذب جزيئات الماء داخل الأدمة."
+                        : "10% Ammonium Lactate accelerates natural surface cell turnover, fading follicular hyperpigmentation while drawing deep moisture into the dermis."}
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 pt-2">
+                      <div className="p-3 rounded-2xl bg-[#ca384a]/10 border border-[#ca384a]/25 text-center">
+                        <span className="block font-mono text-sm font-black text-[#ca384a]">10%</span>
+                        <span className="text-[11px] font-bold text-[#610b0d]">{isArabic ? "أمونيوم لاكتات" : "Lactate AHA"}</span>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-[#485c36]/10 border border-[#485c36]/20 text-center">
+                        <span className="block font-mono text-sm font-black text-[#485c36]">2%</span>
+                        <span className="text-[11px] font-bold text-[#485c36]">{isArabic ? "سالسليك نقي" : "BHA Salicylic"}</span>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-[#610b0d] text-[#f6f9e6] text-center">
+                        <span className="block font-mono text-sm font-black text-[#f3a5a1]">24h</span>
+                        <span className="text-[11px] font-bold text-[#f6f9e6]">{isArabic ? "نعومة مستمرة" : "Active Renewal"}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {activeStage === 2 && (
+                  <motion.div
+                    key="stage-2"
+                    initial={{ opacity: 0, x: 15 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -15 }}
+                    transition={{ duration: 0.3 }}
+                    className="p-6 sm:p-7 rounded-3xl bg-[#f6f9e6] text-[#485c36] border-2 border-[#610b0d] shadow-lg space-y-4 text-start"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="px-3 py-1 rounded-full bg-[#610b0d] text-[#f3a5a1] text-xs font-bold">
+                        {isArabic ? "المرحلة الثالثة • الترميم الدهني" : "Stage 03 • Lipid Barrier Lock"}
+                      </span>
+                      <span className="font-mono text-sm font-black text-[#485c36]">CERAMIDES NP • AP • EOP</span>
+                    </div>
+                    <h4 className="font-amiri text-2xl font-bold text-[#610b0d]">
+                      {isArabic
+                        ? "إعادة بناء الحاجز الدهني لمنع عودة الجفاف أو الخشونة"
+                        : "Rebuilding the Lipid Matrix to Prevent Dry Rebound"}
+                    </h4>
+                    <p className="text-xs sm:text-sm text-[#485c36] leading-relaxed">
+                      {isArabic
+                        ? "تعمل السيراميدات المتطابقة حيوياً مع البانثينول 5% على ختم الرطوبة داخل طبقات الجلد وإصلاح الفجوات بين الخلايا، لتبقى بشرتكِ ناعمة كالحرير دون أي ملمس دهني."
+                        : "Bio-identical Ceramides and 5% Panthenol seal hydration inside skin layers and repair intercellular gaps for a non-greasy, velvet finish."}
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 pt-2">
+                      <div className="p-3 rounded-2xl bg-[#485c36]/10 border border-[#485c36]/20 text-center">
+                        <span className="block font-mono text-sm font-black text-[#485c36]">3x</span>
+                        <span className="text-[11px] font-bold text-[#485c36]">{isArabic ? "سيراميدات حيوية" : "Bio-Ceramides"}</span>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-[#ca384a]/10 border border-[#ca384a]/25 text-center">
+                        <span className="block font-mono text-sm font-black text-[#ca384a]">5%</span>
+                        <span className="text-[11px] font-bold text-[#610b0d]">{isArabic ? "بانثينول مهدئ" : "D-Panthenol"}</span>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-[#610b0d] text-[#f6f9e6] text-center">
+                        <span className="block font-mono text-sm font-black text-[#f3a5a1]">72h</span>
+                        <span className="text-[11px] font-bold text-[#f6f9e6]">{isArabic ? "حبس الرطوبة" : "Moisture Lock"}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Section Header with controls */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">

@@ -92,7 +92,9 @@ export async function fetchOrderById(idOrNumber: string): Promise<OrderRecord | 
   return cached.find((o) => o.id === idOrNumber || o.orderNumber.toLowerCase() === idOrNumber.toLowerCase()) || null;
 }
 
-export async function createOrderApi(data: Omit<OrderRecord, "id" | "orderNumber" | "createdAt">): Promise<OrderRecord> {
+export async function createOrderApi(
+  data: Omit<OrderRecord, "id" | "orderNumber" | "createdAt"> & Partial<Pick<OrderRecord, "id" | "orderNumber" | "createdAt">>
+): Promise<OrderRecord> {
   const res = await fetch("/api/orders", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -108,8 +110,10 @@ export async function createOrderApi(data: Omit<OrderRecord, "id" | "orderNumber
     throw new Error(result.error || "خطأ في تسجيل الطلب.");
   }
 
-  // Update local cache
-  const cached = getCachedOrders();
+  // Update local cache without duplicating
+  const cached = getCachedOrders().filter(
+    (o) => o.id !== result.order.id && o.orderNumber !== result.order.orderNumber
+  );
   setCachedOrders([result.order, ...cached]);
 
   return result.order;
@@ -179,8 +183,8 @@ export function createOrder(data: Omit<OrderRecord, "id" | "orderNumber" | "crea
   };
   const cached = getCachedOrders();
   setCachedOrders([newOrder, ...cached]);
-  // Also push to API asynchronously in background
-  createOrderApi(data).catch((e) => console.error("Async order sync err:", e));
+  // Also push to API asynchronously in background with the same id & orderNumber
+  createOrderApi(newOrder).catch((e) => console.error("Async order sync err:", e));
   return newOrder;
 }
 

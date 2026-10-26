@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart/cart-context";
 import { useStoreSettings } from "@/lib/settings/store-settings-context";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { useCustomerAuth } from "@/lib/auth/customer-auth";
 import { SULAF_SETTINGS } from "@/lib/data/mock-data";
 import { EGYPT_GOVERNORATES_RATES } from "@/lib/shipping/stox";
 import { createOrder } from "@/lib/orders/order-store";
@@ -39,6 +40,7 @@ export default function CheckoutPage() {
   } = useCart();
   const { settings } = useStoreSettings();
   const { isArabic, t, dir } = useLanguage();
+  const { user } = useCustomerAuth();
 
   const currency = isArabic ? "ج.م" : "EGP";
 
@@ -53,6 +55,19 @@ export default function CheckoutPage() {
   const [notes, setNotes] = useState("");
   const [birthdate, setBirthdate] = useState("");
   const [closePersonName, setClosePersonName] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+    if (!fullName && user.name) setFullName(user.name);
+    if (!phone && user.phone) setPhone(user.phone);
+    if (!email && user.email) setEmail(user.email);
+    const defaultAddr = user.savedAddresses?.find((a) => a.isDefault) || user.savedAddresses?.[0];
+    if (defaultAddr) {
+      if (defaultAddr.governorate) setGovernorate(defaultAddr.governorate);
+      if (!city && defaultAddr.city) setCity(defaultAddr.city);
+      if (!street && defaultAddr.address) setStreet(defaultAddr.address);
+    }
+  }, [user]);
 
   // Payment Selection
   const [paymentMethod, setPaymentMethod] = useState<"PAYMOB" | "INSTAPAY">("INSTAPAY");

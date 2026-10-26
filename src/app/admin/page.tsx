@@ -954,13 +954,14 @@ export default function AdminPage() {
   async function loadLiveBackendData(silent = false) {
     if (!silent) setIsSyncing(true);
     try {
-      const [resOrders, resProducts, resCoupons, resAnalytics, resCustomers, resPages] = await Promise.all([
+      const [resOrders, resProducts, resCoupons, resAnalytics, resCustomers, resPages, resReviews] = await Promise.all([
         fetch("/api/orders", { cache: "no-store" }),
         fetch("/api/products", { cache: "no-store" }),
         fetch("/api/coupons", { cache: "no-store" }),
         fetch("/api/analytics", { cache: "no-store" }),
         fetch("/api/customers", { cache: "no-store" }),
         fetch("/api/pages", { cache: "no-store" }),
+        fetch("/api/reviews", { cache: "no-store" }),
       ]);
 
       if (resOrders.ok) {
@@ -986,6 +987,10 @@ export default function AdminPage() {
       if (resPages && resPages.ok) {
         const pd = await resPages.json();
         if (pd.pages) setStorePages(pd.pages);
+      }
+      if (resReviews && resReviews.ok) {
+        const rd = await resReviews.json();
+        if (Array.isArray(rd.reviews)) setReviewsList(rd.reviews);
       }
       setLastSyncTime(new Date().toLocaleTimeString("ar-EG"));
     } catch (err) {

@@ -45,6 +45,40 @@ export function saveAllReviews(reviews: ReviewItem[]): void {
   try {
     ensureFile();
     fs.writeFileSync(REVIEWS_FILE, JSON.stringify(reviews, null, 2), "utf8");
+
+    // Sync approved reviews count and average rating into products.json
+    const productsFile = path.join(process.cwd(), "data", "products.json");
+    if (fs.existsSync(productsFile)) {
+      const productsRaw = fs.readFileSync(productsFile, "utf8");
+      const products = JSON.parse(productsRaw);
+      if (Array.isArray(products)) {
+        const approved = reviews.filter((r) => r.status === "APPROVED");
+        let changed = false;
+        for (const prod of products) {
+          const prodReviews = approved.filter(
+            (r) => !r.productId || r.productId === prod.id || r.productId === prod.slug
+          );
+          const newCount = prodReviews.length;
+          const newRating =
+            newCount > 0
+              ? Number(
+                  (
+                    prodReviews.reduce((sum, r) => sum + (Number(r.rating) || 5), 0) /
+                    newCount
+                  ).toFixed(1)
+                )
+              : 5;
+          if (prod.reviewsCount !== newCount || prod.rating !== newRating) {
+            prod.reviewsCount = newCount;
+            prod.rating = newRating;
+            changed = true;
+          }
+        }
+        if (changed) {
+          fs.writeFileSync(productsFile, JSON.stringify(products, null, 2), "utf8");
+        }
+      }
+    }
   } catch (err) {
     console.error("Error writing reviews.json:", err);
   }

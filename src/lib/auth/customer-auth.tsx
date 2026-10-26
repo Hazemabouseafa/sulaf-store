@@ -82,93 +82,29 @@ export interface CustomerAuthContextType {
   refreshUserData: () => Promise<void>;
 }
 
-const CUSTOMERS_DB_KEY = "sulaf_customers_db_v1";
-const CUSTOMER_SESSION_KEY = "sulaf_customer_session_v1";
-
-const DEFAULT_DEMO_USER: CustomerUser = {
-  id: "cust-sarah-demo",
-  name: "سارة الأندلسي",
-  email: "sarah.andalusi@gmail.com",
-  phone: "01012345678",
-  password: "password123",
-  governorate: "القاهرة",
-  city: "التجمع الخامس",
-  address: "شارع التسعين الشمالي، كمبوند النرجس، عمارة 14، شقة 5",
-  registeredAt: "2026-01-15",
-  role: "vip",
-  savedAddresses: [
-    {
-      id: "addr-1",
-      label: "المنزل (التجمع الخامس)",
-      recipientName: "سارة الأندلسي",
-      phone: "01012345678",
-      governorate: "القاهرة",
-      city: "التجمع الخامس",
-      address: "شارع التسعين الشمالي، كمبوند النرجس، عمارة 14، شقة 5",
-      isDefault: true,
-    },
-    {
-      id: "addr-2",
-      label: "العيادة / العمل (المهندسين)",
-      recipientName: "د. سارة الأندلسي",
-      phone: "01012345678",
-      governorate: "الجيزة",
-      city: "المهندسين",
-      address: "شارع جامعة الدول العربية، برج الأطباء، الدور الرابع",
-      isDefault: false,
-    },
-  ],
-  customCoupons: [
-    {
-      id: "cc-sarah-25",
-      code: "SARAH-VIP25",
-      titleAr: "خصم VIP استثنائي 25%",
-      titleEn: "Exclusive 25% VIP Discount",
-      descAr: "كوبون مخصص لحسابكِ تقديراً لولائكِ واختياركِ الدائم لمستحضرات سُـلاف.",
-      descEn: "Personalized coupon assigned exclusively to your account as a valued client.",
-      discountType: "PERCENTAGE",
-      discountValue: 25,
-      minOrderAmount: 0,
-      expiryDate: "2026-12-31",
-      isActive: true,
-      assignedAt: "2026-10-24",
-    },
-  ],
-  customNotifications: [
-    {
-      id: "cn-sarah-1",
-      titleAr: "🎉 هدية خاصة واستثنائية من إدارة سُـلاف",
-      titleEn: "Special Exclusive Gift from Sulaf Management",
-      messageAr: "يسعدنا تخصيص كود الخصم الحصري (SARAH-VIP25) بخصم 25% لحسابكِ تقديراً لثقتكِ الغالية بنا. يطبق تلقائياً على كامل سلتكِ القادمة!",
-      messageEn: "We are thrilled to assign an exclusive 25% discount code (SARAH-VIP25) to your account. Enjoy premium care!",
-      couponCode: "SARAH-VIP25",
-      type: "gift",
-      isRead: false,
-      createdAt: "2026-10-24",
-    },
-  ],
-};
+const CUSTOMERS_DB_KEY = "sulaf_customers_db_v2";
+const CUSTOMER_SESSION_KEY = "sulaf_customer_session_v2";
 
 const CustomerAuthContext = createContext<CustomerAuthContextType | undefined>(undefined);
 
 export function CustomerAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<CustomerUser | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
 
   const refreshUserData = useCallback(async () => {
     if (typeof window === "undefined") return;
     try {
-      const res = await fetch("/api/customers");
+      const res = await fetch("/api/customers", { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.customers)) {
           localStorage.setItem(CUSTOMERS_DB_KEY, JSON.stringify(data.customers));
 
-          // If current user is logged in, sync with server data
           const rawSession = localStorage.getItem(CUSTOMER_SESSION_KEY);
           if (rawSession) {
             const current = JSON.parse(rawSession) as CustomerUser;
-            const updated = data.customers.find((c: any) => c.id === current.id || c.email === current.email);
+            const updated = data.customers.find(
+              (c: any) => c.id === current.id || c.email?.toLowerCase() === current.email?.toLowerCase()
+            );
             if (updated) {
               const merged: CustomerUser = { ...current, ...updated };
               setUser(merged);
@@ -187,13 +123,6 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     if (typeof window === "undefined") return;
 
     try {
-      // Ensure customers DB exists with at least the demo user
-      const rawDb = localStorage.getItem(CUSTOMERS_DB_KEY);
-      if (!rawDb) {
-        localStorage.setItem(CUSTOMERS_DB_KEY, JSON.stringify([DEFAULT_DEMO_USER]));
-      }
-
-      // Load session
       const rawSession = localStorage.getItem(CUSTOMER_SESSION_KEY);
       if (rawSession) {
         const sessionUser = JSON.parse(rawSession) as CustomerUser;
@@ -201,20 +130,18 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
       }
     } catch (e) {
       console.error("Error reading customer auth state:", e);
-    } finally {
-      setIsLoaded(true);
     }
 
     refreshUserData();
   }, [refreshUserData]);
 
   const getDb = (): CustomerUser[] => {
-    if (typeof window === "undefined") return [DEFAULT_DEMO_USER];
+    if (typeof window === "undefined") return [];
     try {
       const raw = localStorage.getItem(CUSTOMERS_DB_KEY);
-      return raw ? JSON.parse(raw) : [DEFAULT_DEMO_USER];
+      return raw ? JSON.parse(raw) : [];
     } catch {
-      return [DEFAULT_DEMO_USER];
+      return [];
     }
   };
 
@@ -245,12 +172,13 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
 
   const login = async (identifier: string, password?: string): Promise<{ success: boolean; error?: string }> => {
     const cleanId = identifier.trim().toLowerCase();
+    await refreshUserData();
     const db = getDb();
 
     const found = db.find(
       (c) =>
-        c.email.toLowerCase() === cleanId ||
-        c.phone.replace(/\s+/g, "") === cleanId.replace(/\s+/g, "")
+        c.email?.toLowerCase() === cleanId ||
+        c.phone?.replace(/\s+/g, "") === cleanId.replace(/\s+/g, "")
     );
 
     if (!found) {
@@ -286,12 +214,13 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
 
     const cleanEmail = data.email.trim().toLowerCase();
     const cleanPhone = data.phone.trim().replace(/\s+/g, "");
+    await refreshUserData();
     const db = getDb();
 
     const exists = db.some(
       (c) =>
-        c.email.toLowerCase() === cleanEmail ||
-        c.phone.replace(/\s+/g, "") === cleanPhone
+        c.email?.toLowerCase() === cleanEmail ||
+        c.phone?.replace(/\s+/g, "") === cleanPhone
     );
 
     if (exists) {
@@ -346,7 +275,6 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     saveDb(newDb);
     persistSession(newUser);
 
-    // Sync to server backend
     try {
       fetch("/api/customers", {
         method: "POST",
@@ -362,13 +290,8 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     persistSession(null);
   };
 
-  const quickDemoLogin = () => {
-    persistSession(DEFAULT_DEMO_USER);
-  };
-
-  const googleLogin = () => {
-    persistSession(DEFAULT_DEMO_USER);
-  };
+  const quickDemoLogin = () => {};
+  const googleLogin = () => {};
 
   const updateProfile = (data: Partial<CustomerUser>) => {
     if (!user) return;

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { ProductData } from "@/lib/data/mock-data";
-import { getStoredProducts } from "@/lib/products/product-store";
+import { useProducts } from "@/lib/products/product-store";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { QuickViewModal } from "@/components/shop/QuickViewModal";
 import { useLanguage } from "@/lib/i18n/language-context";
@@ -16,9 +16,9 @@ export default function ShopPage() {
   const { isArabic } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [quickViewProduct, setQuickViewProduct] = useState<ProductData | null>(null);
+  const allProducts = useProducts();
 
   const filteredProducts = useMemo(() => {
-    const allProducts = getStoredProducts();
     if (!searchQuery.trim()) return allProducts;
 
     const q = searchQuery.toLowerCase();
@@ -32,7 +32,7 @@ export default function ShopPage() {
         prod.subtitleEn.toLowerCase().includes(q)
       );
     });
-  }, [searchQuery]);
+  }, [allProducts, searchQuery]);
 
   return (
     <div className="py-12 bg-[#f6f9e6] min-h-screen font-cairo">

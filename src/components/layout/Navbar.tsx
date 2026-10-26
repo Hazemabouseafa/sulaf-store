@@ -8,6 +8,7 @@ import { useCart } from "@/lib/cart/cart-context";
 import { useCustomerAuth } from "@/lib/auth/customer-auth";
 import { useStoreSettings } from "@/lib/settings/store-settings-context";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { useProducts } from "@/lib/products/product-store";
 import {
   User,
   ShoppingBag,
@@ -31,6 +32,7 @@ export function Navbar() {
   const { settings } = useStoreSettings();
   const { toggleLanguage, isArabic, t } = useLanguage();
   const { user, isLoggedIn } = useCustomerAuth();
+  const products = useProducts();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -151,8 +153,8 @@ export function Navbar() {
             className="flex items-center gap-2 sm:gap-3 shrink-0 group focus:outline-none"
             aria-label="سُـلاف | Sulaf"
           >
-            <SulafLogo size="sm" color="green" className="sm:hidden" />
-            <SulafLogo size="md" color="green" className="hidden sm:inline-flex" />
+            <SulafLogo size="sm" color="green" className="sm:hidden" href="" />
+            <SulafLogo size="md" color="green" className="hidden sm:inline-flex" href="" />
           </Link>
 
           {/* Desktop Navigation with Dropdowns */}
@@ -197,50 +199,34 @@ export function Navbar() {
               {shopDropdownOpen && (
                 <div className="absolute top-full start-0 mt-1 w-80 rounded-2xl bg-white border border-[#e2e8c0] shadow-xl p-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                   <div className="space-y-1">
-                    {/* Absolutes Smoothing Body Cream Highlight */}
-                    <Link
-                      href="/product/absolutes-smoothing-body-cream"
-                      className="p-2.5 rounded-xl hover:bg-[#f6f9e6] transition-colors block border border-[#485c36]/20 bg-[#485c36]/5"
-                    >
-                      <div className="flex items-center justify-between mb-0.5">
-                        <span className="font-bold text-xs text-[#485c36] flex items-center gap-1.5">
-                          <Flame className="w-3.5 h-3.5 text-[#ca384a]" />
-                          <span>Absolutes Smoothing Body Cream</span>
+                    {products.slice(0, 4).map((prod, idx) => (
+                      <Link
+                        key={prod.id}
+                        href={`/product/${prod.slug}`}
+                        className={`p-2.5 rounded-xl hover:bg-[#f6f9e6] transition-colors block ${
+                          idx === 0 ? "border border-[#485c36]/20 bg-[#485c36]/5" : ""
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-0.5">
+                          <span
+                            className={`text-xs flex items-center gap-1.5 line-clamp-1 ${
+                              idx === 0 ? "font-bold text-[#485c36]" : "font-semibold text-[#1c2616]"
+                            }`}
+                          >
+                            {idx === 0 && <Flame className="w-3.5 h-3.5 text-[#ca384a] shrink-0" />}
+                            <span className="truncate">{isArabic ? prod.nameAr : prod.nameEn}</span>
+                          </span>
+                          {idx === 0 && (
+                            <span className="text-[10px] bg-[#ca384a] text-white px-2 py-0.5 rounded-full font-bold shrink-0">
+                              {isArabic ? "الأكثر طلباً" : "Best Seller"}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[11px] text-gray-500 block line-clamp-1">
+                          {isArabic ? prod.subtitleAr : prod.subtitleEn}
                         </span>
-                        <span className="text-[10px] bg-[#ca384a] text-white px-2 py-0.5 rounded-full font-bold">
-                          {isArabic ? "الأكثر طلباً" : "Best Seller"}
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-gray-600 block line-clamp-1">
-                        {isArabic ? "30% Urea • 10% Ammonium Lactate • 2% Salicylic Acid" : "30% Urea • 10% Ammonium Lactate • 2% Salicylic Acid"}
-                      </span>
-                    </Link>
-
-                    {/* Velvet Cleanser */}
-                    <Link
-                      href="/product/sulaf-velvet-barrier-cleanser"
-                      className="p-2.5 rounded-xl hover:bg-[#f6f9e6] transition-colors block"
-                    >
-                      <span className="font-semibold text-xs text-gray-800 block">
-                        {t.nav.cleanser}
-                      </span>
-                      <span className="text-[11px] text-gray-500 block">
-                        {isArabic ? "غسول زيتي-كريمي لطيف ومرمم للحاجز" : "Gentle barrier repairing cleanser"}
-                      </span>
-                    </Link>
-
-                    {/* Gold Nectar */}
-                    <Link
-                      href="/product/sulaf-gold-radiance-nectar"
-                      className="p-2.5 rounded-xl hover:bg-[#f6f9e6] transition-colors block"
-                    >
-                      <span className="font-semibold text-xs text-gray-800 block">
-                        {t.nav.goldNectar}
-                      </span>
-                      <span className="text-[11px] text-gray-500 block">
-                        {isArabic ? "أوراق الذهب والأزيليك 10% لتوحيد اللون" : "24K Gold flakes & Azelaic 10%"}
-                      </span>
-                    </Link>
+                      </Link>
+                    ))}
 
                     <div className="pt-2 border-t border-[#e2e8c0] mt-2">
                       <Link
@@ -498,15 +484,17 @@ export function Navbar() {
                   <Link href="/shop" className="block text-xs font-semibold text-gray-800">
                     {t.nav.allProducts}
                   </Link>
-                  <Link href="/product/absolutes-smoothing-body-cream" className="block text-xs font-bold text-[#ca384a]">
-                    Absolutes Smoothing Body Cream ★
-                  </Link>
-                  <Link href="/product/sulaf-velvet-barrier-cleanser" className="block text-xs text-gray-700">
-                    {t.nav.cleanser}
-                  </Link>
-                  <Link href="/product/sulaf-gold-radiance-nectar" className="block text-xs text-gray-700">
-                    {t.nav.goldNectar}
-                  </Link>
+                  {products.slice(0, 4).map((prod, idx) => (
+                    <Link
+                      key={prod.id}
+                      href={`/product/${prod.slug}`}
+                      className={`block text-xs truncate ${
+                        idx === 0 ? "font-bold text-[#ca384a]" : "text-gray-700"
+                      }`}
+                    >
+                      {isArabic ? prod.nameAr : prod.nameEn} {idx === 0 ? "★" : ""}
+                    </Link>
+                  ))}
                 </div>
               </div>
 

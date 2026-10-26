@@ -1,6 +1,9 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { MOCK_PRODUCTS, ProductData } from "../data/mock-data";
 
-const STORAGE_KEY = "sulaf_products_catalog_v2";
+const STORAGE_KEY = "sulaf_products_catalog_v3";
 
 export function getStoredProducts(): ProductData[] {
   if (typeof window === "undefined") {
@@ -11,7 +14,6 @@ export function getStoredProducts(): ProductData[] {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_PRODUCTS));
-      // Trigger background sync from server
       syncProductsFromServer();
       return MOCK_PRODUCTS;
     }
@@ -28,7 +30,7 @@ export async function syncProductsFromServer(): Promise<ProductData[]> {
     const res = await fetch("/api/products", { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
-      if (data.products && Array.isArray(data.products)) {
+      if (data.products && Array.isArray(data.products) && data.products.length > 0) {
         saveProducts(data.products);
         return data.products;
       }
@@ -47,6 +49,32 @@ export function saveProducts(products: ProductData[]): void {
   } catch (err) {
     console.error("Failed to save products to storage:", err);
   }
+}
+
+/**
+ * Reactive hook for Storefront components:
+ * Hydrates cleanly with MOCK_PRODUCTS (zero SSR mismatch) and syncs live from /api/products.
+ */
+export function useProducts(): ProductData[] {
+  const [products, setProducts] = useState<ProductData[]>(MOCK_PRODUCTS);
+
+  useEffect(() => {
+    setProducts(getStoredProducts());
+    syncProductsFromServer().then((fresh) => {
+      if (fresh && fresh.length > 0) {
+        setProducts(fresh);
+      }
+    });
+
+    const handleUpdate = () => {
+      setProducts(getStoredProducts());
+    };
+
+    window.addEventListener("sulaf_products_updated", handleUpdate);
+    return () => window.removeEventListener("sulaf_products_updated", handleUpdate);
+  }, []);
+
+  return products;
 }
 
 export async function addProductApi(product: Omit<ProductData, "id"> & { id?: string }): Promise<ProductData> {
@@ -143,7 +171,7 @@ export function addProduct(product: Omit<ProductData, "id"> & { id?: string }): 
     activeIngredients: product.activeIngredients || [],
     reviews: product.reviews || [],
     rating: product.rating || 5.0,
-    reviewsCount: product.reviewsCount || 1,
+    reviewsCount: product.reviewsCount || 0,
     accentColor: product.accentColor || "#485c36",
     routineStepsAr: product.routineStepsAr || ["تطبيق المستحضر بلطف على بشرة نظيفة."],
     usageInstructionsAr: product.usageInstructionsAr || "يُوضع مرتين يومياً على بشرة نظيفة وجافة.",

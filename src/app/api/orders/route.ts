@@ -49,14 +49,14 @@ export async function POST(req: NextRequest) {
     const orders = readJsonFile<OrderRecord[]>("orders.json", []);
     const products = readJsonFile<ProductData[]>("products.json", []);
 
-    const orderNumber = `SLF-${Math.floor(1000 + Math.random() * 9000)}`;
+    const orderNumber = body.orderNumber || `SLF-${Math.floor(1000 + Math.random() * 9000)}`;
     const newOrder: OrderRecord = {
       ...body,
-      id: `ord-${Date.now()}`,
+      id: body.id || `ord-${Date.now()}`,
       orderNumber,
       orderStatus: body.orderStatus || "PENDING_CONFIRMATION",
       paymentStatus: body.paymentStatus || (body.paymentMethod === "COD" ? "PENDING" : "PENDING"),
-      createdAt: new Date().toISOString(),
+      createdAt: body.createdAt || new Date().toISOString(),
     };
 
     // Auto-deduct stock from purchased products
@@ -65,6 +65,9 @@ export async function POST(req: NextRequest) {
       const prodIndex = products.findIndex((p) => p.id === item.productId);
       if (prodIndex !== -1) {
         products[prodIndex].stock = Math.max(0, products[prodIndex].stock - (item.quantity || 1));
+        if (products[prodIndex].variants?.[0]) {
+          products[prodIndex].variants[0].stock = products[prodIndex].stock;
+        }
         productsUpdated = true;
       }
     }

@@ -3,19 +3,93 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { getOrderById, getOrderByTracking, OrderRecord } from "@/lib/orders/order-store";
-import { stoxService, StoxTrackingResult } from "@/lib/shipping/stox";
+import { StoxTrackingResult } from "@/lib/shipping/stox";
 import { useLanguage } from "@/lib/i18n/language-context";
 import {
   Search,
   Truck,
-  PackageCheck,
   Clock,
   MapPin,
   CheckCircle2,
-  FileText,
   AlertCircle,
   MessageCircle,
 } from "lucide-react";
+
+function buildRealTrackingFromOrder(order: OrderRecord): StoxTrackingResult {
+  const createdDate = new Date(order.createdAt).toLocaleString("ar-EG");
+  const statusMap: Record<OrderRecord["orderStatus"], { ar: string; hub: string }> = {
+    PENDING_CONFIRMATION: {
+      ar: "تم استلام الطلب • بانتظار المراجعة والتأكيد",
+      hub: `مركز تجهيز سُـلاف الرئيسي (${order.governorate})`,
+    },
+    PROCESSING: {
+      ar: "جاري التجهيز والتغليف السريري للطرد",
+      hub: `مختبر التغليف والشحن — متجه إلى ${order.governorate}`,
+    },
+    SHIPPED: {
+      ar: "خرج للتوصيل مع مندوب الشحن (معاينة قبل السداد)",
+      hub: `فرع توزيع ${order.governorate} - ${order.city}`,
+    },
+    DELIVERED: {
+      ar: "تم التسليم بنجاح للعميل ✓",
+      hub: `${order.governorate} - ${order.city}`,
+    },
+    CANCELLED: {
+      ar: "تم إلغاء الطلب",
+      hub: "إدارة الطلبات",
+    },
+  };
+
+  const info = statusMap[order.orderStatus] || statusMap.PENDING_CONFIRMATION;
+  const events: StoxTrackingResult["events"] = [
+    {
+      status: "تسجيل الطلب عبر متجر سُـلاف الرسمي",
+      timestamp: createdDate,
+      hubName: "نظام الطلبات المركزي",
+      notes: `رقم الطلب: ${order.orderNumber} — المستلم: ${order.customerName}`,
+    },
+  ];
+
+  if (order.orderStatus === "PROCESSING" || order.orderStatus === "SHIPPED" || order.orderStatus === "DELIVERED") {
+    events.unshift({
+      status: "تأكيد الطلب وتجهيز العبوة السريرية بمعايير الأمان",
+      timestamp: createdDate,
+      hubName: "مركز تجهيز سُـلاف",
+      notes: "مسموح بمعاينة وفحص العبوة قبل الاستلام",
+    });
+  }
+
+  if (order.orderStatus === "SHIPPED" || order.orderStatus === "DELIVERED") {
+    events.unshift({
+      status: `انطلاق الشحنة إلى ${order.governorate} (${order.city})`,
+      timestamp: new Date().toLocaleDateString("ar-EG"),
+      hubName: `فرع توزيع ${order.governorate}`,
+      notes: "سيتواصل معكِ المندوب هاتفياً قبل الوصول",
+    });
+  }
+
+  if (order.orderStatus === "DELIVERED") {
+    events.unshift({
+      status: "تم تسليم الشحنة بنجاح ✓",
+      timestamp: new Date().toLocaleDateString("ar-EG"),
+      hubName: `${order.governorate} - ${order.city}`,
+    });
+  }
+
+  return {
+    trackingNumber: order.stoxTrackingNumber || order.orderNumber,
+    currentStatus:
+      order.orderStatus === "DELIVERED"
+        ? "DELIVERED"
+        : order.orderStatus === "SHIPPED"
+        ? "OUT_FOR_DELIVERY"
+        : "CREATED",
+    statusTextAr: info.ar,
+    carrierHub: info.hub,
+    lastUpdated: createdDate,
+    events,
+  };
+}
 
 function TrackOrderContent() {
   const searchParams = useSearchParams();
@@ -41,28 +115,27 @@ function TrackOrderContent() {
     setIsLoading(true);
     setSearched(true);
 
-    let found = getOrderById(clean) || getOrderByTracking(clean);
-    if (!found) {
-      try {
-        const res = await fetch(`/api/orders/${encodeURIComponent(clean)}`);
-        if (res.ok) {
-          const d = await res.json();
-          if (d.order) found = d.order;
-        }
-      } catch (e) {
-        console.warn("Live tracking lookup error:", e);
+    let found: OrderRecord | undefined = undefined;
+    try {
+      const res = await fetch(`/api/orders/${encodeURIComponent(clean)}`, { cache: "no-store" });
+      if (res.ok) {
+        const d = await res.json();
+        if (d.order) found = d.order;
       }
+    } catch (e) {
+      console.warn("Live tracking lookup error:", e);
+    }
+
+    if (!found) {
+      found = getOrderById(clean) || getOrderByTracking(clean);
     }
 
     if (found) {
       setOrder(found);
-      const trackingNo = found.stoxTrackingNumber || "STX-EG-" + Math.floor(100000 + Math.random() * 900000);
-      const trackRes = await stoxService.trackShipment(trackingNo);
-      setTrackingData(trackRes);
+      setTrackingData(buildRealTrackingFromOrder(found));
     } else {
       setOrder(null);
-      const trackRes = await stoxService.trackShipment(clean);
-      setTrackingData(trackRes);
+      setTrackingData(null);
     }
 
     setIsLoading(false);
@@ -91,8 +164,8 @@ function TrackOrderContent() {
           </h1>
           <p className="text-xs sm:text-sm text-gray-700 font-medium mt-2 leading-relaxed">
             {isArabic
-              ? "أدخلي رقم الطلب (مثل SLF-8821) أو رقم بوليصة الشحن لمعرفة خط سير طردك وموعد وصول المندوب."
-              : "Enter your order reference (e.g. SLF-8821) or tracking code to verify shipment status and delivery window."}
+              ? "أدخلي رقم الطلب (مثل SLF-8821) أو رقم الهاتف المسجل بالطلب لمعرفة حالة طردك وموعد وصول المندوب."
+              : "Enter your order reference (e.g. SLF-8821) or registered phone number to verify shipment status."}
           </p>
         </div>
 
@@ -103,7 +176,7 @@ function TrackOrderContent() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={isArabic ? "اكتبي رقم طلب سلاف (مثال: SLF-8821)..." : "Enter order reference (e.g. SLF-8821)..."}
+              placeholder={isArabic ? "اكتبي رقم طلب سلاف أو رقم الهاتف..." : "Enter order reference or phone number..."}
               className="w-full py-4 px-5 text-xs sm:text-sm font-medium focus:outline-none"
             />
             <button
@@ -120,22 +193,22 @@ function TrackOrderContent() {
         {/* Tracking Results Card */}
         {searched && (
           <div className="space-y-6">
-            {trackingData ? (
+            {trackingData && order ? (
               <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#e2e8c0] shadow-md space-y-6">
                 {/* Header status badge */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#e2e8c0] pb-4">
                   <div>
                     <span className="text-xs text-gray-500 block mb-0.5">
-                      {isArabic ? "كود التتبع وبوليصة الشحن:" : "Tracking & Waybill Code:"}
+                      {isArabic ? "رقم الطلب وكود التتبع:" : "Order & Waybill Reference:"}
                     </span>
                     <strong className="text-base sm:text-lg text-[#610b0d] font-mono font-bold">
-                      {trackingData.trackingNumber}
+                      {order.orderNumber} ({trackingData.trackingNumber})
                     </strong>
                   </div>
 
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold self-start sm:self-auto">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>{isArabic ? trackingData.statusTextAr : "In Transit / Out for Delivery"}</span>
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#485c36]/10 text-[#485c36] border border-[#485c36]/25 text-xs font-bold self-start sm:self-auto">
+                    <CheckCircle2 className="w-4 h-4 text-[#485c36] shrink-0" />
+                    <span>{isArabic ? trackingData.statusTextAr : order.orderStatus}</span>
                   </div>
                 </div>
 
@@ -144,39 +217,41 @@ function TrackOrderContent() {
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-[#485c36] shrink-0" />
                     <span>
-                      {isArabic ? "آخر نقطة لوجستية:" : "Current Distribution Center:"}{" "}
+                      {isArabic ? "نقطة التوزيع والوجهة:" : "Distribution Hub:"}{" "}
                       <strong>{trackingData.carrierHub}</strong>
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-[#485c36] shrink-0" />
                     <span>
-                      {isArabic ? "آخر تحديث للحالة:" : "Last Updated:"}{" "}
+                      {isArabic ? "تاريخ تسجيل الطلب:" : "Order Date:"}{" "}
                       <strong>{trackingData.lastUpdated}</strong>
                     </span>
                   </div>
                 </div>
 
                 {/* COD & Financial Balance details */}
-                {order && (
-                  <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 text-xs text-amber-950 space-y-1.5">
-                    <div className="flex justify-between font-bold">
-                      <span>{isArabic ? "إجمالي قيمة الطلب:" : "Grand Total:"}</span>
-                      <span>{order.total} {currency}</span>
-                    </div>
-                    {order.isDepositMode ? (
-                      <div className="flex justify-between text-[#610b0d] font-bold pt-1.5 border-t border-amber-200/80">
-                        <span>{isArabic ? "المبلغ المطلوب سداده للمندوب عند الاستلام:" : "Remaining Balance Due on Delivery (COD):"}</span>
-                        <span className="text-sm">{order.remainingCodAmount} {currency}</span>
-                      </div>
-                    ) : (
-                      <div className="flex justify-between text-emerald-800 font-bold pt-1.5 border-t border-amber-200/80">
-                        <span>{isArabic ? "حالة السداد:" : "Payment Status:"}</span>
-                        <span>{isArabic ? "مدفوع بالكامل مقدماً (0 ج.م عند الاستلام) ✓" : "Fully Prepaid (0 Balance on Delivery) ✓"}</span>
-                      </div>
-                    )}
+                <div className="p-4 rounded-2xl bg-[#f6f9e6] border border-[#485c36]/25 text-xs text-[#1c2616] space-y-1.5">
+                  <div className="flex justify-between font-bold">
+                    <span>{isArabic ? "إجمالي قيمة الطلب:" : "Grand Total:"}</span>
+                    <span>{order.total} {currency}</span>
                   </div>
-                )}
+                  {order.isDepositMode ? (
+                    <div className="flex justify-between text-[#610b0d] font-bold pt-1.5 border-t border-[#485c36]/20">
+                      <span>{isArabic ? "المبلغ المطلوب سداده للمندوب عند الاستلام:" : "Remaining Balance Due on Delivery (COD):"}</span>
+                      <span className="text-sm">{order.remainingCodAmount} {currency}</span>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between text-[#485c36] font-bold pt-1.5 border-t border-[#485c36]/20">
+                      <span>{isArabic ? "حالة السداد:" : "Payment Status:"}</span>
+                      <span>
+                        {order.paymentStatus === "FULLY_PAID"
+                          ? (isArabic ? "مدفوع بالكامل مقدماً ✓" : "Fully Prepaid ✓")
+                          : (isArabic ? "بانتظار مراجعة وتأكيد الدفع" : "Pending Payment Verification")}
+                      </span>
+                    </div>
+                  )}
+                </div>
 
                 {/* Timeline checkpoints */}
                 <div className="space-y-4 pt-2">
@@ -207,7 +282,7 @@ function TrackOrderContent() {
                     href="https://wa.me/201099887766"
                     target="_blank"
                     rel="noreferrer"
-                    className="px-4 py-2.5 rounded-xl bg-green-700 hover:bg-green-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
+                    className="px-4 py-2.5 rounded-xl bg-[#485c36] hover:bg-[#3a4a2b] text-[#f6f9e6] font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
                   >
                     <MessageCircle className="w-4 h-4" />
                     <span>{isArabic ? "مساعدة فورية من خدمة عملاء سلاف" : "Direct WhatsApp Support"}</span>
@@ -216,14 +291,14 @@ function TrackOrderContent() {
               </div>
             ) : (
               <div className="p-8 rounded-3xl bg-white border border-[#e2e8c0] text-center space-y-3">
-                <AlertCircle className="w-10 h-10 text-amber-600 mx-auto" />
+                <AlertCircle className="w-10 h-10 text-[#ca384a] mx-auto" />
                 <h3 className="font-amiri text-2xl font-bold text-[#485c36]">
                   {isArabic ? "لم يتم العثور على شحنة بهذا الرقم" : "No Shipment Found"}
                 </h3>
                 <p className="text-xs text-gray-600">
                   {isArabic
-                    ? "تأكدي من كتابة رقم الطلب بالشكل الصحيح (مثال: SLF-8821)."
-                    : "Please check your order reference number and try again."}
+                    ? "تأكدي من كتابة رقم الطلب (مثال: SLF-8821) أو رقم الهاتف المسجل في الطلب بالشكل الصحيح."
+                    : "Please check your order reference number or phone number and try again."}
                 </p>
               </div>
             )}

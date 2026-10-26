@@ -11,58 +11,42 @@ export interface CouponData {
   notes?: string;
 }
 
-const DEFAULT_COUPONS: CouponData[] = [
-  {
-    id: "coup-1",
-    code: "SULAF10",
-    discountType: "PERCENTAGE",
-    discountValue: 10,
-    minOrderAmount: 300,
-    usedCount: 42,
-    isActive: true,
-    expiryDate: "2026-12-31",
-    notes: "خصم 10% بمناسبة إطلاق البراند",
-  },
-  {
-    id: "coup-2",
-    code: "ROUGH50",
-    discountType: "FIXED",
-    discountValue: 50,
-    minOrderAmount: 400,
-    usedCount: 28,
-    isActive: true,
-    expiryDate: "2026-11-30",
-    notes: "خصم 50 ج.م على كريم سلاف رف أواي",
-  },
-  {
-    id: "coup-3",
-    code: "VIP20",
-    discountType: "PERCENTAGE",
-    discountValue: 20,
-    minOrderAmount: 800,
-    usedCount: 15,
-    isActive: true,
-    expiryDate: "2026-12-31",
-    notes: "خصم خاص للطلبات فوق 800 ج",
-  },
-];
+const DEFAULT_COUPONS: CouponData[] = [];
 
-const STORAGE_KEY = "sulaf_coupons_store_v1";
+const STORAGE_KEY = "sulaf_coupons_store_v2";
+const CUSTOMER_SESSION_KEY = "sulaf_customer_session_v2";
 
 export function getStoredCoupons(): CouponData[] {
   if (typeof window === "undefined") return DEFAULT_COUPONS;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_COUPONS));
+      syncCouponsFromServer();
       return DEFAULT_COUPONS;
     }
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_COUPONS;
+    return Array.isArray(parsed) ? parsed : DEFAULT_COUPONS;
   } catch (err) {
     console.error("Failed to load coupons:", err);
     return DEFAULT_COUPONS;
   }
+}
+
+export async function syncCouponsFromServer(): Promise<CouponData[]> {
+  if (typeof window === "undefined") return DEFAULT_COUPONS;
+  try {
+    const res = await fetch("/api/coupons", { cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.coupons)) {
+        saveCoupons(data.coupons);
+        return data.coupons;
+      }
+    }
+  } catch (err) {
+    console.warn("Coupon sync failed:", err);
+  }
+  return getStoredCoupons();
 }
 
 export function saveCoupons(coupons: CouponData[]): void {
@@ -123,15 +107,49 @@ export function toggleCoupon(id: string): boolean {
   return true;
 }
 
-export function validateCouponCode(code: string, subtotal: number): { valid: boolean; discount: number; message: string } {
+export function validateCouponCode(
+  code: string,
+  subtotal: number
+): { valid: boolean; discount: number; message: string } {
+  const clean = code.trim().toUpperCase();
+  if (!clean) {
+    return { valid: false, discount: 0, message: "يرجى إدخال كود الخصم" };
+  }
+
   const coupons = getStoredCoupons();
-  const found = coupons.find((c) => c.code === code.trim().toUpperCase() && c.isActive);
+  let found: {
+    code: string;
+    discountType: "PERCENTAGE" | "FIXED";
+    discountValue: number;
+    minOrderAmount: number;
+    isActive: boolean;
+    expiryDate?: string;
+  } | undefined = coupons.find((c) => c.code === clean && c.isActive);
+
+  // Also check personalized customer VIP coupons if logged in
+  if (!found && typeof window !== "undefined") {
+    try {
+      const rawSession = localStorage.getItem(CUSTOMER_SESSION_KEY);
+      if (rawSession) {
+        const sessionUser = JSON.parse(rawSession);
+        if (Array.isArray(sessionUser?.customCoupons)) {
+          found = sessionUser.customCoupons.find(
+            (c: any) => c.code?.trim().toUpperCase() === clean && c.isActive !== false
+          );
+        }
+      }
+    } catch {}
+  }
 
   if (!found) {
     return { valid: false, discount: 0, message: "كود الخصم غير صالح أو منتهي الصلاحية" };
   }
 
-  if (subtotal < found.minOrderAmount) {
+  if (found.expiryDate && new Date(found.expiryDate) < new Date()) {
+    return { valid: false, discount: 0, message: "عذراً، انتهت صلاحية هذا الكوبون" };
+  }
+
+  if (subtotal < (found.minOrderAmount || 0)) {
     return {
       valid: false,
       discount: 0,

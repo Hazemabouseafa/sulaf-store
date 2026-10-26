@@ -12,8 +12,13 @@ export async function GET(
   try {
     const { id } = await params;
     const orders = readJsonFile<OrderRecord[]>("orders.json", []);
+    const cleanId = id.trim().toLowerCase();
     const order = orders.find(
-      (o) => o.id === id || o.orderNumber.toLowerCase() === id.toLowerCase()
+      (o) =>
+        o.id.toLowerCase() === cleanId ||
+        o.orderNumber.toLowerCase() === cleanId ||
+        o.stoxTrackingNumber?.toLowerCase() === cleanId ||
+        o.customerPhone.replace(/\s+/g, "") === cleanId.replace(/\s+/g, "")
     );
 
     if (!order) {

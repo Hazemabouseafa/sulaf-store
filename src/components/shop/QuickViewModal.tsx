@@ -66,13 +66,20 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
           {/* Details */}
           <div className="space-y-4 text-start">
             <div>
-              <div className="flex items-center gap-1.5 text-xs text-amber-600 font-cairo mb-1">
-                <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
-                <span className="font-bold">{product.rating}</span>
-                <span className="text-gray-500">
-                  ({product.reviewsCount} {t.product.reviewsCount})
-                </span>
-              </div>
+              {product.reviewsCount > 0 ? (
+                <div className="flex items-center gap-1.5 text-xs text-[#ca384a] font-cairo mb-1">
+                  <Star className="w-4 h-4 fill-[#ca384a] text-[#ca384a]" />
+                  <span className="font-bold">{product.rating}</span>
+                  <span className="text-gray-500">
+                    ({product.reviewsCount} {t.product.reviewsCount})
+                  </span>
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-1.5 text-[11px] text-[#485c36] font-cairo font-bold mb-1">
+                  <Shield className="w-3.5 h-3.5 text-[#485c36]" />
+                  <span>{isArabic ? "تركيبة سريرية معتمدة" : "Verified Clinical Formula"}</span>
+                </div>
+              )}
               <h2 className="font-amiri text-2xl font-bold text-[#222b1a]">
                 {productName}
               </h2>

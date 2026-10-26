@@ -1,7 +1,7 @@
 "use client";
-import { validateCouponCode } from "@/lib/coupons/coupon-store";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { validateCouponCode, syncCouponsFromServer } from "@/lib/coupons/coupon-store";
 import { ProductData, ProductVariantData, SULAF_SETTINGS } from "../data/mock-data";
 import { useStoreSettings } from "../settings/store-settings-context";
 
@@ -37,36 +37,59 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [isHydrated, setIsHydrated] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isDepositMode, setIsDepositMode] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [discountAmount, setDiscountAmount] = useState(0);
 
-  // Load cart from localStorage
+  // Load cart from localStorage and sync server coupons on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem("sulaf_cart");
       if (saved) {
-        setItems(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setItems(parsed);
+        }
       }
     } catch (e) {
       console.error("Failed to load cart from storage", e);
+    } finally {
+      setIsHydrated(true);
     }
+    syncCouponsFromServer();
   }, []);
 
-  // Save cart to localStorage
+  // Save cart to localStorage only after initial hydration
   useEffect(() => {
+    if (!isHydrated) return;
     try {
       localStorage.setItem("sulaf_cart", JSON.stringify(items));
     } catch (e) {
       console.error("Failed to save cart to storage", e);
     }
-  }, [items]);
+  }, [items, isHydrated]);
 
   const { settings } = useStoreSettings();
   const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const depositAmount = settings.payment?.depositAmount ?? SULAF_SETTINGS.depositAmountEgp;
+
+  // Keep discountAmount dynamically synced with subtotal changes
+  useEffect(() => {
+    if (!appliedCoupon) {
+      setDiscountAmount(0);
+      return;
+    }
+    const res = validateCouponCode(appliedCoupon, subtotal);
+    if (res.valid) {
+      setDiscountAmount(res.discount);
+    } else {
+      setAppliedCoupon(null);
+      setDiscountAmount(0);
+    }
+  }, [subtotal, appliedCoupon]);
 
   function openCart() {
     setIsOpen(true);
@@ -84,7 +107,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       if (existing) {
         return prev.map((i) =>
-          i.id === itemId ? { ...i, quantity: i.quantity + quantity } : i
+          i.id === itemId ? { ...i, quantity: i.quantity + quantity, unitPrice } : i
         );
       }
       return [...prev, { id: itemId, product, variant, quantity, unitPrice }];

@@ -6,27 +6,28 @@
     "slug": "absolutes-smoothing-body-cream",
     "subtitleAr": "Architectural Keratolytic Reset | 30% Pure Urea • 10% Ammonium Lactate • 2% Salicylic Acid",
     "subtitleEn": "Architectural Keratolytic Reset | 30% Pure Urea • 10% Ammonium Lactate • 2% Salicylic Acid",
-    "descriptionAr": "وصف سريري مخصص باللغة العربية لعلاج الخشونة الشديدة وجلد الوزة.",
-    "descriptionEn": "Custom clinical description in English for severe keratosis pilaris reset.",
-    "usageInstructionsAr": "طريقة الاستخدام بالعربي: يُطبق مساءً مرتين أسبوعياً مع تدليك خفيف حتى تمام الامتصاص.",
-    "clinicalResultsAr": "• 96% complete skin texture transformation to silk smoothness within 7 days.\n• 91% noticeable reduction in keratosis pilaris redness and rough follicular bumps within 14 days.\n• 48 hours of continuous cellular moisture lock proven via TEWL barrier testing.\n• 100% gentle, dermatologically certified formula free from harsh fragrances and sulfates.",
+    "descriptionAr": "تحفة صيدلانية سريرية مصممة لإنهاء الحرب بين بشرتك والمقشرات القاسية. بفضل نواة طبية بتركيز 30% يوريا نقية، و10% أمونيوم لاكتات، ومصفوفة حمض الساليسيليك 2%، يفكك هذا الكريم الروابط المتكلسة لسدادات البصيلات وجلد الوزة من الجذور دون أي خدوش مجهرية أو جفاف ارتدادي، ليحول الملمس الخشن إلى حرير أندلسي لا يُهزم.",
+    "descriptionEn": "Absolutes Smoothing Body Cream is a clinical masterpiece formulated to end the war between your skin and coarse exfoliants. Crafted with a medical-grade 30% Urea core, 10% Ammonium Lactate, and an intensified 2% Salicylic Acid matrix, it breaks the mineralized bonds of stubborn follicular plugs from the root up.",
+    "usageInstructionsAr": "المرحلة الأولى (صدمة الترميم - الأسبوع 1 و2): يُدلك مقدار مناسب مساءً 2 إلى 3 مرات أسبوعياً على المناطق المستهدفة حتى تمام الامتصاص. المرحلة الثانية (الحفاظ على النعومة): يُطبق مرة إلى مرتين أسبوعياً.",
+    "usageInstructionsEn": "Phase 1 (The Shock Reset - Weeks 1 & 2): Massage a dime-sized amount 2 to 3 evenings per week into targeted zones until absorbed. Phase 2 (Maintenance): Apply 1 to 2 times weekly.",
+    "clinicalResultsAr": "• 96% تحول كامل في ملمس البشرة إلى نعومة الحرير خلال 7 أيام.\n• 91% انخفاض ملحوظ في احمرار ونتوءات جلد الوزة خلال 14 يوماً.\n• 48 ساعة من حبس الرطوبة الخلوية المثبت باختبارات الحاجز الجلدي (TEWL).\n• 100% تركيبة لطيفة ومعتمدة جلدياً خالية من الكبريتات والمقشرات الخشنة.",
     "routineStepsAr": [
-      "Target: Apply directly to clean, dry problem areas—upper arms, thighs, elbows, heels, or wherever keratin build-up creates roughness.",
-      "Phase 1 (The Shock Reset - Weeks 1 & 2): Massage a dime-sized amount 2 to 3 evenings per week into targeted zones until absorbed.",
-      "Phase 2 (Architectural Maintenance - Week 3 onward): Maintain smooth texture with 1 to 2 applications weekly, ideally layered under your barrier lipid shield."
+      "الاستهداف: يُوضع مباشرة على المناطق الجافة والخشنة (الذراعين، الساقين، الركب، الأكواع).",
+      "المرحلة الأولى (الأسبوع 1 و 2): يُدلك مساءً 2 إلى 3 مرات أسبوعياً حتى الامتصاص الكامل.",
+      "المرحلة الثانية (الأسبوع 3 فصاعداً): يُستخدم مرة إلى مرتين أسبوعياً للحفاظ على ملمس الحرير."
     ],
-    "skinTypeAr": "All skin types prone to roughness, keratosis pilaris, strawberry bumps, or compromised barrier.",
+    "skinTypeAr": "جميع أنواع البشرة المعرضة للخشونة، جلد الوزة (Strawberry Skin)، أو التقرن الشعري.",
     "concernsAr": [
-      "Keratosis Pilaris (Strawberry Bumps)",
-      "Rough Arms & Legs",
-      "Elbows & Knees Hardness",
-      "Cracked Heels"
+      "جلد الوزة (Keratosis Pilaris)",
+      "خشونة الذراعين والساقين",
+      "تصلب الركب والأكواع",
+      "تشققات الكعبين"
     ],
     "price": 420,
     "compareAtPrice": 530,
     "stock": 140,
     "sku": "SLF-ABS-001",
-    "badgeAr": "Architectural Reset",
+    "badgeAr": "الأكثر طلباً • ترميم هيكلي",
     "accentColor": "#485c36",
     "images": [
       {
@@ -43,7 +44,7 @@
     "variants": [
       {
         "id": "var-200ml",
-        "titleAr": "Clinical Jar 200ml",
+        "titleAr": "العبوة السريرية (200 مل)",
         "titleEn": "Clinical Jar 200ml",
         "sku": "SLF-ABS-200ML",
         "price": 420,
@@ -51,7 +52,38 @@
         "volumeMl": 200
       }
     ],
-    "activeIngredients": [],
+    "activeIngredients": [
+      {
+        "id": "urea-30",
+        "nameAr": "يوريا نقية",
+        "nameEn": "Pure Urea",
+        "concentration": "30%",
+        "functionAr": "إذابة الروابط الكيراتينية المتصلبة وسحب الترطيب لعمق الطبقات",
+        "functionEn": "Hydro-keratolytic plug dissolution",
+        "scientificDescriptionAr": "عامل كيراتوليتي طبيعي يفكك التكلسات دون خدش الجلد.",
+        "moleculeSvg": "urea"
+      },
+      {
+        "id": "lactate-10",
+        "nameAr": "أمونيوم لاكتات",
+        "nameEn": "Ammonium Lactate",
+        "concentration": "10%",
+        "functionAr": "تجديد فسيولوجي للخلايا وحبس الرطوبة داخل الحاجز الدهني",
+        "functionEn": "Epidermal renewal & moisture retention",
+        "scientificDescriptionAr": "مشتق ألفا هيدروكسي يمنح مرونة وملمساً حريرياً فورياً.",
+        "moleculeSvg": "lactate"
+      },
+      {
+        "id": "salicylic-2",
+        "nameAr": "حمض الساليسيليك",
+        "nameEn": "Salicylic Acid",
+        "concentration": "2%",
+        "functionAr": "تغلغل داخل قمع البصيلات لتنقيتها وتهدئة الاحمرار",
+        "functionEn": "Follicular funnel purification",
+        "scientificDescriptionAr": "حمض محب للدهون يفكك السدادة الكيراتينية من نقطة ارتكازها.",
+        "moleculeSvg": "salicylic"
+      }
+    ],
     "reviews": [],
     "rating": 5,
     "reviewsCount": 0,
@@ -63,6 +95,7 @@
       "Absolutes Smoothing Body Cream is a clinical masterpiece formulated to end the war between your skin and coarse exfoliants. Crafted with a medical-grade 30% Urea core, 10% Ammonium Lactate, and an intensified, 2% Salicylic Acid matrix, it breaks the mineralized bonds of stubborn follicular plugs from the root up. No micro-tears. No rebound coarseness. Just pure, uncompromised biological alchemy that turns weathered texture into silk."
     ],
     "activesTitle": "The Triple Clinical Complex & Key Actives",
+    "activesTitleAr": "المركب الثلاثي السريري والمركبات الفعالة الأساسية",
     "activeIngredientsList": [
       {
         "id": "urea-30",
@@ -161,29 +194,28 @@
     "inci": "Aqua (Deionized Water), Urea, Ammonium Lactate, Niacinamide, Salicylic Acid, Butyrospermum Parkii (Shea) Butter, Cetearyl Alcohol, Glycerin, Polysorbate 60, C12-15 Alkyl Benzoate, Panthenol (D-Panthenol), Centella Asiatica Leaf Extract, Ceramide NP, Ceramide AP, Ceramide EOP, Phytosphingosine, Cholesterol, Tocopherol (Vitamin E), Allantoin, Argania Spinosa (Argan) Kernel Oil, Persea Gratissima (Avocado) Oil, Prunus Amygdalus Dulcis (Sweet Almond) Oil, Dimethicone, Theobroma Cacao (Cocoa) Seed Butter, Cetyl Alcohol, Phenoxyethanol, Ethylhexylglycerin, Disodium EDTA, Fragrance.",
     "signatureTitle": "The Sulaf Signature",
     "signatureArabic": "ما كان في رِفقٍ يُداوينا سُلافُ بهِ.. إلّا تحوّل حُسنًا لا ينهزمُ.",
-    "signatureTranslation": "Never was Sulaf's gentleness poured into our healing, but that grace triumphed, undefeated.",
-    "activesTitleAr": "المركب الثلاثي السريري والمركبات الفعالة الأساسية",
-    "usageInstructionsEn": "Method of use in English: Apply twice weekly in the evening with light massage."
+    "signatureTranslation": "Never was Sulaf's gentleness poured into our healing, but that grace triumphed, undefeated."
   },
   {
     "id": "prod-barrier-elixir",
     "nameAr": "إكسير سلاف لترميم الحاجز | Sulaf Barrier Elixir",
     "nameEn": "Sulaf Barrier Restoration Elixir",
     "slug": "sulaf-barrier-elixir",
-    "subtitleAr": "سيروم مركز بالسيراميدات والأحماض الدهنية والنياسيناميد 5%",
+    "subtitleAr": "سيروم مركز بالسيراميدات الثلاثية والأحماض الدهنية والنياسيناميد 5%",
     "subtitleEn": "Ceramides, Fatty Acids & 5% Niacinamide Cellular Serum",
-    "descriptionAr": "مصل علاجي مكثف يعيد بناء الغلاف الدهني للبشرة المتضررة من المقشرات أو العوامل البيئية القاسية. يمنح راحة فورية ويقلل التحسس.",
+    "descriptionAr": "مصل علاجي مكثف يعيد بناء الغلاف الدهني للبشرة المتضررة من المقشرات أو العوامل البيئية القاسية. يمنح راحة فورية ويحبس الرطوبة الخلوية لمدة 48 ساعة.",
     "descriptionEn": "Intensive recovery serum designed to reconstruct compromised skin barrier lipids using bio-identical fatty acids, phytosphingosine, and pure niacinamide.",
-    "usageInstructionsAr": "يُوضع 3-4 قطرات صباحاً ومساءً قبل الكريم المرطب.",
+    "usageInstructionsAr": "يُوضع 3-4 قطرات صباحاً ومساءً على بشرة نظيفة قبل الكريم المرطب.",
+    "usageInstructionsEn": "Apply 3-4 drops morning and evening onto clean skin before moisturizer.",
     "clinicalResultsAr": "• 98% استعادة لكفاءة حاجز البشرة خلال 5 أيام.\n• 89% انخفاض في حساسية واحمرار البشرة.",
     "routineStepsAr": [
-      "تنظيف الوجه بغسول لطيف",
-      "وضع قطرات الإكسير",
-      "تطبيق كريم الحماية"
+      "تنظيف البشرة بلطف",
+      "توزيع 3-4 قطرات من الإكسير",
+      "تطبيق كريم الحماية والترميم"
     ],
-    "skinTypeAr": "للبشرة الحساسة والمتضررة والمعرضة للاحمرار",
+    "skinTypeAr": "للبشرة الحساسة والجافة والمتضررة والمعرضة للاحمرار",
     "concernsAr": [
-      "ضعف حاجز البشرة",
+      "ترميم الحاجز الدهني",
       "الاحمرار والتحسس",
       "الجفاف الشديد"
     ],
@@ -191,11 +223,11 @@
     "compareAtPrice": 580,
     "stock": 85,
     "sku": "SLF-BRR-002",
-    "badgeAr": "عناية مركزة",
+    "badgeAr": "ترميم الحاجز الدهني",
     "accentColor": "#610b0d",
     "images": [
       {
-        "url": "/brand/sulaf-palette.jpg",
+        "url": "/brand/sulaf-flower-symbol.png",
         "alt": "Sulaf Barrier Elixir",
         "isPrimary": true
       }
@@ -203,7 +235,7 @@
     "variants": [
       {
         "id": "var-50ml",
-        "titleAr": "سيروم القطارة (50 مل)",
+        "titleAr": "قارورة القطارة (50 مل)",
         "titleEn": "Dropper Bottle 50ml",
         "sku": "SLF-BRR-50ML",
         "price": 490,
@@ -211,7 +243,28 @@
         "volumeMl": 50
       }
     ],
-    "activeIngredients": [],
+    "activeIngredients": [
+      {
+        "id": "ing-ceramide",
+        "nameAr": "سيراميدات ثلاثية",
+        "nameEn": "Ceramide Triad",
+        "concentration": "3%",
+        "functionAr": "إعادة بناء الحاجز الدهني وحبس الرطوبة",
+        "functionEn": "Lipid barrier reconstruction",
+        "scientificDescriptionAr": "سيراميدات متطابقة بيولوجياً تمنع فقدان الماء عبر البشرة.",
+        "moleculeSvg": "ceramide"
+      },
+      {
+        "id": "ing-niacinamide",
+        "nameAr": "نياسيناميد نقي",
+        "nameEn": "Pure Niacinamide",
+        "concentration": "5%",
+        "functionAr": "تهدئة الاحمرار وتقوية غلاف الخلايا",
+        "functionEn": "Calms redness & strengthens barrier",
+        "scientificDescriptionAr": "فيتامين B3 النقي لتوحيد اللون وتلطيف التحسس.",
+        "moleculeSvg": "niacinamide"
+      }
+    ],
     "reviews": [],
     "rating": 5,
     "reviewsCount": 0
@@ -221,29 +274,30 @@
     "nameAr": "بلسم سلاف المنظف فائق النعومة | Sulaf Melt Cleanser",
     "nameEn": "Sulaf Melt Cleansing Balm",
     "slug": "sulaf-melt-cleanser",
-    "subtitleAr": "بلسم حريري مذيب للشوائب معزز بزيوت الأندلس ومستخلص الورد",
-    "subtitleEn": "Gentle Makeup & Impurities Melting Balm with Botanical Oils",
-    "descriptionAr": "تركيبة فريدة تتحول من بلسم مخملي إلى حليب منظف لطيف عند ملامسة الماء، تنظف أعمق المسام دون تجريد البشرة من ترطيبها الطبيعي.",
-    "descriptionEn": "Luxurious balm-to-milk cleanser that lifts stubborn makeup and pollution while preserving essential epidermal hydration.",
-    "usageInstructionsAr": "يُدلّك بلطف على بشرة جافة ثم يُشطف بماء دافئ.",
+    "subtitleAr": "بلسم حريري مذيب للشوائب معزز بزيوت الأندلس والسيراميدات",
+    "subtitleEn": "Gentle Impurities Melting Balm with Botanical Oils & Ceramides",
+    "descriptionAr": "تركيبة فريدة تتحول من بلسم مخملي إلى حليب منظف لطيف عند ملامسة الماء، تنظف أعمق المسام دون تجريد البشرة من ترطيبها الطبيعي أو إضعاف حاجزها الواقي.",
+    "descriptionEn": "Luxurious balm-to-milk cleanser that lifts stubborn impurities while preserving essential epidermal hydration.",
+    "usageInstructionsAr": "يُدلّك بلطف على بشرة جافة ثم يُشطف بماء فاتر.",
+    "usageInstructionsEn": "Gently massage onto dry skin, emulsify with warm water, and rinse thoroughly.",
     "clinicalResultsAr": "• 100% تنظيف عميق دون إحساس بالجفاف أو الشد.",
     "routineStepsAr": [
       "تدليك البلسم على بشرة جافة",
-      "إضافة ماء لتحويله لحليب",
+      "إضافة القليل من الماء لتحويله إلى حليب لطيف",
       "الشطف بالماء الفاتر"
     ],
-    "skinTypeAr": "لجميع أنواع البشرة",
+    "skinTypeAr": "لجميع أنواع البشرة وخاصة الجافة والحساسة",
     "concernsAr": [
-      "تنظيف المسام",
-      "إزالة الشوائب",
-      "الحفاظ على الرطوبة"
+      "تنظيف المسام بلطف",
+      "ترميم الحاجز أثناء الغسيل",
+      "الحفاظ على الرطوبة والجفاف"
     ],
     "price": 360,
     "compareAtPrice": 420,
     "stock": 95,
     "sku": "SLF-CLM-003",
-    "badgeAr": "لطيف ومغذي",
-    "accentColor": "#3d502d",
+    "badgeAr": "لطيف ومرمم للحاجز",
+    "accentColor": "#485c36",
     "images": [
       {
         "url": "/brand/sulaf-flower-symbol.png",
@@ -262,7 +316,28 @@
         "volumeMl": 150
       }
     ],
-    "activeIngredients": [],
+    "activeIngredients": [
+      {
+        "id": "ing-ceramide-balm",
+        "nameAr": "مركب السيراميد والورد",
+        "nameEn": "Ceramide & Rose Complex",
+        "concentration": "4%",
+        "functionAr": "حماية الغلاف الدهني أثناء التنظيف",
+        "functionEn": "Protects lipid mantle during cleansing",
+        "scientificDescriptionAr": "يحافظ على توازن حموضة البشرة الفسيولوجي.",
+        "moleculeSvg": "ceramide"
+      },
+      {
+        "id": "ing-amino",
+        "nameAr": "أحماض أمينية نقية",
+        "nameEn": "Pure Amino Complex",
+        "concentration": "5%",
+        "functionAr": "تغذية بروتينات البشرة ومنع الجفاف",
+        "functionEn": "Maintains optimal acid mantle",
+        "scientificDescriptionAr": "تحافظ على غشاء البشرة الحامضي الواقي.",
+        "moleculeSvg": "amino"
+      }
+    ],
     "reviews": [],
     "rating": 5,
     "reviewsCount": 0
@@ -272,32 +347,33 @@
     "nameAr": "تونيك سلاف المقشر بالأحماض الأندلسية | Sulaf AHA Glow",
     "nameEn": "Sulaf Andalusian AHA Clarifying Toner",
     "slug": "sulaf-aha-glow",
-    "subtitleAr": "تونيك مقشر بحمض الجليكوليك 7% وخلاصة زهر البرتقال",
-    "subtitleEn": "7% Glycolic Acid Clarifying & Radiance Boosting Toner",
-    "descriptionAr": "يقشر خلايا الجلد الميتة بلطف ويوحد لون البشرة ويمنحها إشراقة زجاجية متألقة تدوم طوال اليوم.",
-    "descriptionEn": "Resurfacing tonic powered by 7% buffered glycolic acid to sweep away dull cells and reveal pristine luminous skin.",
-    "usageInstructionsAr": "يُمسح بقطنة على الوجه والرقبة 3 مرات أسبوعياً مساءً.",
-    "clinicalResultsAr": "• 93% نضارة وتوحيد للون البشرة خلال أسبوعين.",
+    "subtitleAr": "تونيك مقشر بحمض الجليكوليك 7% واليوريا 5% وخلاصة زهر البرتقال",
+    "subtitleEn": "7% Glycolic Acid & 5% Urea Clarifying Radiance Toner",
+    "descriptionAr": "يقشر خلايا الجلد الميتة بلطف ويفكك خشونة المسام ويوحد لون البشرة ليمنحها إشراقة زجاجية متألقة تدوم طوال اليوم دون تهيّج.",
+    "descriptionEn": "Resurfacing tonic powered by 7% buffered glycolic acid and 5% soothing urea to sweep away dull cells and reveal luminous skin.",
+    "usageInstructionsAr": "يُمسح بقطنة على البشرة النظيفة 3 مرات أسبوعياً مساءً.",
+    "usageInstructionsEn": "Sweep gently over clean skin with a cotton pad 3 evenings per week.",
+    "clinicalResultsAr": "• 93% نضارة وتوحيد للون البشرة وتنعيم للملمس خلال أسبوعين.",
     "routineStepsAr": [
-      "تنظيف البشرة",
-      "مسح التونيك بقطنة",
-      "تطبيق المرطب اليومي"
+      "تنظيف البشرة وتجفيفها",
+      "مسح التونيك بقطنة ناعمة مساءً",
+      "تطبيق إكسير أو كريم الترميم"
     ],
-    "skinTypeAr": "للبشرة العادية، المختلطة، والمعرضة للبقع",
+    "skinTypeAr": "للبشرة العادية، المختلطة، والمعرضة للتصبغات والخشونة",
     "concernsAr": [
       "التصبغات وتوحيد اللون",
-      "بهتان البشرة",
+      "خشونة الملمس وجلد الوزة",
       "المسام الواسعة"
     ],
     "price": 390,
     "compareAtPrice": 460,
     "stock": 60,
     "sku": "SLF-AHA-004",
-    "badgeAr": "إشراقة أندلسية",
-    "accentColor": "#d4af37",
+    "badgeAr": "إشراقة وتنعيم",
+    "accentColor": "#ca384a",
     "images": [
       {
-        "url": "/brand/sulaf-palette.jpg",
+        "url": "/brand/sulaf-flower-symbol.png",
         "alt": "Sulaf AHA Glow",
         "isPrimary": true
       }
@@ -313,7 +389,28 @@
         "volumeMl": 200
       }
     ],
-    "activeIngredients": [],
+    "activeIngredients": [
+      {
+        "id": "ing-glycolic",
+        "nameAr": "حمض الجليكوليك",
+        "nameEn": "Glycolic Acid",
+        "concentration": "7%",
+        "functionAr": "تجديد سطحي للخلايا وتوحيد اللون",
+        "functionEn": "Cellular resurfacing & glow",
+        "scientificDescriptionAr": "أصغر أحماض الفواكه وزناً جزيئياً لنضارة فورية.",
+        "moleculeSvg": "lactate"
+      },
+      {
+        "id": "ing-urea-5",
+        "nameAr": "يوريا مرطبة",
+        "nameEn": "Hydrating Urea",
+        "concentration": "5%",
+        "functionAr": "تليين المسام ومنع جفاف التقشير",
+        "functionEn": "Pore softening & hydration",
+        "scientificDescriptionAr": "تضمن بقاء البشرة رطبة ومرنة أثناء عمل الأحماض.",
+        "moleculeSvg": "urea"
+      }
+    ],
     "reviews": [],
     "rating": 5,
     "reviewsCount": 0

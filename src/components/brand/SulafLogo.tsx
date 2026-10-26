@@ -30,6 +30,7 @@ export function SulafFlowerIcon({
         alt="سلاف زهرة أندلسية"
         width={size}
         height={size}
+        style={{ width: size, height: size }}
         className={`object-contain transition-transform duration-700 ${
           animated ? "animate-[spin_40s_linear_infinite]" : ""
         }`}
@@ -71,7 +72,7 @@ export function SulafLogo({
                 : color === "green"
                 ? "text-[#485c36]"
                 : color === "gold"
-                ? "text-[#d4af37]"
+                ? "text-[#ca384a]"
                 : "text-[#610b0d]"
             }`}
           >
@@ -86,7 +87,7 @@ export function SulafLogo({
                 : color === "green"
                 ? "text-[#485c36]"
                 : color === "gold"
-                ? "text-[#d4af37]"
+                ? "text-[#ca384a]"
                 : "text-[#610b0d]"
             }`}
           >
@@ -102,7 +103,7 @@ export function SulafLogo({
         </span>
 
         {showPoem && (
-          <p className="mt-1 font-amiri text-xs text-[#d4af37] italic opacity-90 max-w-xs">
+          <p className="mt-1 font-amiri text-xs text-[#f3a5a1] italic opacity-90 max-w-xs">
             «ما كان في رفقٍ يداوينا سلافُ به إلّا تحوّل حسنًا لا ينهزمُ»
           </p>
         )}
