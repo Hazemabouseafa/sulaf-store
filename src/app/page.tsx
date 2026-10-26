@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { motion } from "framer-motion";
 import { useStoreSettings } from "@/lib/settings/store-settings-context";
 import { DEFAULT_HOMEPAGE_SECTIONS_ORDER, HomepageSectionKey } from "@/lib/settings/store-settings";
 import dynamic from "next/dynamic";
@@ -56,21 +57,49 @@ export default function HomePage() {
     : DEFAULT_HOMEPAGE_SECTIONS_ORDER;
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex flex-col w-full overflow-hidden">
       {sectionsOrder.map((sectionKey) => {
         // 1. Built-in Section
         if (sectionKey in SECTION_COMPONENTS) {
           if (vis[sectionKey as HomepageSectionKey] === false) return null;
           const Component = SECTION_COMPONENTS[sectionKey as HomepageSectionKey];
           if (!Component) return null;
-          return <Component key={sectionKey} />;
+
+          // Hero handles its own above-the-fold entrance animations
+          if (sectionKey === "heroSection") {
+            return <Component key={sectionKey} />;
+          }
+
+          return (
+            <motion.div
+              key={sectionKey}
+              initial={{ opacity: 0, y: 28 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full"
+            >
+              <Component />
+            </motion.div>
+          );
         }
 
         // 2. Custom Section added by client
         const customSection = (settings.customSections || []).find((s) => s.id === sectionKey);
         if (customSection) {
           if (customSection.isVisible === false) return null;
-          return <CustomSectionRenderer key={customSection.id} section={customSection} />;
+          return (
+            <motion.div
+              key={customSection.id}
+              initial={{ opacity: 0, y: 28 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full"
+            >
+              <CustomSectionRenderer section={customSection} />
+            </motion.div>
+          );
         }
 
         return null;

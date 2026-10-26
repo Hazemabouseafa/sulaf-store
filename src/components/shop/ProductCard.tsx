@@ -61,6 +61,9 @@ export function ProductCard({
       {/* Background Ambient Glow */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-[#485c36]/5 rounded-full blur-2xl pointer-events-none group-hover:bg-[#485c36]/12 transition-all" />
 
+      {/* Ambient Specular Light Sweep on Hover */}
+      <div className="absolute inset-0 -translate-x-[120%] group-hover:translate-x-[120%] duration-1000 bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none transition-transform ease-out z-30" />
+
       {/* Top Meta: Badge & Rating */}
       <div className="relative z-20 flex items-center justify-between gap-2 mb-2">
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold font-cairo bg-[#ca384a] text-white shadow-xs">
@@ -68,8 +71,8 @@ export function ProductCard({
           <span className="truncate max-w-[120px]">{badgeText}</span>
         </span>
 
-        <div className="flex items-center gap-1 text-[11px] font-bold font-cairo text-amber-600 bg-amber-50/90 px-2 py-0.5 rounded-md border border-amber-200/70 shrink-0">
-          <Star className="w-3 h-3 fill-amber-500 text-amber-500 shrink-0" />
+        <div className="flex items-center gap-1 text-[11px] font-bold font-cairo text-[#ca384a] bg-[#ca384a]/10 px-2 py-0.5 rounded-md border border-[#ca384a]/20 shrink-0">
+          <Star className="w-3 h-3 fill-[#ca384a] text-[#ca384a] shrink-0" />
           <span>{product.rating}</span>
           <span className="text-gray-400 font-normal">({product.reviewsCount})</span>
         </div>

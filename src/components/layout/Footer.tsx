@@ -45,7 +45,7 @@ export function Footer() {
           <div className="lg:col-span-2 space-y-4">
             <SulafLogo size="md" color="cream" className="sm:hidden" />
             <SulafLogo size="lg" color="cream" className="hidden sm:inline-flex" />
-            <p className={`${isArabic ? "font-amiri text-base" : "font-cormorant italic text-sm"} text-[#f3e5ab] font-bold tracking-wide`}>
+            <p className={`${isArabic ? "font-amiri text-base" : "font-cormorant italic text-sm"} text-[#f3a5a1] font-bold tracking-wide`}>
               {isArabic ? "حيث يلتقي العلم الصيدلاني بالجمال." : "Where Pharmaceutical Science Meets Beauty."}
             </p>
             <p className="text-xs text-[#f6f9e6]/80 leading-relaxed max-w-sm">
@@ -54,11 +54,11 @@ export function Footer() {
 
             <div className="pt-2 flex flex-col gap-2 text-xs text-[#f6f9e6]/90">
               <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-[#d4af37]" />
+                <MapPin className="w-4 h-4 text-[#f3a5a1]" />
                 <span>{t.footer.location}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-[#d4af37]" />
+                <Mail className="w-4 h-4 text-[#f3a5a1]" />
                 <span>care@sulaf.com</span>
               </div>
               <a
@@ -75,7 +75,7 @@ export function Footer() {
 
           {/* Col 2: Navigation Links */}
           <div className="space-y-3 text-xs">
-            <h4 className="font-amiri text-lg font-bold text-[#f3e5ab]">
+            <h4 className="font-amiri text-lg font-bold text-[#f3a5a1]">
               {t.footer.linksTitle}
             </h4>
             <ul className="space-y-2 text-[#f6f9e6]/80">
@@ -153,12 +153,12 @@ export function Footer() {
 
           {/* Col 4: Logistics */}
           <div className="space-y-3 text-xs">
-            <h4 className="font-amiri text-lg font-bold text-[#f3e5ab]">
+            <h4 className="font-amiri text-lg font-bold text-[#f3a5a1]">
               {t.footer.shippingTitle}
             </h4>
             <div className="p-3.5 rounded-2xl bg-white/10 border border-[#f6f9e6]/20 space-y-2">
-              <div className="flex items-center gap-2 text-[#f3e5ab] font-bold">
-                <Truck className="w-4 h-4 text-[#d4af37]" />
+              <div className="flex items-center gap-2 text-[#f3a5a1] font-bold">
+                <Truck className="w-4 h-4 text-[#f3a5a1]" />
                 <span>{t.footer.stoxPartner}</span>
               </div>
               <p className="text-[11px] text-[#f6f9e6]/80 leading-relaxed">

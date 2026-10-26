@@ -103,18 +103,18 @@ export function Navbar() {
     <header ref={headerRef} className="sticky top-0 z-50 w-full select-none font-cairo">
       {/* 1. Top Luxury Announcement Ribbon (Clean, no Stox / Paymob / Deposit) */}
       {(settings.sectionsVisibility?.announcementBar !== false && settings.announcement.enabled) && (
-        <div className="bg-gradient-to-r from-[#2c3821] via-[#485c36] to-[#2c3821] text-[#f6f9e6] px-4 py-2 text-xs font-semibold shadow-inner border-b border-[#d4af37]/30">
+        <div className="bg-gradient-to-r from-[#2c3821] via-[#485c36] to-[#2c3821] text-[#f6f9e6] px-4 py-2 text-xs font-semibold shadow-inner border-b border-[#f3a5a1]/30">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div className="flex-1 flex items-center justify-center gap-2.5 overflow-hidden text-center">
               <span className="inline-flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#d4af37] animate-pulse shrink-0" />
+                <Sparkles className="w-3.5 h-3.5 text-[#f3a5a1] animate-pulse shrink-0" />
                 <span className="tracking-wide">
                   {settings.elementsVisibility?.announcementText !== false ? (custom.announcementText || (isArabic ? settings.announcement.text : t.announcement.defaultText)) : ""}
                 </span>
               </span>
 
               {(settings.announcement.badge && settings.elementsVisibility?.announcementBadge !== false) && (
-                <span className="hidden sm:inline bg-[#610b0d] text-[#f3e5ab] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#d4af37]/40 shrink-0">
+                <span className="hidden sm:inline bg-[#610b0d] text-[#f3a5a1] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#f3a5a1]/40 shrink-0">
                   {custom.announcementBadge || (isArabic ? settings.announcement.badge : t.announcement.badge)}
                 </span>
               )}
@@ -128,7 +128,7 @@ export function Navbar() {
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/10 hover:bg-white/20 text-[#f3e5ab] text-[11px] font-bold border border-white/20 transition-all cursor-pointer"
                 title={isArabic ? "Switch to English" : "التبديل إلى العربية"}
               >
-                <Globe className="w-3 h-3 text-[#d4af37]" />
+                <Globe className="w-3 h-3 text-[#f3a5a1]" />
                 <span>{isArabic ? "English" : "العربية"}</span>
               </button>
             </div>
@@ -396,10 +396,10 @@ export function Navbar() {
             <button
               type="button"
               onClick={openCart}
-              className="relative inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 rounded-xl bg-[#485c36] hover:bg-[#38482a] text-[#f6f9e6] font-bold text-xs shadow-md border border-[#d4af37]/40 transition-all active:scale-95 cursor-pointer"
+              className="relative inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 rounded-xl bg-[#485c36] hover:bg-[#38482a] text-[#f6f9e6] font-bold text-xs shadow-md border border-[#485c36]/40 transition-all active:scale-95 cursor-pointer"
               aria-label={t.nav.cart}
             >
-              <ShoppingBag className="w-4 h-4 text-[#f3e5ab]" />
+              <ShoppingBag className="w-4 h-4 text-[#f6f9e6]" />
               <span className="hidden sm:inline font-bold">{t.nav.cart}</span>
 
               {totalItems > 0 ? (
@@ -407,7 +407,7 @@ export function Navbar() {
                   {totalItems}
                 </span>
               ) : (
-                <span className="w-2 h-2 rounded-full bg-[#d4af37]/80" />
+                <span className="w-2 h-2 rounded-full bg-[#f3a5a1]/80" />
               )}
             </button>
 
