@@ -43,10 +43,10 @@ export default function HomePage() {
   const { settings } = useStoreSettings();
   const vis = settings.sectionsVisibility || {
     heroSection: true,
-    aboutSection: true,
-    artOfCosmeceuticals: true,
+    aboutSection: false,
+    artOfCosmeceuticals: false,
     gallerySection: true,
-    clinicalStorySection: true,
+    clinicalStorySection: false,
     reviewsSection: true,
     consultationSection: true,
   };

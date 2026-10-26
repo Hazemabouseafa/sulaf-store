@@ -48,7 +48,7 @@ export function ProductCard({
   return (
     <div
       onClick={handleCardClick}
-      className="group relative h-full flex flex-col justify-between rounded-3xl bg-white/90 backdrop-blur-md border border-[#e2e8c0] hover:border-[#d4af37] p-4 sm:p-5 shadow-[0_4px_20px_rgba(72,92,54,0.06)] hover:shadow-[0_16px_36px_rgba(72,92,54,0.15)] transition-all duration-300 overflow-hidden font-cairo cursor-pointer"
+      className="group relative h-full flex flex-col justify-between rounded-3xl bg-white/90 backdrop-blur-md border border-[#e2e8c0] hover:border-[#485c36] p-4 sm:p-5 shadow-[0_4px_20px_rgba(72,92,54,0.06)] hover:shadow-[0_16px_36px_rgba(72,92,54,0.15)] transition-all duration-300 overflow-hidden font-cairo cursor-pointer"
       role="link"
       tabIndex={0}
       onKeyDown={(e) => {
@@ -101,7 +101,7 @@ export function ProductCard({
         {product.activeIngredients.slice(0, 3).map((ing) => (
           <span
             key={ing.id}
-            className="text-[10px] sm:text-[11px] font-semibold font-cairo px-2 py-0.5 rounded-full bg-[#f6f9e6] border border-[#d4af37]/35 text-[#485c36] truncate max-w-[150px]"
+            className="text-[10px] sm:text-[11px] font-semibold font-cairo px-2 py-0.5 rounded-full bg-[#f6f9e6] border border-[#485c36]/35 text-[#485c36] truncate max-w-[150px]"
           >
             {ing.concentration} {isArabic ? ing.nameAr : ing.nameEn}
           </span>
@@ -110,7 +110,7 @@ export function ProductCard({
 
       {/* Title & Subtitle with fixed min-height for uniform alignment */}
       <div className="space-y-1.5 flex-1 flex flex-col justify-start">
-        <h3 className="font-amiri text-lg sm:text-xl font-bold text-[#1c2616] group-hover:text-[#3d502d] transition-colors line-clamp-1 min-h-[1.75rem]">
+        <h3 className="font-amiri text-lg sm:text-xl font-bold text-[#1c2616] group-hover:text-[#485c36] transition-colors line-clamp-1 min-h-[1.75rem]">
           {productName}
         </h3>
         <p className="text-xs text-gray-700 font-cairo font-medium line-clamp-2 min-h-[2rem] leading-relaxed">
@@ -121,7 +121,7 @@ export function ProductCard({
       {/* Pinned Bottom Row: Pricing & Action Buttons */}
       <div className="mt-3 pt-3 border-t border-[#e2e8c0] flex items-center justify-between gap-2">
         <div className="flex flex-col">
-          <span className="font-cairo text-base sm:text-lg font-black text-[#3d502d] leading-tight">
+          <span className="font-cairo text-base sm:text-lg font-black text-[#485c36] leading-tight">
             {product.price} {currency}
           </span>
           {product.compareAtPrice && (

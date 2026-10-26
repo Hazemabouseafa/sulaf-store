@@ -46,7 +46,7 @@ export function DoctorReviewsSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-12">
           {vis.reviewsBadge !== false && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#485c36]/10 text-[#485c36] text-xs font-cairo font-bold mb-3">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#485c36]/10 text-[#485c36] text-xs font-cairo font-bold mb-3">
               <ShieldCheck className="w-4 h-4 text-[#485c36]" />
               <span>{custom.reviewsBadgeText || (isArabic ? "تجارب حقيقية موثقة" : "Verified Clinical Reviews")}</span>
             </div>
@@ -67,14 +67,14 @@ export function DoctorReviewsSection() {
           {reviews.map((rev) => (
             <div
               key={rev.id}
-              className="p-6 rounded-3xl bg-white border border-[#e2e8c0] shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between relative group text-start"
+              className="p-6 rounded-3xl bg-white border border-[#e2e8c0] hover:border-[#485c36] shadow-sm hover:shadow-md transition-all flex flex-col justify-between relative group text-start"
             >
               <div>
-                {/* Star rating */}
+                {/* Star rating in crimson #ca384a */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-1">
                     {[...Array(rev.rating || 5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                      <Star key={i} className="w-4 h-4 fill-[#ca384a] text-[#ca384a]" />
                     ))}
                   </div>
                   <Quote className="w-6 h-6 text-[#485c36]/20" />
@@ -92,7 +92,7 @@ export function DoctorReviewsSection() {
 
               <div className="pt-4 mt-4 border-t border-[#e2e8c0] flex items-center justify-between">
                 <div>
-                  <span className="font-cairo text-sm font-bold text-[#3d502d] block">
+                  <span className="font-cairo text-sm font-bold text-[#485c36] block">
                     {rev.authorName}
                   </span>
                   <span className="text-[10px] text-gray-500 font-cairo">
@@ -101,8 +101,8 @@ export function DoctorReviewsSection() {
                 </div>
 
                 {rev.isVerifiedPurchase && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#485c36] bg-[#485c36]/10 px-2.5 py-0.5 rounded-full border border-[#485c36]/20">
+                    <CheckCircle2 className="w-3 h-3 text-[#485c36]" />
                     <span>{isArabic ? "شراء موثق" : "Verified"}</span>
                   </span>
                 )}

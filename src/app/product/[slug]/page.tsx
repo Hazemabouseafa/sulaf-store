@@ -270,7 +270,7 @@ export default function ProductStoryPage() {
 
               {/* Pricing Display */}
               <div className="flex items-baseline gap-3">
-                <span className="text-3xl font-black text-[#3d502d]">{unitPrice} {currency}</span>
+                <span className="text-3xl font-black text-[#485c36]">{unitPrice} {currency}</span>
                 {product.compareAtPrice > unitPrice && (
                   <span className="text-base text-gray-400 line-through font-semibold">
                     {product.compareAtPrice} {currency}
@@ -421,7 +421,7 @@ export default function ProductStoryPage() {
               {custom.productStoryParagraph2 || (isArabic ? "بشرتك تتحدث باللغة ذاتها. تلك الحبيبات الخشنة وجلد الوزة ليست أوساخاً لتُفرك بخشونة، بل هي دروع كيراتينية دفاعية بنتها بشرتك لحماية حاجز فقد ترطيبه." : "Your skin speaks the same language. Those rough, strawberry bumps are not debris to be scrubbed away—they are fragile ramparts, desperate keratin shields raised by a barrier stripped of moisture.")}
             </p>
 
-            <p className="font-medium text-[#1c2616] p-6 rounded-2xl bg-white border-s-4 border-[#3d502d] shadow-sm">
+            <p className="font-medium text-[#1c2616] p-6 rounded-2xl bg-white border-s-4 border-[#485c36] shadow-sm">
               {custom.productStoryParagraph3 || (isArabic ? "Absolutes Smoothing Body Cream تحفة سريرية صُممت لإنهاء الحرب بين بشرتك والمقشرات القاسية. بقلب من اليوريا الطبية 30%، و10% أمونيوم لاكتات، ومصفوفة 2% حمض الساليسيليك، تذيب الروابط المتصلبة من الجذور. لا خدوش دقيقة، ولا انتكاس للخشونة. بل كيمياء حيوية راقية تحول الملمس الخشن إلى حرير لا يُهزم." : "Absolutes Smoothing Body Cream is a clinical masterpiece formulated to end the war between your skin and coarse exfoliants. Crafted with a medical-grade 30% Urea core, 10% Ammonium Lactate, and an intensified, 2% Salicylic Acid matrix, it breaks the mineralized bonds of stubborn follicular plugs from the root up. No micro-tears. No rebound coarseness. Just pure, uncompromised biological alchemy that turns weathered texture into silk.")}
             </p>
           </div>
@@ -531,11 +531,11 @@ export default function ProductStoryPage() {
               transition={{ delay: 0.3 }}
               className="p-6 sm:p-8 rounded-3xl bg-[#f6f9e6] border border-[#e2e8c0] shadow-sm flex items-start gap-5 text-start"
             >
-              <div className="w-12 h-12 rounded-2xl bg-[#d4af37] text-[#1c2616] flex items-center justify-center font-amiri font-black text-2xl shrink-0 shadow-md">
+              <div className="w-12 h-12 rounded-2xl bg-[#ca384a] text-[#1c2616] flex items-center justify-center font-amiri font-black text-2xl shrink-0 shadow-md">
                 3
               </div>
               <div className="space-y-1">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#8b6b0b] font-mono">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#485c36] font-mono">
                   {custom.productRitualStep3Phase || (isArabic ? "المرحلة 2: بدءاً من الأسبوع 3" : "Phase 2: Week 3 Onward")}
                 </span>
                 <p className="font-cairo text-sm sm:text-base text-gray-900 font-semibold leading-relaxed">
@@ -565,7 +565,7 @@ export default function ProductStoryPage() {
             <h3 className="font-amiri text-2xl sm:text-3xl font-bold text-[#1c2616]">
               Full INCI Composition
             </h3>
-            <p className="italic text-gray-700 font-cairo text-sm mt-2 border-s-2 border-[#d4af37] ps-3">
+            <p className="italic text-gray-700 font-cairo text-sm mt-2 border-s-2 border-[#ca384a] ps-3">
               {custom.productInciIntro || (isArabic ? "مصمم وفق أعلى معايير النقاء الصيدلاني والكوزميسوتيكال الأوروبي:" : "Formulated to strict clinical and cosmetic purity standards:")}
             </p>
           </div>
@@ -576,7 +576,7 @@ export default function ProductStoryPage() {
               className="w-full p-5 flex items-center justify-between text-start text-xs sm:text-sm font-bold font-cairo text-[#1c2616] hover:bg-gray-50 transition-colors"
             >
               <div className="flex items-center gap-2">
-                <FlaskConical className="w-4 h-4 text-[#3d502d]" />
+                <FlaskConical className="w-4 h-4 text-[#485c36]" />
                 <span>عرض قائمة المكونات الكاملة وفق النظام الدولي (Complete INCI List)</span>
               </div>
               <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${inciOpen ? "rotate-180" : ""}`} />
@@ -593,16 +593,16 @@ export default function ProductStoryPage() {
 
       {/* 6. PINNED SECTION: The Sulaf Signature (Calligraphy verse word-by-word reveal + Translation) */}
       <section className="py-24 bg-gradient-to-b from-[#182313] to-[#11190d] text-[#f6f9e6] relative overflow-hidden text-center">
-        <AndalusianPattern opacity={0.08} color="#d4af37" scale={1.5} />
+        <AndalusianPattern opacity={0.08} color="#ca384a" scale={1.5} />
         
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-6">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-[#d4af37]/15 text-[#f3e5ab] text-xs font-mono font-bold tracking-widest uppercase border border-[#d4af37]/30">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[#ca384a]/15 text-[#f6f9e6] text-xs font-mono font-bold tracking-widest uppercase border border-[#ca384a]/30">
             The Sulaf Signature
           </span>
 
           {/* Word-by-word Arabic Poetic Line */}
           <div className="py-6 overflow-visible">
-            <h2 className="font-amiri text-3xl sm:text-5xl lg:text-6xl font-black text-[#f3e5ab] leading-[1.8] sm:leading-[1.85] drop-shadow-lg">
+            <h2 className="font-amiri text-3xl sm:text-5xl lg:text-6xl font-black text-[#f6f9e6] leading-[1.8] sm:leading-[1.85] drop-shadow-lg">
               {signatureWords.map((word, i) => (
                 <motion.span
                   key={i}
@@ -614,7 +614,7 @@ export default function ProductStoryPage() {
                     delay: 0.15 + i * 0.08,
                     ease: [0.33, 1, 0.68, 1],
                   }}
-                  className="inline-block mx-1.5 py-2 hover:text-[#d4af37] transition-colors"
+                  className="inline-block mx-1.5 py-2 hover:text-[#ca384a] transition-colors"
                 >
                   {word}
                 </motion.span>

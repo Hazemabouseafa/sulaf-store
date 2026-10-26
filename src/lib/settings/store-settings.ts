@@ -68,10 +68,7 @@ export interface CustomHomepageSection {
 
 export const DEFAULT_HOMEPAGE_SECTIONS_ORDER: string[] = [
   "heroSection",
-  "aboutSection",
-  "artOfCosmeceuticals",
   "gallerySection",
-  "clinicalStorySection",
   "reviewsSection",
   "consultationSection",
 ];
@@ -371,23 +368,27 @@ export interface CheckoutFieldsSettings {
 }
 
 export interface ThemeColorsSettings {
-  primary: string;         // اللون الرئيسي (أخضر سُلاف الزيتوني: #485c36)
+  primary: string;         // اللون الرئيسي (الأخير في الصورة: #485c36)
   primaryHover?: string;    // درجة التحويم للأزرار: #38492a
-  secondary: string;       // اللون الثانوي / الأكسنت (بورجوندي عنابي: #610b0d)
-  gold: string;            // اللون الذهبي الملكي: #d4af37
-  background: string;      // لون خلفية المتجر: #f6f9e6
+  secondary: string;       // اللون الثانوي (الأول في الصورة: #610b0d)
+  gold: string;            // لون الأكسنت (الرابع في الصورة: #ca384a)
+  background: string;      // لون خلفية المتجر (الثاني في الصورة: #f6f9e6)
   surface: string;         // لون كروت المحتوى: #ffffff
   text: string;            // لون النصوص: #1c2616
+  rose?: string;           // الورد الناعم (الثالث في الصورة: #f3a5a1)
+  crimson?: string;        // القرمزي الحريري (الرابع في الصورة: #ca384a)
 }
 
 export const DEFAULT_THEME_COLORS: ThemeColorsSettings = {
-  primary: "#485c36",
+  primary: "#485c36", // اللون الأساسي الأخير في الصورة
   primaryHover: "#38492a",
-  secondary: "#610b0d",
-  gold: "#d4af37",
-  background: "#f6f9e6",
+  secondary: "#610b0d", // اللون الأول
+  gold: "#ca384a", // اللون الرابع
+  background: "#f6f9e6", // اللون الثاني
   surface: "#ffffff",
   text: "#1c2616",
+  rose: "#f3a5a1", // اللون الثالث
+  crimson: "#ca384a", // اللون الرابع
 };
 
 export interface ThemePreset {
@@ -408,7 +409,7 @@ export const LUXURY_THEME_PRESETS: ThemePreset[] = [
       primary: "#485c36",
       primaryHover: "#38492a",
       secondary: "#610b0d",
-      gold: "#d4af37",
+      gold: "#ca384a",
       background: "#f6f9e6",
       surface: "#ffffff",
       text: "#1c2616",
@@ -552,14 +553,21 @@ export function generateThemeCss(colors: ThemeColorsSettings = DEFAULT_THEME_COL
     `  border-color: ${gold} !important;`,
     '}',
     '/* Secondary / Burgundy Overrides */',
-    '.text-\\[\\#610b0d\\], .text-\\[\\#ca384a\\] {',
+    '.text-\\[\\#610b0d\\] {',
     `  color: ${secondary} !important;`,
     '}',
-    '.bg-\\[\\#610b0d\\], .bg-\\[\\#ca384a\\] {',
+    '.bg-\\[\\#610b0d\\] {',
     `  background-color: ${secondary} !important;`,
     '}',
     '.border-\\[\\#610b0d\\] {',
     `  border-color: ${secondary} !important;`,
+    '}',
+    '/* Crimson & Rose Palette Overrides */',
+    '.text-\\[\\#ca384a\\] {',
+    `  color: ${gold} !important;`,
+    '}',
+    '.bg-\\[\\#ca384a\\] {',
+    `  background-color: ${gold} !important;`,
     '}',
     '/* Background / Canvas Overrides */',
     '.bg-\\[\\#f6f9e6\\] {',
@@ -683,10 +691,10 @@ export interface StoreSettings {
 export const DEFAULT_SECTION_VISIBILITY: SectionVisibilitySettings = {
   announcementBar: true,
   heroSection: true,
-  aboutSection: true,
-  artOfCosmeceuticals: true,
+  aboutSection: false,
+  artOfCosmeceuticals: false,
   gallerySection: true,
-  clinicalStorySection: true,
+  clinicalStorySection: false,
   reviewsSection: true,
   consultationSection: true,
 };

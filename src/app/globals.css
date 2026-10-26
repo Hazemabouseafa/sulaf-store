@@ -13,10 +13,10 @@
     --background: #f6f9e6;
     --foreground: #1c2616;
 
-    --primary: #3d502d;
+    --primary: #485c36;
     --primary-foreground: #f6f9e6;
-    --primary-dark: #233019;
-    --primary-light: #526b3c;
+    --primary-dark: #38492a;
+    --primary-light: #587042;
 
     --cream: #f6f9e6;
     --cream-dark: #e8ecd0;
@@ -31,9 +31,9 @@
     --red-accent: #ca384a;
     --red-accent-dark: #a82637;
 
-    --gold: #d4af37;
-    --gold-light: #f3e5ab;
-    --gold-dark: #aa820a;
+    --gold: #ca384a;
+    --gold-light: #f3a5a1;
+    --gold-dark: #a82637;
 
     --border: #dbe2bd;
   }

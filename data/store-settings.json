@@ -29,19 +29,16 @@
   "sectionsVisibility": {
     "announcementBar": true,
     "heroSection": true,
-    "aboutSection": true,
-    "artOfCosmeceuticals": true,
+    "aboutSection": false,
+    "artOfCosmeceuticals": false,
     "gallerySection": true,
-    "clinicalStorySection": true,
+    "clinicalStorySection": false,
     "reviewsSection": true,
     "consultationSection": true
   },
   "sectionsOrder": [
     "heroSection",
-    "aboutSection",
-    "artOfCosmeceuticals",
     "gallerySection",
-    "clinicalStorySection",
     "reviewsSection",
     "consultationSection"
   ],
@@ -199,10 +196,12 @@
     "primary": "#485c36",
     "primaryHover": "#38492a",
     "secondary": "#610b0d",
-    "gold": "#d4af37",
+    "gold": "#ca384a",
     "background": "#f6f9e6",
     "surface": "#ffffff",
-    "text": "#1c2616"
+    "text": "#1c2616",
+    "rose": "#f3a5a1",
+    "crimson": "#ca384a"
   },
   "contacts": {
     "whatsapp": "+201099887766",
