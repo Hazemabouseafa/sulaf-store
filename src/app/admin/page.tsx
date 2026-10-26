@@ -2195,6 +2195,30 @@ export default function AdminPage() {
               </span>
             </button>
 
+            {/* 3.5 Reviews & Customer Feedback */}
+            <button
+              onClick={() => setActiveTab("reviews")}
+              className={`shrink-0 md:w-full flex items-center justify-between px-3.5 py-2.5 sm:py-3 rounded-2xl font-bold text-xs lg:text-sm transition-all overflow-hidden cursor-pointer ${
+                activeTab === "reviews"
+                  ? "bg-[#3d502d] text-white shadow-md ring-2 ring-emerald-400/40"
+                  : "text-gray-300 hover:bg-[#233019] hover:text-white"
+              }`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Star className="w-4 h-4 shrink-0 text-amber-300 fill-amber-300/30" />
+                <span className="truncate">{ADMIN_I18N[adminLang].tabs.reviews || (adminLang === "ar" ? "تقييمات وآراء العملاء" : "Reviews")}</span>
+              </div>
+              {reviewsList.filter((r) => r.status === "PENDING").length > 0 ? (
+                <span className="shrink-0 ms-2 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-black animate-pulse">
+                  {reviewsList.filter((r) => r.status === "PENDING").length} معلق
+                </span>
+              ) : (
+                <span className="shrink-0 ms-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#485c36] text-white">
+                  {reviewsList.length}
+                </span>
+              )}
+            </button>
+
             {/* 4. Coupons */}
             <button
               onClick={() => setActiveTab("coupons")}
@@ -2280,30 +2304,6 @@ export default function AdminPage() {
               <span className="shrink-0 ms-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#485c36] text-white">
                 {storePages.length}
               </span>
-            </button>
-
-            {/* 6.8 Reviews & Customer Feedback */}
-            <button
-              onClick={() => setActiveTab("reviews")}
-              className={`shrink-0 md:w-full flex items-center justify-between px-3.5 py-2.5 sm:py-3 rounded-2xl font-bold text-xs lg:text-sm transition-all overflow-hidden cursor-pointer ${
-                activeTab === "reviews"
-                  ? "bg-[#3d502d] text-white shadow-md ring-2 ring-emerald-400/40"
-                  : "text-gray-300 hover:bg-[#233019] hover:text-white"
-              }`}
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <Star className="w-4 h-4 shrink-0 text-amber-300" />
-                <span className="truncate">{ADMIN_I18N[adminLang].tabs.reviews || (adminLang === "ar" ? "تقييمات وآراء العملاء" : "Reviews")}</span>
-              </div>
-              {reviewsList.filter((r) => r.status === "PENDING").length > 0 ? (
-                <span className="shrink-0 ms-2 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-black animate-pulse">
-                  {reviewsList.filter((r) => r.status === "PENDING").length} معلق
-                </span>
-              ) : (
-                <span className="shrink-0 ms-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#485c36] text-white">
-                  {reviewsList.length}
-                </span>
-              )}
             </button>
 
             {/* 7. CMS (Content & Sections) */}
@@ -2442,6 +2442,33 @@ export default function AdminPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Pending Reviews Urgent Alert in Overview */}
+              {reviewsList.filter((r) => r.status === "PENDING").length > 0 && (
+                <div className="p-5 rounded-3xl bg-amber-50 border-2 border-amber-300 text-amber-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-amber-200 text-amber-900 flex items-center justify-center shrink-0">
+                      <Star className="w-6 h-6 fill-amber-600 text-amber-600" />
+                    </div>
+                    <div>
+                      <div className="font-black text-base font-cairo">
+                        {adminLang === "ar" ? "تنبيه: آراء وتقييمات جديدة من العملاء بانتظار الاعتماد!" : "New customer reviews pending approval!"}
+                      </div>
+                      <div className="text-xs font-semibold text-amber-800 font-cairo mt-0.5">
+                        {adminLang === "ar"
+                          ? `هناك ${reviewsList.filter((r) => r.status === "PENDING").length} فيدباك وارد بحاجة لاعتمادك قبل ظهوره في المتجر.`
+                          : `${reviewsList.filter((r) => r.status === "PENDING").length} feedback pending your approval before publishing.`}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab("reviews")}
+                    className="px-5 py-2.5 rounded-xl bg-[#3d502d] text-white font-bold text-xs hover:bg-[#2b3a1f] transition-all cursor-pointer shadow-sm shrink-0 font-cairo flex items-center gap-1.5"
+                  >
+                    <span>{adminLang === "ar" ? "فحص واعتماد التقييمات الآن ←" : "Review & Approve Now →"}</span>
+                  </button>
+                </div>
+              )}
 
               {/* Low Stock Urgent Alerts (if any) */}
               {products.filter((p) => p.stock < 10).length > 0 && (
@@ -7536,6 +7563,353 @@ export default function AdminPage() {
               </div>
             </div>
           )}
+
+          {activeTab === "reviews" && (() => {
+            const pendingCount = reviewsList.filter((r) => r.status === "PENDING").length;
+            const approvedCount = reviewsList.filter((r) => r.status === "APPROVED").length;
+            const rejectedCount = reviewsList.filter((r) => r.status === "REJECTED").length;
+
+            const filteredReviews = reviewsList.filter((rev) => {
+              if (reviewFilter !== "ALL" && rev.status !== reviewFilter) return false;
+              if (reviewSearch.trim()) {
+                const q = reviewSearch.toLowerCase().trim();
+                const authorMatch = (rev.authorName || "").toLowerCase().includes(q);
+                const commentMatch = (rev.comment || "").toLowerCase().includes(q);
+                const productMatch = (rev.productName || "").toLowerCase().includes(q);
+                const roleMatch = (rev.authorRole || "").toLowerCase().includes(q);
+                if (!authorMatch && !commentMatch && !productMatch && !roleMatch) return false;
+              }
+              return true;
+            });
+
+            const isSectionVisible = settings.sectionsVisibility?.reviewsSection !== false;
+
+            return (
+              <div className="space-y-6">
+                {/* Header & Overview Stats */}
+                <div className="bg-white p-6 rounded-3xl border border-[#dbe2bd] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Star className="w-6 h-6 text-amber-500 fill-amber-500" />
+                      <h2 className="font-bold text-2xl text-gray-900 font-cairo">
+                        {adminLang === "ar" ? "إدارة تقييمات وآراء العملاء والفيدباك" : "Customer Reviews & Feedback Management"}
+                      </h2>
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1 font-semibold font-cairo">
+                      {adminLang === "ar"
+                        ? "مراجعة واعتماد الفيدباك الوارد من صفحة المنتج، إضافة آراء يدوياً، والتحكم في إظهار القسم بالصفحة الرئيسية."
+                        : "Review and approve product feedback, manually add reviews, and toggle homepage section visibility."}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => setAddReviewModalOpen(true)}
+                      className="px-5 py-2.5 rounded-2xl bg-[#3d502d] hover:bg-[#2e3d22] text-white font-bold text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer font-cairo"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>{adminLang === "ar" ? "+ إضافة رأي عميل يدوياً" : "+ Add Review Manually"}</span>
+                    </button>
+
+                    <button
+                      onClick={() => loadLiveBackendData()}
+                      className="p-2.5 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all cursor-pointer"
+                      title={adminLang === "ar" ? "تحديث التقييمات" : "Refresh"}
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Section Visibility & Homepage Display Card */}
+                <div className="p-5 rounded-3xl bg-gradient-to-r from-[#f6f9e6] to-[#edf4d3] border border-[#dbe2bd] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+                  <div className="space-y-1 text-start">
+                    <div className="flex items-center gap-2">
+                      <Eye className="w-4 h-4 text-[#3d502d]" />
+                      <span className="font-cairo font-bold text-sm text-[#1c2616]">
+                        {adminLang === "ar" ? "عرض قسم آراء الأطباء والعملاء في الصفحة الرئيسية:" : "Homepage Reviews Section Display:"}
+                      </span>
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-xs font-cairo font-bold ${
+                          isSectionVisible
+                            ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                            : "bg-gray-200 text-gray-700 border border-gray-300"
+                        }`}
+                      >
+                        {isSectionVisible
+                          ? (adminLang === "ar" ? "مفعل وظاهر بالواجهة ✓" : "Active on Homepage ✓")
+                          : (adminLang === "ar" ? "مخفي حالياً ✕" : "Hidden from Homepage ✕")}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600 font-cairo">
+                      {adminLang === "ar"
+                        ? "يمكنك إخفاء أو إظهار قسم التقييمات كاملاً في الواجهة بضغطة واحدة دون الحاجة للدخول لصفحة CMS."
+                        : "Toggle the entire reviews section on the homepage without navigating to CMS settings."}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={toggleReviewsSectionVisibility}
+                    className={`px-4 py-2 rounded-2xl font-cairo font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs ${
+                      isSectionVisible
+                        ? "bg-rose-100 text-rose-800 hover:bg-rose-200 border border-rose-300"
+                        : "bg-emerald-700 text-white hover:bg-emerald-800 shadow-sm"
+                    }`}
+                  >
+                    <span>
+                      {isSectionVisible
+                        ? (adminLang === "ar" ? "إخفاء القسم من الواجهة" : "Hide from Homepage")
+                        : (adminLang === "ar" ? "إظهار وتفعيل القسم بالواجهة" : "Show on Homepage")}
+                    </span>
+                  </button>
+                </div>
+
+                {/* Stats Cards Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                  <div
+                    onClick={() => setReviewFilter("ALL")}
+                    className={`p-4 rounded-2xl border cursor-pointer transition-all ${
+                      reviewFilter === "ALL" ? "bg-white border-[#3d502d] ring-2 ring-[#3d502d]/20 shadow-sm" : "bg-white/60 border-gray-200 hover:bg-white"
+                    }`}
+                  >
+                    <div className="text-xs text-gray-500 font-cairo font-bold">إجمالي الآراء المسجلة</div>
+                    <div className="text-2xl font-black text-gray-900 mt-1 font-cairo">{reviewsList.length}</div>
+                    <div className="text-[11px] text-gray-500 font-cairo mt-1">عرض كل التقييمات</div>
+                  </div>
+
+                  <div
+                    onClick={() => setReviewFilter("PENDING")}
+                    className={`p-4 rounded-2xl border cursor-pointer transition-all ${
+                      reviewFilter === "PENDING" ? "bg-amber-50/80 border-amber-400 ring-2 ring-amber-400/30 shadow-sm" : "bg-white/60 border-gray-200 hover:bg-amber-50/40"
+                    }`}
+                  >
+                    <div className="text-xs text-amber-800 font-cairo font-bold flex items-center justify-between">
+                      <span>قيد المراجعة والاعتماد</span>
+                      {pendingCount > 0 && <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />}
+                    </div>
+                    <div className="text-2xl font-black text-amber-900 mt-1 font-cairo">{pendingCount}</div>
+                    <div className="text-[11px] text-amber-700 font-cairo mt-1 font-bold">بانتظار موافقة المدير</div>
+                  </div>
+
+                  <div
+                    onClick={() => setReviewFilter("APPROVED")}
+                    className={`p-4 rounded-2xl border cursor-pointer transition-all ${
+                      reviewFilter === "APPROVED" ? "bg-emerald-50/80 border-emerald-400 ring-2 ring-emerald-400/30 shadow-sm" : "bg-white/60 border-gray-200 hover:bg-emerald-50/40"
+                    }`}
+                  >
+                    <div className="text-xs text-emerald-800 font-cairo font-bold">معتمد ومنشور بالمتجر</div>
+                    <div className="text-2xl font-black text-emerald-900 mt-1 font-cairo">{approvedCount}</div>
+                    <div className="text-[11px] text-emerald-700 font-cairo mt-1 font-bold">ظاهر للزوار والعملاء</div>
+                  </div>
+
+                  <div
+                    onClick={() => setReviewFilter("REJECTED")}
+                    className={`p-4 rounded-2xl border cursor-pointer transition-all ${
+                      reviewFilter === "REJECTED" ? "bg-rose-50/80 border-rose-400 ring-2 ring-rose-400/30 shadow-sm" : "bg-white/60 border-gray-200 hover:bg-rose-50/40"
+                    }`}
+                  >
+                    <div className="text-xs text-rose-800 font-cairo font-bold">تقييمات مرفوضة</div>
+                    <div className="text-2xl font-black text-rose-900 mt-1 font-cairo">{rejectedCount}</div>
+                    <div className="text-[11px] text-rose-700 font-cairo mt-1">غير منشورة بالمتجر</div>
+                  </div>
+                </div>
+
+                {/* Filters & Search Toolbar */}
+                <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
+                  <div className="w-full md:w-96 relative">
+                    <Search className="w-4 h-4 text-gray-400 absolute start-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={reviewSearch}
+                      onChange={(e) => setReviewSearch(e.target.value)}
+                      placeholder={adminLang === "ar" ? "بحث باسم العميل، المنتج، أو نص الرأي..." : "Search by customer, product, or review text..."}
+                      className="w-full ps-9 pe-4 py-2 rounded-xl border border-gray-200 bg-gray-50 text-xs font-cairo text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3d502d]"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none font-cairo">
+                    {[
+                      { id: "ALL", label: "الكل" },
+                      { id: "PENDING", label: `قيد المراجعة (${pendingCount})` },
+                      { id: "APPROVED", label: `المنشور (${approvedCount})` },
+                      { id: "REJECTED", label: `المرفوض (${rejectedCount})` },
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setReviewFilter(tab.id as any)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                          reviewFilter === tab.id
+                            ? "bg-[#3d502d] text-white shadow-xs"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Reviews List */}
+                {filteredReviews.length === 0 ? (
+                  <div className="bg-white p-12 rounded-3xl border border-dashed border-gray-300 text-center space-y-3 font-cairo">
+                    <div className="w-14 h-14 mx-auto rounded-full bg-amber-100 flex items-center justify-center text-amber-700">
+                      <Star className="w-7 h-7" />
+                    </div>
+                    <h3 className="font-bold text-base text-gray-800">
+                      {reviewSearch ? "لا توجد نتائج مطابقة لبحثك" : "لا توجد تقييمات في هذا التبويب حالياً"}
+                    </h3>
+                    <p className="text-xs text-gray-500 max-w-md mx-auto">
+                      {reviewSearch
+                        ? "جرب البحث بكلمة مختلفة أو اختر تبويب 'الكل'."
+                        : "عندما يقوم العملاء بكتابة فيدباك من صفحة المنتج، سيظهر هنا مباشرة للمراجعة والاعتماد. أو يمكنك إضافة آراء يدوياً الآن."}
+                    </p>
+                    <button
+                      onClick={() => setAddReviewModalOpen(true)}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3d502d] text-white text-xs font-bold hover:bg-[#2d3b21] transition-all cursor-pointer mt-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>+ إضافة رأي عميل يدوياً</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredReviews.map((rev) => (
+                      <div
+                        key={rev.id}
+                        className={`bg-white p-5 sm:p-6 rounded-3xl border transition-all shadow-xs ${
+                          rev.status === "PENDING"
+                            ? "border-amber-300 ring-2 ring-amber-300/20 bg-amber-50/20"
+                            : "border-gray-200"
+                        }`}
+                      >
+                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                          {/* Info Column */}
+                          <div className="space-y-2.5 flex-1 text-start font-cairo">
+                            <div className="flex items-center flex-wrap gap-2.5">
+                              <span className="font-bold text-base text-gray-900">{rev.authorName}</span>
+                              {rev.authorRole && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#3d502d]/10 text-[#3d502d]">
+                                  {rev.authorRole}
+                                </span>
+                              )}
+
+                              {/* Status Badge */}
+                              {rev.status === "PENDING" && (
+                                <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+                                  <Clock className="w-3.5 h-3.5" />
+                                  <span>قيد المراجعة (في انتظار الاعتماد)</span>
+                                </span>
+                              )}
+                              {rev.status === "APPROVED" && (
+                                <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                  <span>معتمد ومنشور بالمتجر ✓</span>
+                                </span>
+                              )}
+                              {rev.status === "REJECTED" && (
+                                <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-900 border border-rose-300 flex items-center gap-1">
+                                  <XCircle className="w-3.5 h-3.5" />
+                                  <span>مرفوض</span>
+                                </span>
+                              )}
+
+                              {rev.isVerifiedPurchase && (
+                                <span className="text-[11px] font-bold text-emerald-700 flex items-center gap-1">
+                                  <ShieldCheck className="w-3.5 h-3.5" />
+                                  <span>شراء موثق</span>
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Stars & Product */}
+                            <div className="flex items-center flex-wrap gap-3 text-xs text-gray-500 font-mono">
+                              <div className="flex items-center">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`w-4 h-4 ${
+                                      i < rev.rating
+                                        ? "fill-amber-500 text-amber-500"
+                                        : "text-gray-300"
+                                    }`}
+                                  />
+                                ))}
+                                <span className="ms-1.5 font-bold text-gray-700">{rev.rating}/5</span>
+                              </div>
+
+                              <span>•</span>
+                              <span>المنتج: <strong className="text-gray-800">{rev.productName || "Absolutes Smoothing Body Cream"}</strong></span>
+                              <span>•</span>
+                              <span>التاريخ: {new Date(rev.createdAt).toLocaleString(adminLang === "ar" ? "ar-EG" : "en-US")}</span>
+                            </div>
+
+                            {/* Review Title & Body */}
+                            {rev.title && (
+                              <h4 className="font-bold text-sm text-[#3d502d]">{rev.title}</h4>
+                            )}
+                            <p className="text-xs sm:text-sm text-gray-800 leading-relaxed whitespace-pre-line bg-gray-50/70 p-3.5 rounded-2xl border border-gray-100">
+                              {rev.comment}
+                            </p>
+                          </div>
+
+                          {/* Action Buttons Column */}
+                          <div className="flex flex-row md:flex-col items-center justify-end gap-2 shrink-0 font-cairo">
+                            {rev.status === "PENDING" && (
+                              <>
+                                <button
+                                  onClick={() => handleApproveReview(rev.id)}
+                                  className="flex-1 md:w-36 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                                >
+                                  <Check className="w-4 h-4" />
+                                  <span>اعتماد ونشر ✓</span>
+                                </button>
+                                <button
+                                  onClick={() => handleRejectReview(rev.id)}
+                                  className="py-2 px-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
+                                >
+                                  <X className="w-4 h-4" />
+                                  <span>رفض</span>
+                                </button>
+                              </>
+                            )}
+
+                            {rev.status === "APPROVED" && (
+                              <button
+                                onClick={() => handleUnapproveReview(rev.id)}
+                                className="py-2 px-3 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
+                              >
+                                <Clock className="w-4 h-4" />
+                                <span>إلغاء النشر</span>
+                              </button>
+                            )}
+
+                            {rev.status === "REJECTED" && (
+                              <button
+                                onClick={() => handleApproveReview(rev.id)}
+                                className="py-2 px-3 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
+                              >
+                                <Check className="w-4 h-4" />
+                                <span>إعادة اعتماد</span>
+                              </button>
+                            )}
+
+                            <button
+                              onClick={() => handleDeleteReview(rev.id)}
+                              className="py-2 px-3 rounded-xl text-rose-600 hover:bg-rose-50 font-bold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
+                              title="حذف نهائي"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              <span>حذف</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {activeTab === "settings" && (
             <div className="space-y-8">
