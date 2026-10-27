@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { AndalusianPattern } from "../brand/AndalusianPattern";
 import { MarblePodium } from "../shop/MarblePodium";
 import { useCart } from "@/lib/cart/cart-context";
@@ -15,12 +15,10 @@ import {
   ArrowRight,
   ShieldCheck,
   Truck,
-  FlaskConical,
   Sparkles,
   ShoppingBag,
   PackageCheck,
   Check,
-  Eye,
 } from "lucide-react";
 
 export function HeroSection() {
@@ -30,8 +28,6 @@ export function HeroSection() {
   const products = useProducts();
   const roughAway = products[0] || MOCK_PRODUCTS[0];
 
-  const [selectedActive, setSelectedActive] = useState<number>(0);
-  const [selectedDay, setSelectedDay] = useState<number>(0);
   const [addedHero, setAddedHero] = useState(false);
 
   const vis = settings.elementsVisibility || {
@@ -51,63 +47,6 @@ export function HeroSection() {
   const ArrowIcon = isArabic ? ArrowLeft : ArrowRight;
   const currency = isArabic ? "ج.م" : "EGP";
 
-  const activesInfo = [
-    {
-      code: "30% UREA",
-      title: isArabic ? "30% يوريا نقية" : "30% Pure Urea",
-      role: isArabic ? "تفكيك التقرن وجلد الوزة" : "Keratolytic Reset",
-      desc: isArabic
-        ? "تذيب السدادات الكيراتينية المتصلبة في المسام بهدوء تام وبدون أي تقشير فيزيائي قاسٍ."
-        : "Dissolves hyper-keratinized plugs gently with zero abrasive friction.",
-      pillBg: "bg-[#485c36] text-[#f6f9e6]",
-    },
-    {
-      code: "10% LACTATE",
-      title: isArabic ? "10% أمونيوم لاكتات" : "10% Lactate",
-      role: isArabic ? "توحيد الملمس وحبس الرطوبة" : "Surface Resurfacing",
-      desc: isArabic
-        ? "يجدد الخلايا السطحية ويمحو مظهر النقط الداكنة مع جذب الماء لأعماق الجلد."
-        : "Accelerates epidermal renewal and locks deep cellular hydration.",
-      pillBg: "bg-[#ca384a] text-[#f6f9e6]",
-    },
-    {
-      code: "2% SALICYLIC",
-      title: isArabic ? "2% ساليسيليك + سيراميد" : "2% BHA + Ceramides",
-      role: isArabic ? "تنقية المسام وإغلاق الحاجز" : "Pore & Barrier Lock",
-      desc: isArabic
-        ? "يحرر الشعر المحتجز تحت الجلد ويرمم الحاجز الدهني لمنع عودة الجفاف."
-        : "Frees trapped ingrown hairs and seals the lipid barrier against dryness.",
-      pillBg: "bg-[#610b0d] text-[#f3a5a1]",
-    },
-  ];
-
-  const timelineDays = [
-    {
-      day: isArabic ? "اليوم 01" : "Day 01",
-      metric: "92%",
-      title: isArabic ? "تهدئة فورية للملمس الخشن" : "Instant Roughness Relief",
-      desc: isArabic
-        ? "امتصاص فوري يذيب القشور السطحية الجافة من أول استخدام دون أي لزوجة."
-        : "Rapid absorption dissolving dry surface flakes from the first application.",
-    },
-    {
-      day: isArabic ? "اليوم 03" : "Day 03",
-      metric: "72h",
-      title: isArabic ? "انحسار حبيبات جلد الوزة" : "Keratosis Pilaris Retreat",
-      desc: isArabic
-        ? "تفرغ المسام من التكلسات الكيراتينية وتبدأ النتوءات الخشنة بالتلاشي التدريجي."
-        : "Follicles clear out keratin plugs and bumpy texture visibly flattens.",
-    },
-    {
-      day: isArabic ? "اليوم 07" : "Day 07",
-      metric: "100%",
-      title: isArabic ? "ملمس الحرير الأندلسي" : "Undefeated Silk Texture",
-      desc: isArabic
-        ? "بشرة ملساء متجانسة كالحرير مع حاجز دهني مرمم يمنع انتكاس الجفاف."
-        : "Silky, unified skin architecture with a restored moisture barrier.",
-    },
-  ];
-
   function handleQuickOrder() {
     addItem(roughAway);
     setAddedHero(true);
@@ -115,216 +54,109 @@ export function HeroSection() {
   }
 
   return (
-    <section className="relative bg-[#f6f9e6] text-[#485c36] py-6 sm:py-10 lg:py-12 overflow-hidden font-cairo">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* =================================================================== */}
-        {/* SULAF ARCHITECTURAL BENTO GRID HERO (12-COLUMN ASYMMETRIC MATRIX)   */}
-        {/* =================================================================== */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 auto-rows-auto">
-          
-          {/* BENTO CELL 1: MAIN BRAND MANIFESTO & POETIC IDENTITY (7 Cols, 2 Rows) */}
-          <motion.article
-            initial={{ opacity: 0, y: 18 }}
+    <section className="relative bg-[#f6f9e6] text-[#485c36] py-12 sm:py-16 lg:py-20 overflow-hidden font-cairo border-b border-[#485c36]/10">
+      {/* Subtle Architectural Hairlines framing the stage */}
+      <div className="hidden lg:block absolute inset-y-0 left-12 w-px bg-[#485c36]/10 pointer-events-none" />
+      <div className="hidden lg:block absolute inset-y-0 right-12 w-px bg-[#485c36]/10 pointer-events-none" />
+
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col items-center text-center">
+        
+        {/* 1. Minimalist Heritage Pill */}
+        {vis.heroBadge !== false && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-7 lg:row-span-2 relative rounded-[2rem] bg-[#485c36] text-[#f6f9e6] p-6 sm:p-10 lg:p-12 flex flex-col justify-between overflow-hidden shadow-[0_20px_50px_rgba(72,92,54,0.18)] border border-[#485c36]"
+            transition={{ duration: 0.6 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#485c36]/10 border border-[#485c36]/20 text-[#485c36] text-xs font-bold mb-6"
           >
-            {/* Subtle Andalusian Geometric Watermark */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-10">
-              <AndalusianPattern opacity={1} color="#f6f9e6" scale={1.35} />
-            </div>
-            <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-[#ca384a]/25 blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-[#610b0d]/40 blur-3xl pointer-events-none" />
+            <span className="w-2 h-2 rounded-full bg-[#ca384a]" />
+            <span>
+              {custom.heroBadgeText ||
+                (isArabic
+                  ? "سُـلاف • حيث يلتقي العلم الصيدلاني بالجمال الأندلسي"
+                  : t.hero?.badge || "Where Pharmaceutical Science Meets Beauty")}
+            </span>
+          </motion.div>
+        )}
 
-            {/* Top Row: Brand Pill & Minimalist Manifesto Tag */}
-            <div className="relative z-10 flex flex-wrap items-center justify-between gap-3">
-              {vis.heroBadge !== false && (
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#610b0d] border border-[#f3a5a1]/40 text-[#f6f9e6] text-xs font-bold shadow-xs">
-                  <span className="w-2 h-2 rounded-full bg-[#f3a5a1] animate-pulse shrink-0" />
-                  <span>
-                    {custom.heroBadgeText ||
-                      (isArabic
-                        ? "سُـلاف • الصيدلية الأندلسية السريرية"
-                        : t.hero?.badge || "Sulaf • Clinical Andalusian Apothecary")}
-                  </span>
-                </div>
-              )}
+        {/* 2. Poetic Verse Above the Arch */}
+        {vis.heroPoem !== false && (
+          <motion.h1
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.1 }}
+            className={`${
+              isArabic
+                ? "font-amiri text-[clamp(1.85rem,4vw,3.35rem)] leading-[1.6]"
+                : "font-cormorant italic text-[clamp(1.85rem,4vw,3.35rem)] leading-[1.3]"
+            } font-bold text-[#485c36] max-w-3xl mb-4`}
+          >
+            <span>{poemLine1}</span>
+            <span className="block text-[#610b0d] mt-1">{poemLine2}</span>
+          </motion.h1>
+        )}
 
-              <span className="font-mono text-[11px] font-bold tracking-widest uppercase px-3 py-1 rounded-full bg-[#f6f9e6]/10 text-[#f3a5a1] border border-[#f6f9e6]/15">
-                DERM-GRADE • pH 5.2
-              </span>
-            </div>
+        {/* 3. Simple Clinical Subtitle */}
+        {vis.heroSubheading !== false && (
+          <motion.p
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="text-xs sm:text-base text-[#485c36]/85 max-w-xl leading-relaxed mb-10"
+          >
+            {custom.heroSubheading ||
+              (isArabic ? settings.hero.subheading : t.hero.subheading)}
+          </motion.p>
+        )}
 
-            {/* Center: Poetic Verse & Simple Unique Value Proposition */}
-            <div className="relative z-10 my-8 sm:my-10 space-y-5 text-start">
-              {vis.heroPoem !== false && (
-                <h1
-                  className={`${
-                    isArabic
-                      ? "font-amiri text-[clamp(1.75rem,3.2vw,3rem)] leading-[1.65]"
-                      : "font-cormorant italic text-[clamp(1.75rem,3.2vw,3rem)] leading-[1.35]"
-                  } font-bold text-[#f6f9e6]`}
-                >
-                  <span className="block">{poemLine1}</span>
-                  <span className="block mt-1 text-[#f3a5a1] decoration-[#ca384a] underline decoration-2 underline-offset-8">
-                    {poemLine2}
-                  </span>
-                </h1>
-              )}
-
-              {vis.heroSubheading !== false && (
-                <p className="text-xs sm:text-base text-[#f6f9e6]/90 max-w-xl leading-relaxed font-normal">
-                  {custom.heroSubheading ||
-                    (isArabic ? settings.hero.subheading : t.hero.subheading)}
-                </p>
-              )}
-
-              {/* Minimalist Key Metrics Bento Strip inside Hero */}
-              <div className="grid grid-cols-3 gap-2.5 pt-2 max-w-lg">
-                <div className="p-3 rounded-2xl bg-[#f6f9e6]/10 border border-[#f6f9e6]/15 backdrop-blur-xs">
-                  <span className="block font-mono text-base sm:text-xl font-black text-[#f3a5a1]">
-                    30%
-                  </span>
-                  <span className="text-[11px] text-[#f6f9e6]/90 font-bold">
-                    {isArabic ? "يوريا علاجية نقية" : "Pure Urea USP"}
-                  </span>
-                </div>
-                <div className="p-3 rounded-2xl bg-[#f6f9e6]/10 border border-[#f6f9e6]/15 backdrop-blur-xs">
-                  <span className="block font-mono text-base sm:text-xl font-black text-[#f6f9e6]">
-                    10%
-                  </span>
-                  <span className="text-[11px] text-[#f6f9e6]/90 font-bold">
-                    {isArabic ? "أمونيوم لاكتات" : "Lactate AHA"}
-                  </span>
-                </div>
-                <div className="p-3 rounded-2xl bg-[#610b0d] border border-[#f3a5a1]/30">
-                  <span className="block font-mono text-base sm:text-xl font-black text-[#f3a5a1]">
-                    0%
-                  </span>
-                  <span className="text-[11px] text-[#f6f9e6] font-bold">
-                    {isArabic ? "احتكاك أو خدوش" : "Micro-tears"}
-                  </span>
-                </div>
+        {/* =================================================================== */}
+        {/* 4. THE GRAND ANDALUSIAN ARCH FOCAL STAGE                            */}
+        {/* =================================================================== */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.85, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          className="relative w-full max-w-[340px] sm:max-w-[390px] mx-auto"
+        >
+          {/* Outer Decorative Double-Arch Ring */}
+          <div className="p-2.5 sm:p-3.5 rounded-t-[14rem] rounded-b-[2.5rem] border border-[#485c36]/25 bg-white/50 shadow-[0_24px_60px_rgba(72,92,54,0.14)]">
+            
+            {/* Inner Primary Olive Andalusian Mihrab / Arch */}
+            <div className="relative rounded-t-[13rem] rounded-b-[2rem] bg-[#485c36] text-[#f6f9e6] pt-12 pb-8 px-6 flex flex-col items-center overflow-hidden border border-[#f3a5a1]/35">
+              
+              {/* Subtle Andalusian Pattern inside the Arch */}
+              <div className="absolute inset-0 opacity-10 pointer-events-none">
+                <AndalusianPattern opacity={1} color="#f6f9e6" scale={1.1} />
               </div>
-            </div>
 
-            {/* Bottom Row: Action Buttons & Trust Pills */}
-            <div className="relative z-10 space-y-5">
-              {(vis.heroPrimaryCta !== false || vis.heroSecondaryCta !== false) && (
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                  {vis.heroPrimaryCta !== false && (
-                    <button
-                      type="button"
-                      onClick={handleQuickOrder}
-                      className="px-7 py-3.5 rounded-2xl bg-[#ca384a] hover:bg-[#610b0d] text-[#f6f9e6] font-bold text-xs sm:text-sm shadow-lg flex items-center justify-center gap-2.5 transition-all active:scale-95 cursor-pointer"
-                    >
-                      {addedHero ? (
-                        <>
-                          <Check className="w-4 h-4" />
-                          <span>{isArabic ? "تمت الإضافة لحقيبتكِ ✓" : "Added to Bag ✓"}</span>
-                        </>
-                      ) : (
-                        <>
-                          <ShoppingBag className="w-4 h-4" />
-                          <span>
-                            {custom.heroPrimaryCtaText ||
-                              (isArabic
-                                ? settings.hero.ctaText || "اطلبي الآن — تسليم فوري"
-                                : t.hero.ctaOrder)}
-                          </span>
-                          <ArrowIcon className="w-4 h-4" />
-                        </>
-                      )}
-                    </button>
-                  )}
+              {/* Soft Crimson / Blush Glow at the Crown of the Arch */}
+              <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full bg-[#f3a5a1]/20 blur-2xl pointer-events-none" />
 
-                  {vis.heroSecondaryCta !== false && (
-                    <Link
-                      href="/shop"
-                      className="px-6 py-3.5 rounded-2xl bg-[#f6f9e6] hover:bg-[#f3a5a1] text-[#485c36] hover:text-[#610b0d] font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-xs"
-                    >
-                      <Sparkles className="w-4 h-4 text-[#ca384a]" />
-                      <span>{custom.heroSecondaryCtaText || t.hero.ctaExplore}</span>
-                    </Link>
-                  )}
-                </div>
-              )}
-
-              {vis.heroTrustBadges !== false && (
-                <div className="pt-4 border-t border-[#f6f9e6]/15 flex flex-wrap items-center gap-4 text-[11px] font-bold text-[#f6f9e6]/90">
-                  <span className="inline-flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-[#f3a5a1]" />
-                    <span>
-                      {custom.heroTrustEfficacy ||
-                        (isArabic ? "تركيبات سريرية معتمدة" : "Clinical Grade")}
-                    </span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <PackageCheck className="w-4 h-4 text-[#f3a5a1]" />
-                    <span>
-                      {isArabic ? "معاينة العبوة قبل الدفع" : "Inspect Before Paying"}
-                    </span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <Truck className="w-4 h-4 text-[#f3a5a1]" />
-                    <span>
-                      {custom.heroTrustShipping ||
-                        (isArabic ? "شحن مؤمن لكافة المحافظات" : "Insured Delivery")}
-                    </span>
-                  </span>
-                </div>
-              )}
-            </div>
-          </motion.article>
-
-          {/* BENTO CELL 2: FLAGSHIP PRODUCT & ACTIVE MOLECULE SWITCHER (5 Cols) */}
-          <motion.article
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-5 rounded-[2rem] bg-[#610b0d] text-[#f6f9e6] p-6 sm:p-7 flex flex-col justify-between relative overflow-hidden shadow-[0_16px_40px_rgba(97,11,13,0.18)] border border-[#f3a5a1]/30"
-          >
-            <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-[#ca384a]/30 blur-2xl pointer-events-none" />
-
-            {/* Top Header */}
-            <div className="relative z-10 flex items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ca384a] text-[#f6f9e6] text-[11px] font-bold">
-                <FlaskConical className="w-3.5 h-3.5" />
-                <span>{isArabic ? "المستحضر الرئيسي" : "Flagship Formula"}</span>
+              {/* Top Arch Keystone Label */}
+              <span className="relative z-10 font-mono text-[10px] tracking-[0.2em] uppercase px-3 py-1 rounded-full bg-[#610b0d] text-[#f3a5a1] border border-[#f3a5a1]/30 mb-3">
+                30% UREA • 10% LACTATE • 2% BHA
               </span>
 
-              <Link
-                href={`/product/${roughAway.slug}`}
-                className="inline-flex items-center gap-1 text-xs font-bold text-[#f3a5a1] hover:text-[#f6f9e6] transition-colors"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                <span>{isArabic ? "صفحة المستحضر" : "View Formula"}</span>
-              </Link>
-            </div>
-
-            {/* Center Podium + Product Title */}
-            <div className="relative z-10 my-4 flex flex-col sm:flex-row items-center gap-4">
-              <div className="shrink-0">
+              {/* Floating Flagship Product on Marble Podium */}
+              <div className="relative z-10 my-2">
                 <MarblePodium
                   imageSrc={roughAway?.images[0]?.url || "/brand/sulaf-flower-symbol.png"}
                   alt={isArabic ? roughAway.nameAr : roughAway.nameEn}
-                  size="sm"
+                  size="md"
                   priority={true}
                 />
               </div>
 
-              <div className="space-y-1.5 text-center sm:text-start flex-1">
-                <span className="font-mono text-[10px] uppercase tracking-widest text-[#f3a5a1]">
-                  {roughAway.sku || "SLF-ABS-200"} • 200 ML
-                </span>
-                <h2 className="font-amiri text-xl sm:text-2xl font-bold text-[#f6f9e6] leading-snug">
+              {/* Minimal Product Caption inside the Arch Base */}
+              <div className="relative z-10 mt-3 space-y-1 text-center">
+                <Link
+                  href={`/product/${roughAway.slug}`}
+                  className="font-amiri text-xl sm:text-2xl font-bold text-[#f6f9e6] hover:text-[#f3a5a1] transition-colors block"
+                >
                   {isArabic ? roughAway.nameAr : roughAway.nameEn}
-                </h2>
-                <p className="text-xs text-[#f6f9e6]/80 leading-relaxed line-clamp-2">
-                  {isArabic ? roughAway.subtitleAr : roughAway.subtitleEn}
-                </p>
-                <div className="pt-1 flex items-baseline justify-center sm:justify-start gap-2">
-                  <span className="font-mono text-xl font-black text-[#f3a5a1]">
+                </Link>
+                <div className="flex items-center justify-center gap-2 pt-1">
+                  <span className="font-mono text-lg font-black text-[#f3a5a1]">
                     {roughAway.price} {currency}
                   </span>
                   {roughAway.compareAtPrice > roughAway.price && (
@@ -335,146 +167,86 @@ export function HeroSection() {
                 </div>
               </div>
             </div>
+          </div>
+        </motion.div>
 
-            {/* Interactive Active Ingredient Selector */}
-            <div className="relative z-10 bg-[#f6f9e6] text-[#485c36] p-4 rounded-2xl space-y-2.5 border border-[#f3a5a1]">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {activesInfo.map((act, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setSelectedActive(idx)}
-                    className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
-                      selectedActive === idx
-                        ? `${act.pillBg} shadow-xs scale-[1.02]`
-                        : "bg-[#485c36]/10 text-[#485c36] hover:bg-[#485c36]/20"
-                    }`}
-                  >
-                    {act.title}
-                  </button>
-                ))}
-              </div>
-
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={selectedActive}
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  transition={{ duration: 0.2 }}
-                  className="text-start space-y-0.5"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#610b0d]">
-                      {activesInfo[selectedActive].role}
-                    </span>
-                    <span className="font-mono text-[10px] font-black text-[#ca384a]">
-                      {activesInfo[selectedActive].code}
-                    </span>
-                  </div>
-                  <p className="text-[11px] sm:text-xs text-[#485c36] leading-relaxed">
-                    {activesInfo[selectedActive].desc}
-                  </p>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          </motion.article>
-
-          {/* BENTO CELL 3: 7-DAY SILK TRANSFORMATION INTERACTIVE CARD (3 Cols) */}
-          <motion.article
-            initial={{ opacity: 0, y: 18 }}
+        {/* 5. Clean Single-Focus Action Row Below the Arch */}
+        {(vis.heroPrimaryCta !== false || vis.heroSecondaryCta !== false) && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-3 rounded-[2rem] bg-white border-2 border-[#485c36]/20 p-6 flex flex-col justify-between shadow-sm text-start"
+            transition={{ duration: 0.7, delay: 0.4 }}
+            className="mt-9 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3.5 w-full max-w-xs sm:max-w-none"
           >
-            <div className="space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-[#485c36]/10 text-[#485c36]">
-                  {isArabic ? "الجدول السريري للتحول" : "Clinical Reset"}
-                </span>
-                <span className="font-mono text-xs font-black text-[#ca384a]">
-                  {timelineDays[selectedDay].metric}
-                </span>
-              </div>
-
-              {/* Day switcher pills */}
-              <div className="grid grid-cols-3 gap-1.5 bg-[#f6f9e6] p-1 rounded-xl border border-[#485c36]/15">
-                {timelineDays.map((d, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setSelectedDay(idx)}
-                    className={`py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                      selectedDay === idx
-                        ? "bg-[#485c36] text-[#f6f9e6] shadow-xs"
-                        : "text-[#485c36] hover:bg-[#485c36]/10"
-                    }`}
-                  >
-                    {d.day}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={selectedDay}
-                initial={{ opacity: 0, x: 8 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -8 }}
-                transition={{ duration: 0.22 }}
-                className="my-4 space-y-1.5"
+            {vis.heroPrimaryCta !== false && (
+              <button
+                type="button"
+                onClick={handleQuickOrder}
+                className="px-8 py-4 rounded-full bg-[#ca384a] hover:bg-[#610b0d] text-[#f6f9e6] font-bold text-sm shadow-[0_10px_28px_rgba(202,56,74,0.3)] flex items-center justify-center gap-2.5 transition-all active:scale-95 cursor-pointer"
               >
-                <h3 className="font-amiri text-xl font-bold text-[#610b0d]">
-                  {timelineDays[selectedDay].title}
-                </h3>
-                <p className="text-xs text-[#485c36] leading-relaxed">
-                  {timelineDays[selectedDay].desc}
-                </p>
-              </motion.div>
-            </AnimatePresence>
+                {addedHero ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>{isArabic ? "تمت الإضافة إلى حقيبتكِ ✓" : "Added to Bag ✓"}</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingBag className="w-4 h-4" />
+                    <span>
+                      {custom.heroPrimaryCtaText ||
+                        (isArabic
+                          ? settings.hero.ctaText || "اطلبي الآن — تسليم فوري"
+                          : t.hero.ctaOrder)}
+                    </span>
+                    <ArrowIcon className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            )}
 
-            <div className="pt-3 border-t border-[#485c36]/15 flex items-center justify-between text-[11px] font-bold text-[#485c36]">
-              <span>{isArabic ? "نتائج تدريجية موثقة" : "Progressive Silk Reset"}</span>
-              <Sparkles className="w-3.5 h-3.5 text-[#ca384a]" />
-            </div>
-          </motion.article>
+            {vis.heroSecondaryCta !== false && (
+              <Link
+                href="/shop"
+                className="px-8 py-4 rounded-full bg-white hover:bg-[#485c36] text-[#485c36] hover:text-[#f6f9e6] border border-[#485c36]/25 font-bold text-sm transition-all flex items-center justify-center gap-2"
+              >
+                <Sparkles className="w-4 h-4 text-[#ca384a]" />
+                <span>{custom.heroSecondaryCtaText || t.hero.ctaExplore}</span>
+              </Link>
+            )}
+          </motion.div>
+        )}
 
-          {/* BENTO CELL 4: SULAF ARCHITECTURAL PROMISE CARD (2 Cols) */}
-          <motion.article
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-2 rounded-[2rem] bg-[#f3a5a1] text-[#610b0d] p-6 flex flex-col justify-between border border-[#ca384a]/30 shadow-sm text-start relative overflow-hidden"
+        {/* 6. Quiet Minimalist Trust Ribbon */}
+        {vis.heroTrustBadges !== false && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.55 }}
+            className="mt-10 pt-6 border-t border-[#485c36]/15 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs font-bold text-[#485c36]/85"
           >
-            <div className="w-10 h-10 rounded-2xl bg-[#610b0d] text-[#f6f9e6] flex items-center justify-center shadow-xs">
-              <PackageCheck className="w-5 h-5 text-[#f3a5a1]" />
-            </div>
-
-            <div className="my-4 space-y-1.5">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#ca384a] text-[#f6f9e6] inline-block">
-                {isArabic ? "ضمان سُـلاف" : "Sulaf Guarantee"}
+            <span className="inline-flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-[#610b0d]" />
+              <span>
+                {custom.heroTrustEfficacy ||
+                  (isArabic ? "تركيبات سريرية معتمدة" : "Verified Clinical Efficacy")}
               </span>
-              <h3 className="font-amiri text-xl font-bold text-[#610b0d] leading-snug">
-                {isArabic ? "معاينة العبوة بيدكِ قبل السداد" : "Inspect Before Paying"}
-              </h3>
-              <p className="text-[11px] text-[#610b0d]/90 font-semibold leading-relaxed">
-                {isArabic
-                  ? "افحصي عبوتكِ وتأكدي من الختم السريري الأصلي عند الاستلام قبل دفع قيمة الطلب."
-                  : "Verify your sealed clinical jar upon delivery before completing payment."}
-              </p>
-            </div>
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <PackageCheck className="w-4 h-4 text-[#ca384a]" />
+              <span>
+                {isArabic ? "معاينة العبوة قبل الاستلام والدفع" : "Inspect Before Paying"}
+              </span>
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <Truck className="w-4 h-4 text-[#485c36]" />
+              <span>
+                {custom.heroTrustShipping ||
+                  (isArabic ? "شحن فوري مؤمن لجميع المحافظات" : "Insured Nationwide Delivery")}
+              </span>
+            </span>
+          </motion.div>
+        )}
 
-            <Link
-              href="/track"
-              className="inline-flex items-center justify-between px-3 py-2 rounded-xl bg-[#610b0d] hover:bg-[#485c36] text-[#f6f9e6] text-[11px] font-bold transition-colors"
-            >
-              <span>{isArabic ? "تتبع شحنتك" : "Track Order"}</span>
-              <ArrowIcon className="w-3.5 h-3.5 text-[#f3a5a1]" />
-            </Link>
-          </motion.article>
-
-        </div>
       </div>
     </section>
   );
