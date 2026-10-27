@@ -1,187 +1,212 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { SulafLogo } from "../brand/SulafLogo";
-import { AndalusianPattern } from "../brand/AndalusianPattern";
 import { SULAF_SETTINGS } from "@/lib/data/mock-data";
 import { useStoreSettings } from "@/lib/settings/store-settings-context";
 import { useLanguage } from "@/lib/i18n/language-context";
 import {
-  ShieldCheck,
-  Truck,
   MessageCircle,
   Mail,
   MapPin,
-  Heart,
-  CreditCard,
-  CheckCircle,
+  ArrowLeft,
+  ArrowRight,
+  Check,
 } from "lucide-react";
 
 export function Footer() {
   const { settings } = useStoreSettings();
   const { isArabic, t, dir } = useLanguage();
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+
+  const ArrowIcon = isArabic ? ArrowLeft : ArrowRight;
+
+  function handleSubscribe(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setSubscribed(true);
+    setEmail("");
+  }
 
   return (
-    <footer className="relative bg-[#485c36] text-[#f6f9e6] pt-16 pb-8 overflow-hidden select-none" dir={dir}>
-      {/* Background Islamic Geometric Engraving */}
-      <AndalusianPattern opacity={0.06} color="#f6f9e6" scale={1.2} />
-
-      {/* Hero Quote Ribbon */}
-      <div className="relative z-10 max-w-5xl mx-auto px-4 text-center mb-16 pb-12 border-b border-[#f6f9e6]/15">
-        <p className={`${isArabic ? "font-amiri text-2xl md:text-3xl" : "font-cormorant italic text-2xl md:text-3xl"} text-[#f3a5a1] italic leading-relaxed`}>
-          {isArabic
-            ? `«${settings.hero.poemLine1} ${settings.hero.poemLine2}»`
-            : t.footer.quote}
-        </p>
-        <span className="mt-3 block text-xs text-[#f6f9e6]/70 uppercase tracking-widest">
-          {t.footer.quoteSource}
-        </span>
-      </div>
-
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-[#f6f9e6]/15">
-          {/* Col 1: Brand Info */}
-          <div className="lg:col-span-2 space-y-4">
-            <SulafLogo size="md" color="cream" className="sm:hidden" />
-            <SulafLogo size="lg" color="cream" className="hidden sm:inline-flex" />
-            <p className={`${isArabic ? "font-amiri text-base" : "font-cormorant italic text-sm"} text-[#f3a5a1] font-bold tracking-wide`}>
-              {isArabic ? "حيث يلتقي العلم الصيدلاني بالجمال." : "Where Pharmaceutical Science Meets Beauty."}
-            </p>
-            <p className="text-xs text-[#f6f9e6]/80 leading-relaxed max-w-sm">
-              {t.footer.aboutDesc}
+    <footer
+      className="relative bg-[#22301e] text-[#f6f9e6] pt-16 pb-10 overflow-hidden select-none font-cairo"
+      dir={dir}
+    >
+      <div className="relative z-10 max-w-6xl mx-auto px-6 sm:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 pb-12 border-b border-[#f6f9e6]/15">
+          
+          {/* Col 1: Brand Logo & Tagline (4 Cols) */}
+          <div className="lg:col-span-4 space-y-4 text-start">
+            <SulafLogo size="md" color="cream" />
+            <p
+              className={`${
+                isArabic ? "font-amiri text-lg" : "font-cormorant italic text-base"
+              } text-[#f6f9e6]/85 tracking-wide`}
+            >
+              {isArabic
+                ? "دقة صيدلانية.. وروح أندلسية."
+                : "Clinical Precision. Andalusian Soul."}
             </p>
 
-            <div className="pt-2 flex flex-col gap-2 text-xs text-[#f6f9e6]/90">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-[#f3a5a1]" />
-                <span>{t.footer.location}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-[#f3a5a1]" />
-                <span>care@sulaf.com</span>
-              </div>
+            <div className="pt-2 flex items-center gap-2.5">
               <a
-                href={`https://wa.me/${settings.contacts?.whatsapp ? settings.contacts.whatsapp.replace('+', '') : SULAF_SETTINGS.whatsappNumber}`}
+                href={`https://wa.me/${
+                  settings.contacts?.whatsapp
+                    ? settings.contacts.whatsapp.replace("+", "")
+                    : SULAF_SETTINGS.whatsappNumber
+                }`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 text-green-300 hover:text-green-200 transition-colors font-semibold"
+                className="w-8 h-8 rounded-lg border border-[#f6f9e6]/25 hover:border-[#f3a5a1] flex items-center justify-center text-[#f6f9e6]/80 hover:text-[#f3a5a1] transition-colors"
+                aria-label="WhatsApp"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span>{t.footer.whatsappBtn}</span>
               </a>
+              <a
+                href="mailto:care@sulaf.com"
+                className="w-8 h-8 rounded-lg border border-[#f6f9e6]/25 hover:border-[#f3a5a1] flex items-center justify-center text-[#f6f9e6]/80 hover:text-[#f3a5a1] transition-colors"
+                aria-label="Email"
+              >
+                <Mail className="w-4 h-4" />
+              </a>
+              <Link
+                href="/contact"
+                className="w-8 h-8 rounded-lg border border-[#f6f9e6]/25 hover:border-[#f3a5a1] flex items-center justify-center text-[#f6f9e6]/80 hover:text-[#f3a5a1] transition-colors"
+                aria-label="Location"
+              >
+                <MapPin className="w-4 h-4" />
+              </Link>
             </div>
           </div>
 
-          {/* Col 2: Navigation Links */}
-          <div className="space-y-3 text-xs">
-            <h4 className="font-amiri text-lg font-bold text-[#f3a5a1]">
-              {t.footer.linksTitle}
+          {/* Col 2: Shop (2 Cols) */}
+          <div className="lg:col-span-2 space-y-3 text-xs text-start">
+            <h4 className="font-cormorant text-base font-bold text-[#f6f9e6]">
+              {isArabic ? "المتجر" : "Shop"}
             </h4>
-            <ul className="space-y-2 text-[#f6f9e6]/80">
+            <ul className="space-y-2 text-[#f6f9e6]/70">
               <li>
-                <Link href="/shop" className="hover:text-white transition-colors">
-                  {t.nav.shop}
+                <Link href="/shop" className="hover:text-[#f6f9e6] transition-colors">
+                  {isArabic ? "جميع المستحضرات" : "All Products"}
                 </Link>
               </li>
               <li>
-                <Link href="/product/absolutes-smoothing-body-cream" className="hover:text-white transition-colors">
-                  Absolutes Smoothing Body Cream
+                <Link
+                  href="/product/absolutes-smoothing-body-cream"
+                  className="hover:text-[#f6f9e6] transition-colors"
+                >
+                  {isArabic ? "كريم أبسوليوتس 30% يوريا" : "Body Care"}
                 </Link>
               </li>
               <li>
-                <Link href="/philosophy" className="hover:text-white transition-colors">
-                  {t.nav.philosophy}
+                <Link href="/shop" className="hover:text-[#f6f9e6] transition-colors">
+                  {isArabic ? "ترميم الحاجز" : "Skincare"}
                 </Link>
               </li>
               <li>
-                <Link href="/story" className="hover:text-white transition-colors">
+                <Link href="/guide" className="hover:text-[#f6f9e6] transition-colors">
+                  {isArabic ? "دليل الروتين" : "Our Ritual"}
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Col 3: About (2 Cols) */}
+          <div className="lg:col-span-2 space-y-3 text-xs text-start">
+            <h4 className="font-cormorant text-base font-bold text-[#f6f9e6]">
+              {isArabic ? "عن سُـلاف" : "About"}
+            </h4>
+            <ul className="space-y-2 text-[#f6f9e6]/70">
+              <li>
+                <Link href="/story" className="hover:text-[#f6f9e6] transition-colors">
                   {t.nav.story}
                 </Link>
               </li>
               <li>
-                <Link href="/guide" className="hover:text-white transition-colors">
-                  {t.nav.guide}
+                <Link href="/philosophy" className="hover:text-[#f6f9e6] transition-colors">
+                  {t.nav.philosophy}
                 </Link>
               </li>
               <li>
-                <Link href="/blog" className="hover:text-white transition-colors">
+                <Link href="/blog" className="hover:text-[#f6f9e6] transition-colors">
                   {t.nav.blog}
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Col 3: Customer Care & Tracking */}
-          <div className="space-y-3 text-xs">
-            <h4 className="font-amiri text-lg font-bold text-[#f3a5a1]">
-              {isArabic ? "خدمة العملاء والشحن" : "Care & Delivery"}
+          {/* Col 4: Help (2 Cols) */}
+          <div className="lg:col-span-2 space-y-3 text-xs text-start">
+            <h4 className="font-cormorant text-base font-bold text-[#f6f9e6]">
+              {isArabic ? "المساعدة" : "Help"}
             </h4>
-            <ul className="space-y-2 text-[#f6f9e6]/80">
+            <ul className="space-y-2 text-[#f6f9e6]/70">
               <li>
-                <Link href="/account" className="hover:text-white transition-colors font-semibold text-[#f3a5a1]">
-                  {isArabic ? "حسابي وتسجيل الدخول" : "My Account & Login"}
+                <Link href="/track" className="hover:text-[#f6f9e6] transition-colors text-[#f3a5a1]">
+                  {isArabic ? "تتبع شحنتك" : "Shipping & Track"}
                 </Link>
               </li>
               <li>
-                <Link href="/track" className="hover:text-white transition-colors font-semibold text-[#f3a5a1]">
-                  {isArabic ? "تتبع مسار شحنتك المباشر" : "Track Your Order"}
+                <Link href="/account" className="hover:text-[#f6f9e6] transition-colors">
+                  {isArabic ? "حسابي" : "My Account"}
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-white transition-colors">
-                  {isArabic ? "الدعم الفني والاستشارات" : "Consultation & Support"}
+                <Link href="/contact" className="hover:text-[#f6f9e6] transition-colors">
+                  {isArabic ? "تواصلي معنا" : "Contact Us"}
                 </Link>
               </li>
               <li>
-                <Link href="/refund" className="hover:text-white transition-colors">
-                  {isArabic ? "سياسة الاسترجاع والضمان السريري" : "Refund & Return Policy"}
-                </Link>
-              </li>
-              <li>
-                <Link href="/terms" className="hover:text-white transition-colors">
-                  {isArabic ? "الشروط والأحكام" : "Terms & Conditions"}
-                </Link>
-              </li>
-              <li>
-                <Link href="/privacy" className="hover:text-white transition-colors">
-                  {isArabic ? "سياسة الخصوصية وأمان البيانات" : "Privacy Policy"}
+                <Link href="/refund" className="hover:text-[#f6f9e6] transition-colors">
+                  {isArabic ? "سياسة الاسترجاع" : "Returns"}
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Col 4: Logistics */}
-          <div className="space-y-3 text-xs">
-            <h4 className="font-amiri text-lg font-bold text-[#f3a5a1]">
-              {t.footer.shippingTitle}
+          {/* Col 5: Join Our Newsletter (2 Cols) */}
+          <div className="lg:col-span-2 space-y-3 text-xs text-start">
+            <h4 className="font-cormorant text-base font-bold text-[#f6f9e6]">
+              {isArabic ? "النشرة السريرية" : "Join Our Newsletter"}
             </h4>
-            <div className="p-3.5 rounded-2xl bg-white/10 border border-[#f6f9e6]/20 space-y-2">
-              <div className="flex items-center gap-2 text-[#f3a5a1] font-bold">
-                <Truck className="w-4 h-4 text-[#f3a5a1]" />
-                <span>{t.footer.stoxPartner}</span>
-              </div>
-              <p className="text-[11px] text-[#f6f9e6]/80 leading-relaxed">
-                {t.footer.stoxDesc}
-              </p>
-            </div>
+            <p className="text-[11px] text-[#f6f9e6]/70 leading-relaxed">
+              {isArabic
+                ? "كوني أول من يعلم بالإصدارات الجديدة ونصائح العناية السريرية."
+                : "Be the first to know about new launches, exclusive offers and skincare tips."}
+            </p>
+            <form onSubmit={handleSubscribe} className="relative pt-1">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={isArabic ? "بريدكِ الإلكتروني" : "Your email address"}
+                className="w-full py-2.5 ps-3.5 pe-10 rounded-full bg-transparent border border-[#f6f9e6]/25 text-[11px] text-[#f6f9e6] placeholder:text-[#f6f9e6]/45 focus:outline-none focus:border-[#f3a5a1]"
+              />
+              <button
+                type="submit"
+                className="absolute top-1/2 -translate-y-1/2 end-1.5 mt-0.5 w-7 h-7 rounded-full bg-[#f6f9e6] text-[#22301e] flex items-center justify-center hover:bg-[#f3a5a1] transition-colors cursor-pointer"
+                aria-label="Subscribe"
+              >
+                {subscribed ? <Check className="w-3.5 h-3.5" /> : <ArrowIcon className="w-3.5 h-3.5" />}
+              </button>
+            </form>
           </div>
+
         </div>
 
-        {/* Bottom Bar: Payments & Copyright */}
-        <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[#f6f9e6]/70">
-          <div className="flex items-center justify-center md:justify-start gap-2 sm:gap-3 flex-wrap">
-            <span className="font-semibold text-white">{isArabic ? "طرق الدفع:" : "Payment:"}</span>
-            <span className="bg-white/15 px-2.5 py-1 rounded-md text-[11px]">Paymob Accept</span>
-            <span className="bg-white/15 px-2.5 py-1 rounded-md text-[11px]">Visa / Mastercard</span>
-            <span className="bg-white/15 px-2.5 py-1 rounded-md text-[11px]">Meeza</span>
-            <span className="bg-white/15 px-2.5 py-1 rounded-md text-[11px]">InstaPay</span>
-            <span className="bg-white/15 px-2.5 py-1 rounded-md text-[11px]">Vodafone Cash</span>
-            <span className="bg-white/15 px-2.5 py-1 rounded-md text-[11px]">{isArabic ? "الدفع عند الاستلام" : "Cash on Delivery"}</span>
-          </div>
-
-          <div className="text-center md:text-left">
-            <span>{t.footer.rights}</span>
+        {/* Bottom Copyright & Legal Links */}
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-[#f6f9e6]/55">
+          <span>{t.footer.rights}</span>
+          <div className="flex items-center gap-4">
+            <Link href="/terms" className="hover:text-[#f6f9e6] transition-colors">
+              {isArabic ? "الشروط والأحكام" : "Terms & Conditions"}
+            </Link>
+            <Link href="/privacy" className="hover:text-[#f6f9e6] transition-colors">
+              {isArabic ? "سياسة الخصوصية" : "Privacy Policy"}
+            </Link>
           </div>
         </div>
       </div>

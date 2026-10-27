@@ -30,38 +30,40 @@ export default function ShopPage() {
     });
   }, [allProducts, searchQuery]);
 
-  // IDEA #1: Quiet Apothecary Formulary Index
   return (
-    <div className="py-16 sm:py-24 bg-[#f6f9e6] text-[#485c36] min-h-screen font-cairo">
-      <div className="max-w-5xl mx-auto px-6 sm:px-8 space-y-14">
+    <div className="py-16 sm:py-20 bg-[#f6f9e6] text-[#22301e] min-h-screen font-cairo">
+      <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-12">
         
-        {/* Minimalist Manuscript Header */}
-        <div className="pb-10 border-b border-[#485c36]/20 flex flex-col md:flex-row md:items-end justify-between gap-6 text-start">
+        {/* Editorial Header matching the reference layout */}
+        <div className="pb-10 border-b border-[#485c36]/15 flex flex-col md:flex-row md:items-end justify-between gap-6 text-start">
           <div className="space-y-2 max-w-xl">
-            <span className="font-mono text-[11px] tracking-[0.25em] uppercase text-[#610b0d] block">
-              {isArabic ? "فهرس المستحضرات السريرية" : "APOTHECARY INDEX"}
+            <span className="font-mono text-[10px] tracking-[0.28em] uppercase text-[#610b0d] font-bold block">
+              {isArabic ? "طقوس سُـلاف السريرية" : "THE SULAF RITUAL"}
             </span>
-            <h1 className="font-amiri text-3xl sm:text-5xl font-normal text-[#485c36]">
+            <h1
+              className={`${
+                isArabic ? "font-amiri text-3xl sm:text-5xl" : "font-cormorant text-4xl sm:text-5xl"
+              } font-normal text-[#1e2b18]`}
+            >
               {isArabic
-                ? "مخطوطة سُـلاف للتركيبات العلاجية"
-                : "Sulaf Clinical Formulary"}
+                ? "تركيبات علاجية مركزة. نتائج ملموسة."
+                : "Targeted Formulas. Visible Results."}
             </h1>
           </div>
 
-          {/* Minimalist Underline Search */}
           <div className="w-full md:w-64 relative">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={
-                isArabic ? "ابحثي باسم المستحضر..." : "Search formulary..."
+                isArabic ? "ابحثي باسم المستحضر..." : "Search formulas..."
               }
-              className="w-full py-2 px-7 bg-transparent border-b border-[#485c36]/35 text-xs text-[#485c36] placeholder:text-[#485c36]/55 focus:outline-none focus:border-[#485c36]"
+              className="w-full py-2.5 px-8 rounded-full bg-[#f9fbf0] border border-[#485c36]/25 text-xs text-[#22301e] placeholder:text-[#485c36]/55 focus:outline-none focus:border-[#610b0d]"
             />
             <Search
               className={`w-3.5 h-3.5 absolute ${
-                isArabic ? "right-0" : "left-0"
+                isArabic ? "right-3" : "left-3"
               } top-1/2 -translate-y-1/2 text-[#485c36]/70`}
             />
             {searchQuery && (
@@ -69,7 +71,7 @@ export default function ShopPage() {
                 type="button"
                 onClick={() => setSearchQuery("")}
                 className={`absolute ${
-                  isArabic ? "left-0" : "right-0"
+                  isArabic ? "left-3" : "right-3"
                 } top-1/2 -translate-y-1/2 text-[#610b0d] cursor-pointer`}
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -78,12 +80,13 @@ export default function ShopPage() {
           </div>
         </div>
 
-        {/* Quiet 2-Column Specimen Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
-          {filteredProducts.map((product) => (
+        {/* 4-Column Numbered Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {filteredProducts.map((product, idx) => (
             <ProductCard
               key={product.id}
               product={product}
+              index={idx}
               onQuickView={setQuickViewProduct}
             />
           ))}

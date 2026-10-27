@@ -6,16 +6,21 @@ import { useRouter } from "next/navigation";
 import { ProductData } from "@/lib/data/mock-data";
 import { useCart } from "@/lib/cart/cart-context";
 import { useLanguage } from "@/lib/i18n/language-context";
-import { ShoppingBag, Check } from "lucide-react";
+import { ShoppingBag, Check, ArrowLeft, ArrowRight, Eye } from "lucide-react";
 
 interface ProductCardProps {
   product: ProductData;
+  index?: number;
   displayMode?: "podium" | "standard";
   featuredBento?: boolean;
   onQuickView?: (product: ProductData) => void;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({
+  product,
+  index = 0,
+  onQuickView,
+}: ProductCardProps) {
   const router = useRouter();
   const { addItem } = useCart();
   const { isArabic, t } = useLanguage();
@@ -23,17 +28,18 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const currency = isArabic ? "ج.م" : "EGP";
   const productName = isArabic ? product.nameAr : product.nameEn;
-  const productSubtitle = isArabic ? product.subtitleAr : product.subtitleEn;
+  const ArrowIcon = isArabic ? ArrowLeft : ArrowRight;
+  const num = String(index + 1).padStart(2, "0");
 
-  const prescriptionLine =
+  const triplet =
     product.activeIngredients && product.activeIngredients.length > 0
       ? product.activeIngredients
-          .slice(0, 2)
+          .slice(0, 3)
           .map((ing) => `${ing.concentration} ${isArabic ? ing.nameAr : ing.nameEn}`)
-          .join(" — ")
+          .join(" · ")
       : isArabic
-      ? "تركيبة سريرية"
-      : "Clinical Formula";
+      ? "تغذية · ترميم · نعومة"
+      : "Nourish · Restore · Replenish";
 
   function handleCardClick() {
     router.push(`/product/${product.slug}`);
@@ -47,11 +53,11 @@ export function ProductCard({ product }: ProductCardProps) {
     setTimeout(() => setAdded(false), 1600);
   }
 
-  // IDEA #1: Quiet Apothecary Specimen (No heavy card borders, pure parchment aesthetic)
+  // Matches the numbered card aesthetic (| 01, crimson stem, category, serif title, dot summary, Shop Now ->)
   return (
     <article
       onClick={handleCardClick}
-      className="group py-6 flex flex-col justify-between border-t border-[#485c36]/20 font-cairo cursor-pointer text-start"
+      className="group rounded-xl bg-[#f9fbf0] border border-[#485c36]/15 hover:border-[#610b0d]/50 p-6 flex flex-col justify-between shadow-[0_6px_22px_rgba(34,48,30,0.05)] hover:shadow-[0_12px_30px_rgba(34,48,30,0.1)] transition-all cursor-pointer font-cairo text-start"
       role="link"
       tabIndex={0}
       onKeyDown={(e) => {
@@ -61,45 +67,82 @@ export function ProductCard({ product }: ProductCardProps) {
         }
       }}
     >
-      {/* Floating Bottle without a Box */}
-      <div className="relative h-56 w-full flex items-center justify-center my-4">
+      {/* Top: Number + Price + Quick View */}
+      <div>
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-xs text-[#22301e] font-bold ps-1.5 border-s-2 border-[#610b0d]">
+            {num}
+          </span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-sm font-bold text-[#610b0d]">
+              {product.price} {currency}
+            </span>
+            {onQuickView && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onQuickView(product);
+                }}
+                className="p-1 text-[#485c36]/70 hover:text-[#610b0d] cursor-pointer"
+                title={t.product.quickView}
+                aria-label={t.product.quickView}
+              >
+                <Eye className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="w-px h-6 bg-[#ca384a]/60 my-3 ms-0.5" />
+      </div>
+
+      {/* Center Bottle Preview */}
+      <div className="relative h-36 w-full flex items-center justify-center my-2">
         <Image
           src={product.images[0]?.url || "/brand/sulaf-flower-symbol.png"}
           alt={productName}
-          width={175}
-          height={175}
-          className="object-contain drop-shadow-[0_18px_24px_rgba(72,92,54,0.14)] transition-transform duration-500 group-hover:scale-105"
+          width={125}
+          height={125}
+          className="object-contain transition-transform duration-500 group-hover:scale-105"
         />
       </div>
 
-      {/* Minimalist Prescription Line & Name */}
-      <div className="space-y-1.5">
-        <span className="font-mono text-[10px] text-[#ca384a] font-bold tracking-wider uppercase block">
-          {prescriptionLine}
+      {/* Category + Serif Title + Triplet */}
+      <div className="space-y-1.5 my-2">
+        <span className="font-mono text-[9px] tracking-[0.22em] uppercase text-[#485c36]/75 block">
+          {isArabic ? product.badgeAr || "مستحضر سريري" : "CLINICAL FORMULA"}
         </span>
 
-        <h3 className="font-amiri text-2xl font-normal text-[#485c36] group-hover:text-[#610b0d] transition-colors">
+        <h3
+          className={`${
+            isArabic
+              ? "font-amiri text-xl leading-snug"
+              : "font-cormorant text-xl leading-snug"
+          } font-bold text-[#1e2b18] group-hover:text-[#610b0d] transition-colors line-clamp-2 min-h-[2.75rem]`}
+        >
           {productName}
         </h3>
 
-        <p className="text-xs text-[#485c36]/75 line-clamp-2 leading-relaxed">
-          {productSubtitle}
+        <p className="text-[11px] text-[#485c36]/80 pt-1 line-clamp-1">
+          {triplet}
         </p>
       </div>
 
-      {/* Price & Thin Outlined Add Button */}
-      <div className="mt-6 pt-4 border-t border-[#485c36]/10 flex items-center justify-between gap-2">
-        <span className="font-mono text-lg font-bold text-[#610b0d]">
-          {product.price} {currency}
+      {/* Bottom: Shop Now + Quick Add */}
+      <div className="pt-4 mt-2 border-t border-[#485c36]/10 flex items-center justify-between gap-2">
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#1e2b18] group-hover:text-[#610b0d] transition-colors">
+          <span>{isArabic ? "اطلبي الآن" : "Shop Now"}</span>
+          <ArrowIcon className="w-3.5 h-3.5" />
         </span>
 
         <button
           type="button"
           onClick={handleAddToCart}
-          className={`px-5 py-2 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+          className={`px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
             added
               ? "bg-[#610b0d] text-[#f3a5a1]"
-              : "bg-transparent hover:bg-[#485c36] text-[#485c36] hover:text-[#f6f9e6] border border-[#485c36]"
+              : "bg-[#22301e] hover:bg-[#610b0d] text-[#f6f9e6]"
           }`}
         >
           {added ? (
