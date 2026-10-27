@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -39,10 +39,8 @@ export function Navbar() {
 
   // Dropdown States
   const [shopDropdownOpen, setShopDropdownOpen] = useState(false);
-  const [heritageDropdownOpen, setHeritageDropdownOpen] = useState(false);
 
   const shopDropdownRef = useRef<HTMLDivElement>(null);
-  const heritageDropdownRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
   const [headerHeight, setHeaderHeight] = useState(90);
 
@@ -68,7 +66,6 @@ export function Navbar() {
   // Close dropdowns on path change
   useEffect(() => {
     setShopDropdownOpen(false);
-    setHeritageDropdownOpen(false);
     setMobileMenuOpen(false);
   }, [pathname]);
 
@@ -89,9 +86,6 @@ export function Navbar() {
     function handleClickOutside(e: MouseEvent) {
       if (shopDropdownRef.current && !shopDropdownRef.current.contains(e.target as Node)) {
         setShopDropdownOpen(false);
-      }
-      if (heritageDropdownRef.current && !heritageDropdownRef.current.contains(e.target as Node)) {
-        setHeritageDropdownOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -242,85 +236,17 @@ export function Navbar() {
               )}
             </div>
 
-            {/* 3. Heritage & Science Dropdown */}
-            <div
-              ref={heritageDropdownRef}
-              className="relative"
-              onMouseEnter={() => setHeritageDropdownOpen(true)}
-              onMouseLeave={() => setHeritageDropdownOpen(false)}
+            {/* 3. About Sulaf (Single direct page, no dropdown) */}
+            <Link
+              href="/story"
+              className={`px-3.5 py-2 rounded-xl text-xs xl:text-sm font-semibold transition-all duration-200 ${
+                pathname === "/story"
+                  ? "bg-[#485c36] text-[#f6f9e6] font-bold shadow-xs"
+                  : "text-[#24301a] hover:text-[#485c36] hover:bg-[#485c36]/10"
+              }`}
             >
-              <button
-                type="button"
-                onClick={() => setHeritageDropdownOpen(!heritageDropdownOpen)}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs xl:text-sm font-semibold transition-all duration-200 cursor-pointer ${
-                  pathname === "/philosophy" || pathname === "/story" || pathname === "/guide" || pathname === "/blog"
-                    ? "bg-[#485c36] text-[#f6f9e6] font-bold shadow-xs"
-                    : "text-[#24301a] hover:text-[#485c36] hover:bg-[#485c36]/10"
-                }`}
-              >
-                <span>{t.nav.heritageMenu}</span>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                    heritageDropdownOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-
-              {/* Heritage Dropdown Menu */}
-              {heritageDropdownOpen && (
-                <div className="absolute top-full start-0 mt-1 w-72 rounded-2xl bg-white border border-[#e2e8c0] shadow-xl p-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                  <div className="space-y-1">
-                    <Link
-                      href="/philosophy"
-                      className="p-2.5 rounded-xl hover:bg-[#f6f9e6] transition-colors block"
-                    >
-                      <span className="font-semibold text-xs text-gray-800 block">
-                        {t.nav.philosophy}
-                      </span>
-                      <span className="text-[11px] text-gray-500 block">
-                        {isArabic ? "علم الـ Cosmeceuticals وترميم حاجز البشرة" : "Science of barrier reconstruction"}
-                      </span>
-                    </Link>
-
-                    <Link
-                      href="/story"
-                      className="p-2.5 rounded-xl hover:bg-[#f6f9e6] transition-colors block"
-                    >
-                      <span className="font-semibold text-xs text-gray-800 block">
-                        {t.nav.story}
-                      </span>
-                      <span className="text-[11px] text-gray-500 block">
-                        {isArabic ? "رحلة سلاف من قصر الحمراء إلى المختبر" : "From Alhambra palace to clinical lab"}
-                      </span>
-                    </Link>
-
-                    <Link
-                      href="/guide"
-                      className="p-2.5 rounded-xl hover:bg-[#f6f9e6] transition-colors block"
-                    >
-                      <span className="font-semibold text-xs text-gray-800 block">
-                        {t.nav.guide}
-                      </span>
-                      <span className="text-[11px] text-gray-500 block">
-                        {isArabic ? "بروتوكول وطقوس الاستخدام للحصول على نتائج الحرير" : "Rituals for silk-like skin results"}
-                      </span>
-                    </Link>
-
-                    <Link
-                      href="/blog"
-                      className="p-2.5 rounded-xl hover:bg-[#f6f9e6] transition-colors block"
-                    >
-                      <span className="font-semibold text-xs text-gray-800 block">
-                        {t.nav.blog}
-                      </span>
-                      <span className="text-[11px] text-gray-500 block">
-                        {isArabic ? "مقالات واستشارات جلدية صيدلانية" : "Dermatology insights & clinical advice"}
-                      </span>
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
+              <span>{isArabic ? "عن سُـلاف" : "About Sulaf"}</span>
+            </Link>
 
             {/* 4. Track Order */}
             <Link
@@ -498,24 +424,18 @@ export function Navbar() {
                 </div>
               </div>
 
-              {/* Group 2: Heritage & Science */}
-              <div className="p-3 rounded-xl bg-white border border-[#e2e8c0] space-y-2">
-                <span className="block text-xs font-bold text-[#485c36]">{t.nav.heritageMenu}</span>
-                <div className="space-y-1.5 ps-2 border-s-2 border-[#485c36]/20">
-                  <Link href="/philosophy" className="block text-xs text-gray-700">
-                    {t.nav.philosophy}
-                  </Link>
-                  <Link href="/story" className="block text-xs text-gray-700">
-                    {t.nav.story}
-                  </Link>
-                  <Link href="/guide" className="block text-xs text-gray-700">
-                    {t.nav.guide}
-                  </Link>
-                  <Link href="/blog" className="block text-xs text-gray-700">
-                    {t.nav.blog}
-                  </Link>
-                </div>
-              </div>
+              {/* Group 2: About Sulaf (Single direct page, no dropdown) */}
+              <Link
+                href="/story"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block p-3 rounded-xl border text-sm font-semibold transition-colors ${
+                  pathname === "/story"
+                    ? "bg-[#485c36] text-[#f6f9e6] font-bold border-[#485c36]"
+                    : "bg-white border-[#e2e8c0] text-[#24301a] hover:bg-[#f6f9e6]"
+                }`}
+              >
+                {isArabic ? "عن سُـلاف" : "About Sulaf"}
+              </Link>
 
               <Link
                 href="/track"

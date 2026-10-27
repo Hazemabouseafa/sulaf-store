@@ -12,6 +12,7 @@ import {
   CustomContentSettings,
   DEFAULT_HOMEPAGE_SECTIONS_ORDER,
 } from "@/lib/settings/store-settings";
+import { PageContentEditor } from "./PageContentEditor";
 import {
   Sparkles,
   Layers,
@@ -785,15 +786,35 @@ export function HomepageSectionBuilder({
                         />
                       </div>
 
-                      <div className="md:col-span-2 space-y-1">
-                        <label className="text-xs font-bold text-gray-700">النص التفصيلي / الشرح (Content AR)</label>
-                        <textarea
-                          rows={3}
+                      <div className="md:col-span-2 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-[#d4af37]" />
+                            <span>{adminLang === "ar" ? "محتوى وتفاصيل القسم (المحرر المتطور • Rich Content)" : "Section Rich Content Editor"}</span>
+                          </label>
+                          <span className="text-[11px] text-gray-500">
+                            {adminLang === "ar" ? "يتيح التبديل بين المحرر البسيط والمتقدم وتكبير/تصغير الخطوط وتغيير الألوان بحرية" : "Simple & Advanced modes with custom font sizes"}
+                          </span>
+                        </div>
+                        <PageContentEditor
                           value={customSec.contentAr || ""}
-                          onChange={(e) => handleUpdateCustomField(secId, "contentAr", e.target.value)}
-                          placeholder="اكتب المحتوى أو الشرح الكامل هنا..."
-                          className="w-full px-3 py-2 text-xs font-medium rounded-xl border border-gray-300 bg-white focus:outline-none focus:border-[#485c36]"
+                          onChange={(newHtml) => handleUpdateCustomField(secId, "contentAr", newHtml)}
                           dir="rtl"
+                          placeholder={adminLang === "ar" ? "اكتبي محتوى القسم بحرية، ونسقي الخطوط والألوان بالشكل الذي يناسبك..." : "Write section content freely with rich formatting..."}
+                        />
+                      </div>
+
+                      <div className="md:col-span-2 space-y-2 pt-2 border-t border-gray-100">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-bold text-gray-800">
+                            {adminLang === "ar" ? "محتوى القسم بالإنجليزية (English Rich Content - اختياري)" : "English Content (Optional)"}
+                          </label>
+                        </div>
+                        <PageContentEditor
+                          value={customSec.contentEn || ""}
+                          onChange={(newHtml) => handleUpdateCustomField(secId, "contentEn", newHtml)}
+                          dir="ltr"
+                          placeholder="Write English section content..."
                         />
                       </div>
 
@@ -1042,13 +1063,12 @@ export function HomepageSectionBuilder({
                   </div>
 
                   <div className="space-y-1 sm:col-span-2">
-                    <label className="text-xs font-bold text-gray-700">النص التفصيلي أو الشرح (Content AR)</label>
-                    <textarea
-                      rows={3}
+                    <label className="text-xs font-bold text-gray-700">النص التفصيلي أو الشرح (المحرر المتطور • Rich Content)</label>
+                    <PageContentEditor
                       value={newContentAr}
-                      onChange={(e) => setNewContentAr(e.target.value)}
-                      className="w-full px-3 py-2 text-xs font-medium rounded-xl border border-gray-300 focus:outline-none focus:border-[#485c36]"
+                      onChange={(newHtml) => setNewContentAr(newHtml)}
                       dir="rtl"
+                      placeholder="اكتبي نص أو محتوى القسم الجديد بحرية..."
                     />
                   </div>
 
@@ -1245,7 +1265,7 @@ function renderBuiltinSectionFields(
                 value={current.heroSubheading || ""}
                 onChange={(v) => updateField("heroSubheading", v)}
                 placeholder={isEn ? "Born from Arab identity and the poetic soul of Andalusia..." : "من عبق الهوية العربية، وسحر الروح الأندلسية، وُلدت سُلاف..."}
-                isTextarea
+                isRichEditor
                 isEn={isEn}
               />
             </div>
@@ -1555,6 +1575,7 @@ function FieldInput({
   onChange,
   placeholder,
   isTextarea = false,
+  isRichEditor = false,
   isEn = false,
 }: {
   label: string;
@@ -1562,6 +1583,7 @@ function FieldInput({
   onChange: (val: string) => void;
   placeholder?: string;
   isTextarea?: boolean;
+  isRichEditor?: boolean;
   isEn?: boolean;
 }) {
   return (
@@ -1574,7 +1596,14 @@ function FieldInput({
           </span>
         )}
       </label>
-      {isTextarea ? (
+      {isRichEditor ? (
+        <PageContentEditor
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          dir={isEn ? "ltr" : "rtl"}
+        />
+      ) : isTextarea ? (
         <textarea
           rows={3}
           value={value}

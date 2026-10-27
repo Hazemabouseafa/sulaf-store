@@ -5868,17 +5868,19 @@ export default function AdminPage() {
                 <div className="flex gap-2 overflow-x-auto pb-2 border-b border-gray-100 scrollbar-none">
                   {[
                     { id: "announcement", labelAr: "الشريط العلوي والفوتر", labelEn: "Top Bar & Footer" },
-                    { id: "productPage", labelAr: "صفحة المنتج", labelEn: "Product Page" },
-                    { id: "philosophyPage", labelAr: "صفحة الفلسفة", labelEn: "Philosophy Page" },
-                    { id: "storyPage", labelAr: "صفحة قصتنا", labelEn: "Story Page" },
-                    { id: "guidePage", labelAr: "دليل الاستخدام", labelEn: "Guide Page" },
-                    { id: "contactPage", labelAr: "صفحة التواصل", labelEn: "Contact Page" },
-                    { id: "policiesPage", labelAr: "الاسترجاع والشروط", labelEn: "Policies Page" },
+                    { id: "productPage", labelAr: "صفحة المنتج وخيارات العرض", labelEn: "Product Page & Options" },
+                    { id: "pagesInfo", labelAr: "📄 إدارة الصفحات والمحرر المتطور ↗", labelEn: "📄 Site Pages & Rich Editor ↗" },
                   ].map((st) => (
                     <button
                       key={st.id}
                       type="button"
-                      onClick={() => setCmsSubTab(st.id)}
+                      onClick={() => {
+                        if (st.id === "pagesInfo") {
+                          setActiveTab("pages");
+                        } else {
+                          setCmsSubTab(st.id);
+                        }
+                      }}
                       className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                         cmsSubTab === st.id
                           ? "bg-[#3d502d] text-white shadow-sm"
@@ -6136,428 +6138,30 @@ export default function AdminPage() {
                         </div>
                       )}
 
-                      {/* SUBTAB: PHILOSOPHY PAGE */}
-                      {cmsSubTab === "philosophyPage" && (
-                        <div className="space-y-6">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
-                            <div>
-                              <h4 className="text-xs font-bold uppercase text-emerald-800 tracking-wider flex items-center gap-2">
-                                <FlaskConical className="w-4 h-4 text-emerald-700" />
-                                <span>{adminLang === "ar" ? "صفحة فلسفة سلاف ومفهوم الـ Cosmeceuticals (/philosophy)" : "Sulaf Philosophy Page (/philosophy)"}</span>
-                              </h4>
-                              <p className="text-[11px] text-gray-500 mt-0.5">
-                                {adminLang === "ar"
-                                  ? "التحكم في شارة المختبر، العنوان الرئيسي، شرح الفلسفة، بطاقات الركائز العلاجية الثلاث، وأوربات الجزيئات الكيميائية التفاعلية."
-                                  : "Customize lab badge, headline, narrative, 3 pillar cards, and interactive chemical molecules."}
-                              </p>
-                            </div>
-                            <Link
-                              href="/philosophy"
-                              target="_blank"
-                              className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200 transition-colors self-start sm:self-auto"
+                      {/* SUBTAB: SITE PAGES WITH RICH EDITOR BANNER */}
+                      {cmsSubTab === "pagesInfo" && (
+                        <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-br from-[#f6f9e6] to-[#ebf1d2] border-2 border-[#dbe2bd] text-center space-y-4 shadow-xs">
+                          <div className="w-16 h-16 rounded-3xl bg-[#485c36] text-white flex items-center justify-center mx-auto shadow-md">
+                            <FileText className="w-8 h-8" />
+                          </div>
+                          <div className="space-y-1.5 max-w-xl mx-auto">
+                            <h4 className="font-amiri text-2xl sm:text-3xl font-black text-gray-900">
+                              {adminLang === "ar" ? "محرر الصفحات المتطور متاح في تبويب [الصفحات]" : "Rich Pages Editor Available in [Pages] Tab"}
+                            </h4>
+                            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-cairo">
+                              {adminLang === "ar"
+                                ? "لتبسيط لوحة التحكم وتفادي التكرار، أصبحت كافة صفحات المتجر (الفلسفة، عن سُلاف، دليل الاستخدام، سياسة الاسترجاع، الشروط والأحكام) تُدار بالكامل من تبويب [الصفحات] باستخدام المحرر المتطور مع إمكانية تكبير وتصغير الخطوط، الألوان، والجداول والصور."
+                                : "All store pages (Philosophy, Story, Guide, Refund, Terms) are centrally managed from the Pages tab using the Advanced Rich Editor."}
+                            </p>
+                          </div>
+                          <div className="pt-2">
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab("pages")}
+                              className="px-6 py-3 rounded-2xl bg-[#485c36] hover:bg-[#3d502d] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer inline-flex items-center gap-2 active:scale-95"
                             >
-                              <ExternalLink className="w-3.5 h-3.5" />
-                              <span>{adminLang === "ar" ? "معاينة صفحة الفلسفة" : "Preview Philosophy Page"}</span>
-                            </Link>
-                          </div>
-
-                          {/* Main Headline & Narrative */}
-                          <div className="space-y-3">
-                            <h5 className="text-xs font-bold text-gray-700 flex items-center gap-1.5 border-b border-gray-100 pb-2">
-                              <Sparkles className="w-4 h-4 text-emerald-700" />
-                              <span>{adminLang === "ar" ? "1. ترويسة الصفحة وعنوان الفلسفة العلاجية" : "1. Header & Main Philosophy Narrative"}</span>
-                            </h5>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {renderField("philosophyBadgeText", "philosophyBadgeVis", "شارة المختبر العلوية", "Laboratory Badge", "مختبر سلاف للأبحاث السريرية", "Sulaf Clinical Research Lab")}
-                              {renderField("philosophyHeadingText", "philosophyHeadingVis", "العنوان الرئيسي للصفحة", "Main Page Heading", "الفلسفة العلاجية ومفهوم الـ Cosmeceuticals", "Therapeutic Philosophy & Cosmeceuticals")}
-                            </div>
-                            <div className="w-full">
-                              {renderField("philosophySubtitleText", "philosophySubtitleVis", "الوصف التقديمي للفلسفة", "Philosophy Subtitle Narrative", "الـ Cosmeceuticals هي الجيل المتطور الذي يدمج بين الفعالية الدوائية المثبتة سريرياً والرفاهية التجميلية الفائقة.", "Cosmeceuticals merge certified pharmaceutical efficacy with cosmetic skincare luxury.", true)}
-                            </div>
-                          </div>
-
-                          {/* The 3 Pillars */}
-                          <div className="space-y-3">
-                            <h5 className="text-xs font-bold text-gray-700 flex items-center gap-1.5 border-b border-gray-100 pb-2">
-                              <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                              <span>{adminLang === "ar" ? "2. بطاقات الركائز العلاجية الثلاث (Pillars)" : "2. The Three Therapeutic Pillars"}</span>
-                            </h5>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              {/* Card 1 */}
-                              <div className="space-y-3 p-4 rounded-2xl bg-white border border-gray-200">
-                                <div className="text-xs font-bold text-[#485c36]">{adminLang === "ar" ? "الركيزة 1: كسر الكيراتين" : "Pillar 1: Keratolysis"}</div>
-                                {renderField("philosophyCard1Title", "philosophyCard1Vis", "عنوان الركيزة 1", "Pillar 1 Title", "1. كسر الكيراتين المتصلب", "1. Break Hyperkeratinization")}
-                                {renderField("philosophyCard1Desc", null, "شرح الركيزة 1", "Pillar 1 Description", "باستخدام اليوريا 30% لتفكيك الروابط بين خلايا الكيراتين...", "Using 30% Urea to break down excessive keratin bonds...", true)}
-                              </div>
-
-                              {/* Card 2 */}
-                              <div className="space-y-3 p-4 rounded-2xl bg-white border border-gray-200">
-                                <div className="text-xs font-bold text-[#610b0d]">{adminLang === "ar" ? "الركيزة 2: تنقية المسام" : "Pillar 2: Pore Clarification"}</div>
-                                {renderField("philosophyCard2Title", "philosophyCard2Vis", "عنوان الركيزة 2", "Pillar 2 Title", "2. تنقية المسام العميقة", "2. Deep Pore Clarification")}
-                                {renderField("philosophyCard2Desc", null, "شرح الركيزة 2", "Pillar 2 Description", "عبر حمض الساليسيليك BHA المحب للدهون لاختراق أعماق بصيلات الشعر...", "Through lipophilic Salicylic Acid (BHA) to penetrate follicles...", true)}
-                              </div>
-
-                              {/* Card 3 */}
-                              <div className="space-y-3 p-4 rounded-2xl bg-white border border-gray-200">
-                                <div className="text-xs font-bold text-[#d4af37]">{adminLang === "ar" ? "الركيزة 3: ترميم الحاجز" : "Pillar 3: Barrier Reconstruction"}</div>
-                                {renderField("philosophyCard3Title", "philosophyCard3Vis", "عنوان الركيزة 3", "Pillar 3 Title", "3. إعادة بناء الحاجز الدهني", "3. Lipid Barrier Reconstruction")}
-                                {renderField("philosophyCard3Desc", null, "شرح الركيزة 3", "Pillar 3 Description", "بواسطة السيراميدات المتطابقة حيوياً لمنع فقدان الترطيب عبر الأدمة...", "With biomimetic ceramides preventing Transepidermal Water Loss...", true)}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Molecules & PearlOrbs Section */}
-                          <div className="space-y-3">
-                            <h5 className="text-xs font-bold text-gray-700 flex items-center gap-1.5 border-b border-gray-100 pb-2">
-                              <Activity className="w-4 h-4 text-emerald-700" />
-                              <span>{adminLang === "ar" ? "3. قسم فحص الجزيئات الكيميائية واللآلئ التفاعلية" : "3. Chemical Molecules & PearlOrbs Visuals"}</span>
-                            </h5>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {renderField("philosophyMoleculesTitle", "philosophyMoleculesVis", "عنوان قسم فحص الجزيئات", "Molecules Section Title", "فحص الجزيئات الكيميائية لتركيبة سلاف", "Chemical Molecules Inspection of Sulaf Formula")}
-                              {renderToggleOnly("philosophyOrbsVis", "عرض أوربات ولآلئ الجزيئات التفاعلية (PearlOrbs)", "Display Interactive Chemical Orbs (PearlOrbs)", "تفعيل أو إخفاء ويدجت محاكاة حركة الجزيئات واللآلئ التفاعلية", "Toggle the interactive floating chemical molecules simulator")}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* SUBTAB: STORY PAGE */}
-                      {cmsSubTab === "storyPage" && (
-                        <div className="space-y-6">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
-                            <div>
-                              <h4 className="text-xs font-bold uppercase text-emerald-800 tracking-wider flex items-center gap-2">
-                                <BookOpen className="w-4 h-4 text-emerald-700" />
-                                <span>{adminLang === "ar" ? "صفحة قصة سلاف والهوية الأندلسية (/story)" : "Our Story Page (/story)"}</span>
-                              </h4>
-                              <p className="text-[11px] text-gray-500 mt-0.5">
-                                {adminLang === "ar"
-                                  ? "التحكم في الشعار والبيت الشعري، ومراحل السرد الأندلسي الأربعة، ولوحة الخط العربي الخاتمة."
-                                  : "Customize tagline, poetic quote, the 4 narrative stages, and the grand closing calligraphy."}
-                              </p>
-                            </div>
-                            <Link
-                              href="/story"
-                              target="_blank"
-                              className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200 transition-colors self-start sm:self-auto"
-                            >
-                              <ExternalLink className="w-3.5 h-3.5" />
-                              <span>{adminLang === "ar" ? "معاينة صفحة القصة" : "Preview Story Page"}</span>
-                            </Link>
-                          </div>
-
-                          {/* Tagline & Poetic Quote */}
-                          <div className="space-y-3">
-                            <h5 className="text-xs font-bold text-gray-700 flex items-center gap-1.5 border-b border-gray-100 pb-2">
-                              <Sparkles className="w-4 h-4 text-emerald-700" />
-                              <span>{adminLang === "ar" ? "1. الشعار والبيت الشعري الترحيبي" : "1. Tagline & Signature Poetic Quote"}</span>
-                            </h5>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {renderField("storyTaglineLine1", "storyTaglineVis", "عنوان الشعار (Line 1)", "Brand Tagline Line 1", "SULAF | سُلاف", "SULAF | سُلاف")}
-                              {renderField("storyTaglineLine2", "storyTaglineVis", "الشعار الصيدلاني (Line 2)", "Brand Tagline Line 2", "حيث يلتقي العلم الصيدلاني بالجمال.", "Where Pharmaceutical Science Meets Beauty.")}
-                            </div>
-                            <div className="w-full">
-                              {renderField("storyPoemQuote", "storyPoemVis", "البيت الشعري الأندلسي", "Poetic Couplet Verse", "«ما كان في رِفقٍ يُداوينا سُلافُ بهِ.. إلّا تحوّل حُسنًا لا ينهزمُ»", "Never was Sulaf's gentleness poured into our healing, but that grace triumphed, undefeated.", true)}
-                            </div>
-                          </div>
-
-                          {/* The 4 Stages */}
-                          <div className="space-y-3">
-                            <h5 className="text-xs font-bold text-gray-700 flex items-center gap-1.5 border-b border-gray-100 pb-2">
-                              <FileText className="w-4 h-4 text-emerald-700" />
-                              <span>{adminLang === "ar" ? "2. بطاقات مراحل السرد الأندلسي (Narrative Stages)" : "2. Narrative Story Stages"}</span>
-                            </h5>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {/* Stage 1 */}
-                              <div className="space-y-2 p-4 rounded-2xl bg-white border border-gray-200">
-                                <div className="text-xs font-bold text-amber-800">{adminLang === "ar" ? "المرحلة 1: أصالة البداية" : "Stage 1: The Genesis"}</div>
-                                {renderField("storyCard1Badge", "storyCard1Vis", "شارة المرحلة 1", "Stage 1 Badge", "أصالة البداية • The Genesis", "The Genesis")}
-                                {renderField("storyCard1Text", null, "نص فقرة أصالة البداية", "Stage 1 Narrative", "من عبق الهوية العربية، وسحر الروح الأندلسية، وُلدت سُلاف...", "From the fragrance of Arab identity and Andalusian spirit...", true)}
-                              </div>
-
-                              {/* Stage 2 */}
-                              <div className="space-y-2 p-4 rounded-2xl bg-white border border-gray-200">
-                                <div className="text-xs font-bold text-[#485c36]">{adminLang === "ar" ? "المرحلة 2: فلسفة العناية والتوازن" : "Stage 2: Our Philosophy"}</div>
-                                {renderField("storyCard2Badge", "storyCard2Vis", "شارة المرحلة 2", "Stage 2 Badge", "فلسفة العناية والتوازن • Our Philosophy", "Our Philosophy & Balance")}
-                                {renderField("storyCard2Text", null, "نص فقرة فلسفة العناية", "Stage 2 Narrative", "نؤمن أن الجمال ليس مجرد مظهر، بل رحلة من الفهم والعناية والتوازن...", "We believe beauty is not merely appearance, but a journey of balance...", true)}
-                              </div>
-
-                              {/* Stage 3 */}
-                              <div className="space-y-2 p-4 rounded-2xl bg-white border border-gray-200">
-                                <div className="text-xs font-bold text-[#610b0d]">{adminLang === "ar" ? "المرحلة 3: لغة الرفق الصيدلاني" : "Stage 3: Language of Care"}</div>
-                                {renderField("storyCard3Badge", "storyCard3Vis", "شارة المرحلة 3", "Stage 3 Badge", "لغة الرفق الصيدلاني • The Language of Care", "The Language of Clinical Care")}
-                                {renderField("storyCard3Text", null, "نص فقرة لغة الرفق", "Stage 3 Narrative", "في سُلاف، لا نرى العناية بالبشرة مجرد خطوات، بل لغةً من الرفق...", "In Sulaf, skincare is not mere steps, but a language of kindness...", true)}
-                              </div>
-
-                              {/* Stage 4 */}
-                              <div className="space-y-2 p-4 rounded-2xl bg-white border border-gray-200">
-                                <div className="text-xs font-bold text-amber-700">{adminLang === "ar" ? "المرحلة 4: دقة العلم وعراقة الجذور" : "Stage 4: Modern Radiance"}</div>
-                                {renderField("storyCard4Badge", "storyCard4Vis", "شارة المرحلة 4", "Stage 4 Badge", "دقة العلم وعراقة الجذور • Modern Radiance", "Precision of Science, Roots of Heritage")}
-                                {renderField("storyCard4Text", null, "نص فقرة دقة العلم", "Stage 4 Narrative", "نستلهم من تراثنا العربي أصالته، ومن الأندلس روحها الشعرية...", "We draw authentic inspiration from Arab roots and science precision...", true)}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Closing Calligraphy Box */}
-                          <div className="space-y-3">
-                            <h5 className="text-xs font-bold text-gray-700 flex items-center gap-1.5 border-b border-gray-100 pb-2">
-                              <Award className="w-4 h-4 text-emerald-700" />
-                              <span>{adminLang === "ar" ? "3. لوحة الخط العربي الخاتمة (Grand Calligraphy Reveal)" : "3. Grand Closing Calligraphy Stage"}</span>
-                            </h5>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {renderField("storyClosingTitle", "storyClosingVis", "عنوان الخاتمة الذهبي", "Closing Gold Title", "سُلاف… حين يلتقي العلم بالجمال، وتُروى العناية بروحٍ عربية.", "Sulaf... When science embraces beauty, narrated with Arabic soul.", true)}
-                              {renderField("storyClosingDecorative", "storyClosingVis", "العبارة الزخرفية المشكّلة بالخط العربي", "Decorative Calligraphy Quote", "مَا كَانَ فِي رِفْقٍ يُدَاوِينَا، سُلَافٌ بِهِ.", "Gentleness that heals, crafted by Sulaf.", true)}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* SUBTAB: GUIDE PAGE */}
-                      {cmsSubTab === "guidePage" && (
-                        <div className="space-y-6">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
-                            <div>
-                              <h4 className="text-xs font-bold uppercase text-emerald-800 tracking-wider flex items-center gap-2">
-                                <Clock className="w-4 h-4 text-emerald-700" />
-                                <span>{adminLang === "ar" ? "صفحة دليل طقوس الاستخدام والعناية (/guide)" : "Usage & Ritual Guide Page (/guide)"}</span>
-                              </h4>
-                              <p className="text-[11px] text-gray-500 mt-0.5">
-                                {adminLang === "ar"
-                                  ? "التحكم في شارة البروتوكول، العنوان، خطوات الاستخدام الأربعة، وبنر نصيحة طبيب سلاف."
-                                  : "Customize approved clinical protocol badge, title, the 4 application steps, and physician advice tip."}
-                              </p>
-                            </div>
-                            <Link
-                              href="/guide"
-                              target="_blank"
-                              className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200 transition-colors self-start sm:self-auto"
-                            >
-                              <ExternalLink className="w-3.5 h-3.5" />
-                              <span>{adminLang === "ar" ? "معاينة صفحة الدليل" : "Preview Guide Page"}</span>
-                            </Link>
-                          </div>
-
-                          {/* Header */}
-                          <div className="space-y-3">
-                            <h5 className="text-xs font-bold text-gray-700 flex items-center gap-1.5 border-b border-gray-100 pb-2">
-                              <Sparkles className="w-4 h-4 text-emerald-700" />
-                              <span>{adminLang === "ar" ? "1. ترويسة صفحة الدليل" : "1. Header & Overview"}</span>
-                            </h5>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {renderField("guideBadgeText", "guideBadgeVis", "شارة البروتوكول السريري", "Clinical Protocol Badge", "بروتوكول الاستخدام السريري المعتمد", "Approved Clinical Application Protocol")}
-                              {renderField("guideHeadingText", "guideHeadingVis", "عنوان دليل الاستخدام", "Guide Page Heading", "دليل طقوس الاستخدام والعناية", "Ritual & Application Guide")}
-                            </div>
-                            <div className="w-full">
-                              {renderField("guideSubtitleText", "guideSubtitleVis", "الوصف الفرعي لدليل الاستخدام", "Guide Subtitle Narrative", "خطوات تطبيق كريم Absolutes Smoothing Body Cream لتحقيق أقصى استجابة علاجية...", "Step-by-step application instructions to maximize clinical efficacy against strawberry skin...", true)}
-                            </div>
-                          </div>
-
-                          {/* The 4 Steps */}
-                          <div className="space-y-3">
-                            <h5 className="text-xs font-bold text-gray-700 flex items-center gap-1.5 border-b border-gray-100 pb-2">
-                              <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-                              <span>{adminLang === "ar" ? "2. خطوات الاستخدام الـ 4" : "2. The 4 Application Steps"}</span>
-                            </h5>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {/* Step 1 */}
-                              <div className="space-y-2 p-4 rounded-2xl bg-white border border-gray-200">
-                                <div className="text-xs font-bold text-[#485c36]">{adminLang === "ar" ? "الخطوة 1: التنظيف" : "Step 1: Cleansing"}</div>
-                                {renderField("guideStep1Title", "guideStep1Vis", "عنوان الخطوة 1", "Step 1 Title", "التنظيف والتهيئة اللطيفة", "Gentle Cleansing & Prep")}
-                                {renderField("guideStep1Desc", null, "شرح الخطوة 1", "Step 1 Description", "اغسلي المناطق المستهدفة بماء فاتر وغسول خالٍ تماماً من الكبريتات...", "Cleanse target areas with lukewarm water and a sulfate-free wash...", true)}
-                              </div>
-
-                              {/* Step 2 */}
-                              <div className="space-y-2 p-4 rounded-2xl bg-white border border-gray-200">
-                                <div className="text-xs font-bold text-[#485c36]">{adminLang === "ar" ? "الخطوة 2: التجفيف بالتربيت" : "Step 2: Pat-Drying"}</div>
-                                {renderField("guideStep2Title", "guideStep2Vis", "عنوان الخطوة 2", "Step 2 Title", "التجفيف بالتربيت الهادئ", "Gentle Pat-Drying")}
-                                {renderField("guideStep2Desc", null, "شرح الخطوة 2", "Step 2 Description", "جففي البشرة بمنشفة قطنية ناعمة بطريقة التربيت الخفيف...", "Pat skin gently with a soft cotton towel, leaving slight residual dampness...", true)}
-                              </div>
-
-                              {/* Step 3 */}
-                              <div className="space-y-2 p-4 rounded-2xl bg-white border border-gray-200">
-                                <div className="text-xs font-bold text-[#485c36]">{adminLang === "ar" ? "الخطوة 3: التوزيع والتدليك" : "Step 3: Application"}</div>
-                                {renderField("guideStep3Title", "guideStep3Vis", "عنوان الخطوة 3", "Step 3 Title", "توزيع كريم سلاف رف أواي", "Applying Sulaf Formula")}
-                                {renderField("guideStep3Desc", null, "شرح الخطوة 3", "Step 3 Description", "ضعي كمية سخية من الكريم ودلكيها بحركات دائرية هادئة لمدة 60 ثانية...", "Apply a generous amount and massage in gentle circular motions for 60 seconds...", true)}
-                              </div>
-
-                              {/* Step 4 */}
-                              <div className="space-y-2 p-4 rounded-2xl bg-white border border-gray-200">
-                                <div className="text-xs font-bold text-[#485c36]">{adminLang === "ar" ? "الخطوة 4: الانتظام 14 يوماً" : "Step 4: Consistency"}</div>
-                                {renderField("guideStep4Title", "guideStep4Vis", "عنوان الخطوة 4", "Step 4 Title", "الانتظام لمدة 14 يوماً", "14-Day Consistency")}
-                                {renderField("guideStep4Desc", null, "شرح الخطوة 4", "Step 4 Description", "كرري التطبيق مرتين يومياً (صباحاً ومساءً). تظهر أولى علامات النعومة بعد 48 ساعة...", "Apply twice daily (morning & night). Initial softening begins in 48 hours...", true)}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Doctor Tip Banner */}
-                          <div className="space-y-3">
-                            <h5 className="text-xs font-bold text-gray-700 flex items-center gap-1.5 border-b border-gray-100 pb-2">
-                              <AlertTriangle className="w-4 h-4 text-amber-700" />
-                              <span>{adminLang === "ar" ? "3. بنر نصيحة طبيب سلاف" : "3. Physician Advice Tip Box"}</span>
-                            </h5>
-                            <div className="w-full">
-                              {renderField("guideDoctorTipText", "guideDoctorTipVis", "نص بنر نصيحة الطبيب", "Physician Advice Tip Text", "نصيحة طبيب سلاف: نظراً لاحتواء المستحضر على أحماض ألفا وبيتا هيدروكسي الفعالة، يُرجى استخدام واقي شمس واسع المدى على المناطق المكشوفة أثناء النهار...", "Sulaf Clinical Advice: Because this formula contains active AHAs & BHAs, please apply broad-spectrum sunscreen on exposed body areas...", true)}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* SUBTAB: CONTACT PAGE */}
-                      {cmsSubTab === "contactPage" && (
-                        <div className="space-y-6">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
-                            <div>
-                              <h4 className="text-xs font-bold uppercase text-emerald-800 tracking-wider flex items-center gap-2">
-                                <MessageCircle className="w-4 h-4 text-emerald-700" />
-                                <span>{adminLang === "ar" ? "صفحة تواصل مع فريق سلاف (/contact)" : "Contact Page (/contact)"}</span>
-                              </h4>
-                              <p className="text-[11px] text-gray-500 mt-0.5">
-                                {adminLang === "ar"
-                                  ? "التحكم في عنوان ووصف الصفحة، قنوات التواصل الرسمية، بطاقة استشارة واتساب، ونموذج المراسلة."
-                                  : "Customize contact title, subtitle, official channels, WhatsApp consultation card, and form."}
-                              </p>
-                            </div>
-                            <Link
-                              href="/contact"
-                              target="_blank"
-                              className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200 transition-colors self-start sm:self-auto"
-                            >
-                              <ExternalLink className="w-3.5 h-3.5" />
-                              <span>{adminLang === "ar" ? "معاينة صفحة التواصل" : "Preview Contact Page"}</span>
-                            </Link>
-                          </div>
-
-                          {/* Header */}
-                          <div className="space-y-3">
-                            <h5 className="text-xs font-bold text-gray-700 flex items-center gap-1.5 border-b border-gray-100 pb-2">
-                              <Sparkles className="w-4 h-4 text-emerald-700" />
-                              <span>{adminLang === "ar" ? "1. ترويسة صفحة التواصل" : "1. Header & Subtitle"}</span>
-                            </h5>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {renderField("contactHeadingText", "contactHeadingVis", "عنوان صفحة التواصل", "Contact Page Title", "تواصل مع فريق سلاف", "Contact Sulaf Care Team")}
-                              {renderField("contactSubtitleText", "contactSubtitleVis", "الوصف التقديمي", "Contact Subtitle", "يسعدنا استقبال استفساراتك الجلدية والطبية، ومتابعة شحناتك، وتقديم الدعم الفوري.", "We are delighted to assist with your clinical skincare inquiries and prompt support.", true)}
-                            </div>
-                          </div>
-
-                          {/* Official Channels */}
-                          <div className="space-y-3">
-                            <h5 className="text-xs font-bold text-gray-700 flex items-center gap-1.5 border-b border-gray-100 pb-2">
-                              <Phone className="w-4 h-4 text-emerald-700" />
-                              <span>{adminLang === "ar" ? "2. بطاقة قنوات التواصل الرسمية" : "2. Official Channels Card"}</span>
-                            </h5>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {renderField("contactChannelsTitle", "contactChannelsVis", "عنوان بطاقة القنوات", "Channels Card Title", "قنوات التواصل الرسمية", "Official Communication Channels")}
-                              {renderField("contactAddressText", null, "عنوان المقر والموقع", "Physical Address", "القاهرة، التجمع الخامس، جمهورية مصر العربية", "New Cairo, Fifth Settlement, Cairo, Egypt")}
-                              {renderField("contactEmailText", null, "البريد الإلكتروني للدعم", "Support Email", "care@sulaf.com", "care@sulaf.com")}
-                              {renderField("contactPhoneText", null, "رقم الهاتف الرسمي", "Official Phone", "+20 10 9988 7766", "+20 10 9988 7766")}
-                            </div>
-                          </div>
-
-                          {/* WhatsApp Card & Form */}
-                          <div className="space-y-3">
-                            <h5 className="text-xs font-bold text-gray-700 flex items-center gap-1.5 border-b border-gray-100 pb-2">
-                              <MessageCircle className="w-4 h-4 text-emerald-700" />
-                              <span>{adminLang === "ar" ? "3. بطاقة استشارة واتساب ونموذج المراسلة" : "3. WhatsApp Consultation & Message Form"}</span>
-                            </h5>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {renderField("contactWhatsappTitle", "contactWhatsappCardVis", "عنوان بطاقة استشارة واتساب", "WhatsApp Card Title", "استشارة واتساب الفورية", "Instant WhatsApp Consultation")}
-                              {renderField("contactWhatsappBtnText", null, "نص زر محادثة واتساب", "WhatsApp Chat Button", "فتح محادثة واتساب الآن", "Start WhatsApp Consultation")}
-                            </div>
-                            <div className="w-full">
-                              {renderField("contactWhatsappDesc", null, "وصف بطاقة استشارة واتساب", "WhatsApp Card Description", "تحدثي مباشرة مع أخصائية العناية بالبشرة لتحديد الجرعة المناسبة لحالتك.", "Speak directly with our skincare specialists to tailor your routine.", true)}
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {renderField("contactFormTitle", "contactFormVis", "عنوان نموذج أرسلي رسالتك", "Form Box Title", "أرسلي رسالتكِ لفريق الدعم", "Send Us a Direct Message")}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* SUBTAB: POLICIES PAGE */}
-                      {cmsSubTab === "policiesPage" && (
-                        <div className="space-y-6">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
-                            <div>
-                              <h4 className="text-xs font-bold uppercase text-emerald-800 tracking-wider flex items-center gap-2">
-                                <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                                <span>{adminLang === "ar" ? "صفحات السياسات والشروط والضمان السريري (/refund & /terms)" : "Policies, Terms & Guarantee (/refund & /terms)"}</span>
-                              </h4>
-                              <p className="text-[11px] text-gray-500 mt-0.5">
-                                {adminLang === "ar"
-                                  ? "التحكم في نصوص سياسة الاسترجاع والضمان السريري، وشروط وأحكام الشحن وحق المعاينة مع خيارات إخفاء وإظهار أي بند."
-                                  : "Customize refund policy, clinical satisfaction guarantee, terms of service, and package inspection terms."}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Link
-                                href="/refund"
-                                target="_blank"
-                                className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200 transition-colors"
-                              >
-                                <ExternalLink className="w-3.5 h-3.5" />
-                                <span>{adminLang === "ar" ? "معاينة الاسترجاع" : "Preview Refund"}</span>
-                              </Link>
-                              <Link
-                                href="/terms"
-                                target="_blank"
-                                className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200 transition-colors"
-                              >
-                                <ExternalLink className="w-3.5 h-3.5" />
-                                <span>{adminLang === "ar" ? "معاينة الشروط" : "Preview Terms"}</span>
-                              </Link>
-                            </div>
-                          </div>
-
-                          {/* Section 1: Refund Policy */}
-                          <div className="space-y-3">
-                            <h5 className="text-xs font-bold text-gray-700 flex items-center gap-1.5 border-b border-gray-100 pb-2">
-                              <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                              <span>{adminLang === "ar" ? "1. صفحة سياسة الاسترجاع والضمان السريري (/refund)" : "1. Refund Policy & Clinical Guarantee (/refund)"}</span>
-                            </h5>
-                            <div className="w-full">
-                              {renderField("refundTitleText", "refundTitleVis", "عنوان صفحة الاسترجاع والضمان", "Refund Page Heading", "سياسة الاسترجاع والضمان السريري", "Refund Policy & Clinical Guarantee")}
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {/* Guarantee */}
-                              <div className="space-y-2 p-4 rounded-2xl bg-white border border-gray-200">
-                                <div className="text-xs font-bold text-[#485c36]">{adminLang === "ar" ? "بند ضمان الرضا السريري (14 يوماً)" : "Clinical Satisfaction Guarantee (14 Days)"}</div>
-                                {renderField("refundGuaranteeTitle", "refundGuaranteeVis", "عنوان بند ضمان الرضا", "Guarantee Clause Title", "ضمان الرضا السريري:", "Clinical Satisfaction Guarantee:")}
-                                {renderField("refundGuaranteeText", null, "نص بند ضمان الرضا", "Guarantee Clause Text", "نحن واثقون تماماً من فعالية كريم Absolutes Smoothing Body Cream...", "We stand with absolute confidence behind Sulaf. If you do not experience skin smoothing within 14 days...", true)}
-                              </div>
-
-                              {/* Damaged Replacement */}
-                              <div className="space-y-2 p-4 rounded-2xl bg-white border border-gray-200">
-                                <div className="text-xs font-bold text-[#610b0d]">{adminLang === "ar" ? "بند استبدال المنتجات التالفة" : "Damaged Items Replacement Clause"}</div>
-                                {renderField("refundDamagedTitle", "refundDamagedVis", "عنوان بند استبدال التالف", "Damaged Clause Title", "استبدال المنتجات التالفة:", "Damaged Items Replacement:")}
-                                {renderField("refundDamagedText", null, "نص بند استبدال التالف", "Damaged Clause Text", "يتم استبدال أي عبوة لحق بها ضرر أثناء الشحن فورياً دون أي تكلفة شحن إضافية.", "Any package damaged in transit is replaced immediately with free expedited shipping.", true)}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Section 2: Terms & Conditions */}
-                          <div className="space-y-3">
-                            <h5 className="text-xs font-bold text-gray-700 flex items-center gap-1.5 border-b border-gray-100 pb-2">
-                              <FileText className="w-4 h-4 text-emerald-700" />
-                              <span>{adminLang === "ar" ? "2. صفحة الشروط والأحكام (/terms)" : "2. Terms & Conditions (/terms)"}</span>
-                            </h5>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {renderField("termsTitleText", "termsTitleVis", "عنوان صفحة الشروط", "Terms Page Heading", "الشروط والأحكام", "Terms & Conditions")}
-                              {renderField("termsIntroText", "termsIntroVis", "مقدمة الشروط والأحكام", "Terms Intro Paragraph", "أهلاً بكم في متجر سُلاف الرسمي. تنظم هذه الشروط استخدامكم للموقع وعمليات شراء مستحضرات Cosmeceuticals.", "Welcome to Sulaf official store. These terms govern your usage of our website.", true)}
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {/* Shipping confirmation */}
-                              <div className="space-y-2 p-4 rounded-2xl bg-white border border-gray-200">
-                                <div className="text-xs font-bold text-[#485c36]">{adminLang === "ar" ? "بند الشحن وتأكيد الطلب" : "Shipping & Fulfillment Terms"}</div>
-                                {renderField("termsDepositTitle", "termsDepositVis", "عنوان بند الشحن", "Shipping Clause Title", "تأكيد الطلب والشحن:", "Order Confirmation & Shipping:")}
-                                {renderField("termsDepositText", null, "نص بند الشحن", "Shipping Clause Text", "يتم تجهيز وشحن الطلبات بأعلى معايير الحفظ الصيدلاني والتوصيل السريع بالتعاون مع كبرى شركات الشحن المؤمّنة.", "Orders are prepared under strict pharmaceutical safety standards and shipped express.", true)}
-                              </div>
-
-                              {/* Inspection */}
-                              <div className="space-y-2 p-4 rounded-2xl bg-white border border-gray-200">
-                                <div className="text-xs font-bold text-[#485c36]">{adminLang === "ar" ? "بند حق المعاينة" : "Inspection on Delivery Terms"}</div>
-                                {renderField("termsInspectionTitle", "termsInspectionVis", "عنوان بند المعاينة", "Inspection Clause Title", "حق المعاينة والتسليم:", "Inspection on Delivery:")}
-                                {renderField("termsInspectionText", null, "نص بند المعاينة", "Inspection Clause Text", "يحق للعميل معاينة الطرد الخارجي والتأكد من سلامة التغليف قبل استلام الشحنة.", "Clients retain full right to inspect external security packaging prior to receiving shipment.", true)}
-                              </div>
-                            </div>
+                              <span>{adminLang === "ar" ? "الانتقال إلى محرر الصفحات الآن ←" : "Open Pages Editor Now →"}</span>
+                            </button>
                           </div>
                         </div>
                       )}

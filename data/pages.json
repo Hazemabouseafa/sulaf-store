@@ -18,14 +18,14 @@
     "slug": "story",
     "route": "/story",
     "type": "builtin",
-    "titleAr": "قصة سُلاف والهوية الأندلسية",
-    "titleEn": "Our Story & Andalusian Heritage",
-    "subtitleAr": "من عبق الهوية العربية وسحر الروح الأندلسية وُلدت سُلاف؛ حيث يلتقي العلم الصيدلاني بالجمال.",
+    "titleAr": "SULAF | سُلاف",
+    "titleEn": "SULAF | سُلاف",
+    "subtitleAr": "Where Pharmaceutical Science Meets Beauty.",
     "subtitleEn": "Where Pharmaceutical Science Meets Beauty.",
-    "contentAr": "<h2>من عبق الهوية العربية وسحر الروح الأندلسية</h2>\n<p>وُلدت <strong>سُـلاف</strong> من رؤية علمية تؤمن بأن الجمال ليس مجرد مظهر خارجي، بل هو تناغم دقيق بين صحة الخلايا وعمق العناية والرفاهية.</p>\n<p>نستلهم من تراثنا العربي أصالته، ومن روح الأندلس الشعرية رقّتها، ومن العلوم الصيدلانية الحديثة صرامتها المعملية؛ لنصنع تركيبات علاجية فاخرة تعتني بالبشرة دون تنازل.</p>\n<blockquote>«مَا كَانَ فِي رِفْقٍ يُدَاوِينَا، سُلَافٌ بِهِ.. إِلَّا تَحَوَّلَ حُسْنًا لَا يَنْهَزِمُ»</blockquote>\n<h3>فلسفتنا في الابتكار الصيدلاني</h3>\n<p>في مختبرات سُـلاف، نخضع كل قطرة وكل غرام من مستحضراتنا لاختبارات سريرية دقيقة. لا نعتمد على الحلول المؤقتة أو التغطية السطحية، بل نستهدف الجذور البيولوجية المسببة للجفاف وتراكم الكيراتين، لنمنحكِ بشرة حريرية تدوم ثقتها طويلاً.</p>",
-    "contentEn": "<h2>Where Pharmaceutical Science Meets Andalusian Beauty</h2>\n<p><strong>Sulaf</strong> was born from a clinical vision believing that beauty is not superficial appearance, but a precise equilibrium between cellular health and exquisite self-care luxury.</p>\n<p>We draw upon our rich Arab heritage, the poetic soul of Andalusia, and rigorous pharmaceutical compounding standards to formulate uncompromising cosmeceutical care.</p>\n<blockquote>\"Where pharmaceutical science meets beauty with Andalusian gentleness.\"</blockquote>\n<h3>Our Formulation Philosophy</h3>\n<p>In Sulaf laboratories, every formula undergoes rigorous dermatological verification. We reject temporary cosmetic band-aids; instead, we target root biological mechanisms causing hyperkeratosis and dehydration, ensuring permanent, radiant confidence.</p>",
+    "contentAr": "<p class=\"text-base sm:text-lg leading-relaxed font-semibold text-[#485c36]\">من جذورٍ عربية، بروحٍ أندلسية، وبرؤيةٍ معاصرة، تأتي سُلاف لتعيد صياغة مفهوم العناية بالبشرة.</p>\n<p class=\"text-base leading-relaxed text-gray-700\">نمزج العلم الصيدلاني بفلسفة الجمال، لنقدّم عنايةً تبدأ من فهم البشرة، وتُصاغ بمعرفة، وتُقدَّم بروحٍ من الرفق.</p>\n<blockquote class=\"my-6 border-s-4 border-[#d4af37] ps-5 py-3 italic bg-[#fbf9f0] rounded-r-2xl font-amiri text-lg text-gray-800\">«لسنا مجرد عنايةٍ تُضاف إلى روتينك؛ بل فلسفة ترى في كل تفصيلة علمًا، وفي كل خطوة عناية، وفي الجمال حكايةً تستحق أن تُروى.»</blockquote>\n<p class=\"text-base font-bold text-[#610b0d] text-center pt-2\">سُلاف | علمٌ يُلهم العناية، وجمالٌ تحكيه الهوية.</p>",
+    "contentEn": "<p class=\"text-base sm:text-lg leading-relaxed font-semibold text-[#485c36]\">From Arab roots, with an Andalusian soul, and a contemporary vision, Sulaf arrives to redefine skincare.</p>\n<p class=\"text-base leading-relaxed text-gray-700\">We blend pharmaceutical science with the philosophy of beauty, delivering care that begins with understanding the skin, formulated with knowledge, and presented with gentle grace.</p>\n<blockquote class=\"my-6 border-s-4 border-[#d4af37] ps-5 py-3 italic bg-[#fbf9f0] rounded-r-2xl font-amiri text-lg text-gray-800\">“We are not merely care added to your routine; we are a philosophy that sees science in every detail, devotion in every step, and a story worthy of telling in beauty.”</blockquote>\n<p class=\"text-base font-bold text-[#610b0d] text-center pt-2\">SULAF | Science Inspiring Care, Beauty Telling Identity.</p>",
     "published": true,
-    "updatedAt": "2026-10-24"
+    "updatedAt": "2026-10-27"
   },
   {
     "id": "page-guide",
