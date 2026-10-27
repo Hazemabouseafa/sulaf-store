@@ -20,6 +20,7 @@ export function ConsultationBanner() {
   const custom = isArabic ? (settings.customContent || {}) : (settings.customContentEn || {});
   const ArrowIcon = isArabic ? ArrowLeft : ArrowRight;
 
+  const whatsappNum = (settings.contacts?.whatsapp || SULAF_SETTINGS.whatsappNumber).replace(/[^0-9]/g, "");
   const whatsappMessage = isArabic
     ? "مرحباً فريق سلاف، أود استشارة صيدلانية بخصوص علاج جلد الوزة والخشونة مع كريم Absolutes Smoothing Body Cream."
     : "Hello Sulaf Team, I would like a clinical consultation regarding Keratosis Pilaris and Absolutes Smoothing Body Cream.";
@@ -40,6 +41,11 @@ export function ConsultationBanner() {
           <div className="flex items-center gap-6 text-center md:text-start">
             <FourPointStar className="hidden sm:block w-4 h-4 text-[#22301e] shrink-0" />
             <div>
+              {vis.consultationBadge !== false && custom.consultationBadgeText && (
+                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[#610b0d] font-bold block mb-1">
+                  {custom.consultationBadgeText}
+                </span>
+              )}
               {vis.consultationHeading !== false && (
                 <h2
                   className={`${
@@ -64,6 +70,11 @@ export function ConsultationBanner() {
                     ))}
                 </h2>
               )}
+              {vis.consultationDesc !== false && custom.consultationDescText && (
+                <p className="text-xs text-[#1e2b18]/75 mt-1 max-w-sm">
+                  {custom.consultationDescText}
+                </p>
+              )}
             </div>
           </div>
 
@@ -77,12 +88,12 @@ export function ConsultationBanner() {
                 href="/shop"
                 className="px-8 py-3.5 rounded-full bg-[#22301e] hover:bg-[#610b0d] text-[#f6f9e6] text-xs font-bold tracking-wide inline-flex items-center gap-3 transition-colors shadow-sm"
               >
-                <span>{isArabic ? "تسوقي الآن" : "Shop Now"}</span>
+                <span>{custom.consultationShopBtnText || (isArabic ? "تسوقي الآن" : "Shop Now")}</span>
                 <ArrowIcon className="w-3.5 h-3.5" />
               </Link>
 
               <a
-                href={`https://wa.me/${SULAF_SETTINGS.whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`}
+                href={`https://wa.me/${whatsappNum}?text=${encodeURIComponent(whatsappMessage)}`}
                 target="_blank"
                 rel="noreferrer"
                 className="px-5 py-3.5 rounded-full border border-[#22301e]/30 hover:border-[#610b0d] text-[#1e2b18] hover:text-[#610b0d] text-xs font-bold inline-flex items-center gap-2 transition-colors"
@@ -95,9 +106,9 @@ export function ConsultationBanner() {
 
           {/* End: Stacked Uppercase Micro Label */}
           <div className="font-mono text-[10px] tracking-[0.25em] uppercase text-[#485c36] text-center md:text-start leading-relaxed">
-            <span className="block">{isArabic ? "اكتشفي" : "DISCOVER"}</span>
+            <span className="block">{custom.consultationSideLabel1 || (isArabic ? "اكتشفي" : "DISCOVER")}</span>
             <span className="block font-bold text-[#610b0d]">
-              {isArabic ? "بروتوكول سُـلاف" : "THE RITUAL"}
+              {custom.consultationSideLabel2 || (isArabic ? "بروتوكول سُـلاف" : "THE RITUAL")}
             </span>
           </div>
 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -104,7 +104,7 @@ export function Navbar() {
   return (
     <header ref={headerRef} className="sticky top-0 z-50 w-full select-none font-cairo">
       {/* 1. Top Luxury Announcement Ribbon (Clean, no Stox / Paymob / Deposit) */}
-      {(settings.sectionsVisibility?.announcementBar !== false && settings.announcement.enabled) && (
+      {(settings.sectionsVisibility?.announcementBar !== false && settings.announcement.enabled !== false) && (
         <div className="bg-gradient-to-r from-[#2c3821] via-[#485c36] to-[#2c3821] text-[#f6f9e6] px-4 py-2 text-xs font-semibold shadow-inner border-b border-[#f3a5a1]/30">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div className="flex-1 flex items-center justify-center gap-2.5 overflow-hidden text-center">

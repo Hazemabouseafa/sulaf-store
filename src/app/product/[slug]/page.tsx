@@ -298,7 +298,7 @@ export default function ProductStoryPage() {
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-cairo text-xs font-bold text-[#610b0d]">
-                        {custom.productDepositTitle || (isArabic ? "عربون 100 ج.م فقط" : "100 EGP Deposit Only")}
+                        {custom.productDepositTitle || (isArabic ? `عربون ${settings.payment?.depositAmount ?? 100} ج.م فقط` : `${settings.payment?.depositAmount ?? 100} EGP Deposit Only`)}
                       </span>
                       <input
                         type="radio"
@@ -309,7 +309,7 @@ export default function ProductStoryPage() {
                       />
                     </div>
                     <span className="text-[11px] text-gray-600 font-cairo mt-1">
-                      {custom.productDepositDesc || (isArabic ? `سددي 100 ج.م الآن والباقي (${Math.max(0, unitPrice * quantity - 100)} ج.م) عند الاستلام` : `Pay 100 EGP now and balance (${Math.max(0, unitPrice * quantity - 100)} EGP) on delivery`)}
+                      {custom.productDepositDesc || (isArabic ? `سددي ${settings.payment?.depositAmount ?? 100} ج.م الآن والباقي (${Math.max(0, unitPrice * quantity - (settings.payment?.depositAmount ?? 100))} ج.م) عند الاستلام` : `Pay ${settings.payment?.depositAmount ?? 100} EGP now and balance (${Math.max(0, unitPrice * quantity - (settings.payment?.depositAmount ?? 100))} EGP) on delivery`)}
                     </span>
                   </label>
 

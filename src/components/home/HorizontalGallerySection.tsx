@@ -47,50 +47,50 @@ export function HorizontalGallerySection() {
   const fiveArches = [
     {
       num: "01",
-      titleAr: "بلسم التنظيف",
-      titleEn: "Cleansers",
-      subAr: "تنقية وإذابة الشوائب",
-      subEn: "Purify & refresh",
+      titleAr: custom.arch1Title || "بلسم التنظيف",
+      titleEn: custom.arch1Title || "Cleansers",
+      subAr: custom.arch1Sub || "تنقية وإذابة الشوائب",
+      subEn: custom.arch1Sub || "Purify & refresh",
       href: `/product/${allProducts[2]?.slug || "sulaf-melt-cleansing-balm"}`,
       productIndex: 2,
       accentType: "sand" as const,
     },
     {
       num: "02",
-      titleAr: "إكسير الحاجز",
-      titleEn: "Serums",
-      subAr: "ترميم مركز بالسيراميد",
-      subEn: "Targeted solutions",
+      titleAr: custom.arch2Title || "إكسير الحاجز",
+      titleEn: custom.arch2Title || "Serums",
+      subAr: custom.arch2Sub || "ترميم مركز بالسيراميد",
+      subEn: custom.arch2Sub || "Targeted solutions",
       href: `/product/${allProducts[1]?.slug || "sulaf-barrier-restoration-elixir"}`,
       productIndex: 1,
       accentType: "plain" as const,
     },
     {
       num: "03",
-      titleAr: "كريمات اليوريا 30%",
-      titleEn: "Moisturizers",
-      subAr: "علاج جلد الوزة والخشونة",
-      subEn: "Nourish & restore",
+      titleAr: custom.arch3Title || "كريمات اليوريا 30%",
+      titleEn: custom.arch3Title || "Moisturizers",
+      subAr: custom.arch3Sub || "علاج جلد الوزة والخشونة",
+      subEn: custom.arch3Sub || "Nourish & restore",
       href: `/product/${allProducts[0]?.slug || "absolutes-smoothing-body-cream"}`,
       productIndex: 0,
       accentType: "darkCrescent" as const,
     },
     {
       num: "04",
-      titleAr: "العلاجات المركزة",
-      titleEn: "Treatments",
-      subAr: "عناية سريرية متطورة",
-      subEn: "Advanced care",
+      titleAr: custom.arch4Title || "العلاجات المركزة",
+      titleEn: custom.arch4Title || "Treatments",
+      subAr: custom.arch4Sub || "عناية سريرية متطورة",
+      subEn: custom.arch4Sub || "Advanced care",
       href: `/product/${allProducts[0]?.slug || "absolutes-smoothing-body-cream"}`,
       productIndex: 0,
       accentType: "roseBorder" as const,
     },
     {
       num: "05",
-      titleAr: "تونر الأحماض",
-      titleEn: "Toners",
-      subAr: "توازن وتجديد المسام",
-      subEn: "Balance & prepare",
+      titleAr: custom.arch5Title || "تونر الأحماض",
+      titleEn: custom.arch5Title || "Toners",
+      subAr: custom.arch5Sub || "توازن وتجديد المسام",
+      subEn: custom.arch5Sub || "Balance & prepare",
       href: `/product/${allProducts[3]?.slug || "sulaf-andalusian-aha-clarifying-toner"}`,
       productIndex: 3,
       accentType: "cornerNode" as const,
@@ -330,7 +330,7 @@ export function HorizontalGallerySection() {
             <div className="lg:col-span-5 lg:border-x border-[#f6f9e6]/15 lg:px-10 space-y-5 text-start">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <span className="font-mono text-[10px] tracking-[0.28em] uppercase text-[#f3a5a1] font-bold">
-                  {isArabic ? "الأكثر مبيعاً واعتماداً" : "BEST SELLER"}
+                  {custom.bestSellerBadgeText || (isArabic ? "الأكثر مبيعاً واعتماداً" : "BEST SELLER")}
                 </span>
 
                 {/* Switch between Sulaf's 4 clinical formulas */}
@@ -440,9 +440,10 @@ export function HorizontalGallerySection() {
                     : "font-cormorant text-lg leading-relaxed"
                 } text-[#f6f9e6]/85 max-w-[220px]`}
               >
-                {isArabic
-                  ? `${t.brand.poemLine1}.. ${t.brand.poemLine2}`
-                  : `${t.brand.poemLine1} ${t.brand.poemLine2}`}
+                {custom.bestSellerQuoteText ||
+                  (isArabic
+                    ? `${t.brand.poemLine1}.. ${t.brand.poemLine2}`
+                    : `${t.brand.poemLine1} ${t.brand.poemLine2}`)}
               </p>
 
               <div className="flex items-center gap-2 text-[#c5b37a] pt-2">
@@ -465,7 +466,7 @@ export function HorizontalGallerySection() {
             {/* Left/Start Heading Column (4 Cols) */}
             <div className="lg:col-span-4 space-y-2 text-start">
               <span className="font-mono text-[10px] tracking-[0.28em] uppercase text-[#610b0d] font-bold block">
-                {isArabic ? "ميثاق الثقة في سُـلاف" : "THE SULAF DIFFERENCE"}
+                {custom.diffBadgeText || (isArabic ? "ميثاق الثقة في سُـلاف" : "THE SULAF DIFFERENCE")}
               </span>
               <h2
                 className={`${
@@ -474,16 +475,15 @@ export function HorizontalGallerySection() {
                     : "font-cormorant text-3xl sm:text-4xl leading-tight"
                 } font-normal text-[#18271b]`}
               >
-                {isArabic ? (
-                  <>
-                    {t.brand.tagline}
-                  </>
-                ) : (
-                  <>
-                    More Than Skincare.
-                    <br />A Lasting Ritual.
-                  </>
-                )}
+                {custom.diffHeadingText ||
+                  (isArabic ? (
+                    <>{t.brand.tagline}</>
+                  ) : (
+                    <>
+                      More Than Skincare.
+                      <br />A Lasting Ritual.
+                    </>
+                  ))}
               </h2>
             </div>
 
@@ -500,10 +500,10 @@ export function HorizontalGallerySection() {
                     isArabic ? "font-amiri text-lg" : "font-cormorant text-base"
                   } font-bold text-[#18271b]`}
                 >
-                  {isArabic ? t.hero.clinicalDose : "Premium Ingredients"}
+                  {custom.diff1Title || (isArabic ? t.hero.clinicalDose : "Premium Ingredients")}
                 </h3>
                 <p className="text-[11px] text-[#485c36]/80 leading-relaxed">
-                  {isArabic ? t.hero.clinicalDoseDesc : "Naturally sourced, carefully selected."}
+                  {custom.diff1Desc || (isArabic ? t.hero.clinicalDoseDesc : "Naturally sourced, carefully selected.")}
                 </p>
               </motion.div>
 
@@ -517,10 +517,10 @@ export function HorizontalGallerySection() {
                     isArabic ? "font-amiri text-lg" : "font-cormorant text-base"
                   } font-bold text-[#18271b]`}
                 >
-                  {isArabic ? t.hero.fastAbsorption : "Dermatologically Tested"}
+                  {custom.diff2Title || (isArabic ? t.hero.fastAbsorption : "Dermatologically Tested")}
                 </h3>
                 <p className="text-[11px] text-[#485c36]/80 leading-relaxed">
-                  {isArabic ? t.hero.fastAbsorptionDesc : "Safe, effective, and skin-friendly."}
+                  {custom.diff2Desc || (isArabic ? t.hero.fastAbsorptionDesc : "Safe, effective, and skin-friendly.")}
                 </p>
               </motion.div>
 
@@ -536,10 +536,10 @@ export function HorizontalGallerySection() {
                     isArabic ? "font-amiri text-lg" : "font-cormorant text-base"
                   } font-bold text-[#18271b]`}
                 >
-                  {isArabic ? t.hero.barrierRepair : "Heritage Inspired"}
+                  {custom.diff3Title || (isArabic ? t.hero.barrierRepair : "Heritage Inspired")}
                 </h3>
                 <p className="text-[11px] text-[#485c36]/80 leading-relaxed">
-                  {isArabic ? t.hero.barrierRepairDesc : "Centuries of wisdom, modernized."}
+                  {custom.diff3Desc || (isArabic ? t.hero.barrierRepairDesc : "Centuries of wisdom, modernized.")}
                 </p>
               </motion.div>
 
@@ -553,12 +553,13 @@ export function HorizontalGallerySection() {
                     isArabic ? "font-amiri text-lg" : "font-cormorant text-base"
                   } font-bold text-[#18271b]`}
                 >
-                  {isArabic ? "معاينة العبوة قبل الدفع" : "Real Results"}
+                  {custom.diff4Title || (isArabic ? "معاينة العبوة قبل الدفع" : "Real Results")}
                 </h3>
                 <p className="text-[11px] text-[#485c36]/80 leading-relaxed">
-                  {isArabic
-                    ? "شحن فوري مؤمن لجميع المحافظات مع حق المعاينة."
-                    : "Healthier skin, lasting confidence."}
+                  {custom.diff4Desc ||
+                    (isArabic
+                      ? "شحن فوري مؤمن لجميع المحافظات مع حق المعاينة."
+                      : "Healthier skin, lasting confidence.")}
                 </p>
               </motion.div>
 

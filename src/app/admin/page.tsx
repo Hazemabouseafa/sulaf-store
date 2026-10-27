@@ -163,14 +163,12 @@ const ADMIN_I18N = {
     },
     navSection: "أقسام الإدارة",
     tabs: {
-      overview: "نظرة عامة",
+      overview: "نظرة عامة والتقارير",
       orders: "إدارة الطلبات",
       products: "المنتجات والمخزون",
       coupons: "كوبونات الخصم",
-      customers: "دليل العملاء",
-      customerPerks: "كوبونات وإشعارات العملاء VIP",
+      customers: "العملاء ومكافآت VIP",
       pages: "تعديل صفحات الموقع",
-      analytics: "التقارير والمبيعات",
       reviews: "تقييمات وآراء العملاء",
       cms: "الأقسام والنصوص (CMS)",
       settings: "إعدادات المتجر والدفع",
@@ -301,8 +299,7 @@ const ADMIN_I18N = {
       orders: "Orders",
       products: "Products & Stock",
       coupons: "Coupons",
-      customers: "Customer CRM",
-      customerPerks: "VIP Perks & Notifications",
+      customers: "Customers & VIP Perks",
       pages: "Site Pages Management",
       analytics: "Analytics & Sales",
       reviews: "Customer Reviews",
@@ -446,7 +443,7 @@ export default function AdminPage() {
 
   // Navigation Tab
   const [activeTab, setActiveTab] = useState<
-    "overview" | "orders" | "products" | "coupons" | "customers" | "customerPerks" | "pages" | "analytics" | "cms" | "theme" | "settings" | "reviews"
+    "overview" | "orders" | "products" | "coupons" | "customers" | "pages" | "cms" | "settings" | "reviews"
   >("overview");
 
   // Data Stores
@@ -480,7 +477,7 @@ export default function AdminPage() {
     () => settings.customContentEn || {}
   );
   const [cmsTargetLang, setCmsTargetLang] = useState<"ar" | "en">("ar");
-  const [cmsSubTab, setCmsSubTab] = useState<string>("hero");
+  const [cmsSubTab, setCmsSubTab] = useState<string>("announcement");
   const [isCmsSaving, setIsCmsSaving] = useState(false);
   const [isThemeSaving, setIsThemeSaving] = useState(false);
 
@@ -1592,70 +1589,10 @@ export default function AdminPage() {
   }
 
   
-  function handleApplyThemePreset(preset: ThemePreset) {
-    setSettingsForm((prev) => ({
-      ...prev,
-      themePrimary: preset.colors.primary,
-      themeSecondary: preset.colors.secondary,
-      themeGold: preset.colors.gold,
-      themeBackground: preset.colors.background,
-      themeSurface: preset.colors.surface,
-      themeText: preset.colors.text,
-    }));
-    showToast(`تم تطبيق نسق "${preset.nameAr}" في المعاينة`);
-  }
-
-  function handleResetThemeToDefault() {
-    setSettingsForm((prev) => ({
-      ...prev,
-      themePrimary: DEFAULT_THEME_COLORS.primary,
-      themeSecondary: DEFAULT_THEME_COLORS.secondary,
-      themeGold: DEFAULT_THEME_COLORS.gold,
-      themeBackground: DEFAULT_THEME_COLORS.background,
-      themeSurface: DEFAULT_THEME_COLORS.surface,
-      themeText: DEFAULT_THEME_COLORS.text,
-    }));
-    showToast("تمت استعادة ألوان سُلاف الأصلية");
-  }
-
-  async function handleSaveThemeDirectly() {
-    setIsThemeSaving(true);
-    try {
-      await updateSettings({
-        themeColors: {
-          primary: settingsForm.themePrimary,
-          primaryHover: adjustHexBrightness(settingsForm.themePrimary, -15),
-          secondary: settingsForm.themeSecondary,
-          gold: settingsForm.themeGold,
-          background: settingsForm.themeBackground,
-          surface: settingsForm.themeSurface,
-          text: settingsForm.themeText,
-        },
-      });
-      showToast("تم حفظ وتطبيق الألوان السائدة على واجهة المتجر بنجاح ✓");
-    } catch {
-      showToast("فشل حفظ إعدادات الألوان.", "error");
-    } finally {
-      setIsThemeSaving(false);
-    }
-  }
-
   async function handleSaveSettings(e: React.FormEvent) {
     e.preventDefault();
     try {
       await updateSettings({
-        brandTagline: settingsForm.taglineLine2,
-        brandTaglineEn: settingsForm.taglineLine2,
-        ourStory: {
-          taglineLine1: settingsForm.taglineLine1,
-          taglineLine2: settingsForm.taglineLine2,
-          paragraph1: settingsForm.storyP1,
-          paragraph2: settingsForm.storyP2,
-          paragraph3: settingsForm.storyP3,
-          paragraph4: settingsForm.storyP4,
-          closingTitle: settingsForm.storyClosing,
-          closingDecorative: settingsForm.storyDecorative,
-        },
         payment: {
           ...settings.payment,
           instapayHandle: settingsForm.instapay,
@@ -1680,20 +1617,6 @@ export default function AdminPage() {
         checkoutFields: {
           showBirthdate: settingsForm.showBirthdateField,
           showClosePerson: settingsForm.showClosePersonField,
-        },
-        themeColors: {
-          primary: settingsForm.themePrimary,
-          primaryHover: adjustHexBrightness(settingsForm.themePrimary, -15),
-          secondary: settingsForm.themeSecondary,
-          gold: settingsForm.themeGold,
-          background: settingsForm.themeBackground,
-          surface: settingsForm.themeSurface,
-          text: settingsForm.themeText,
-        },
-        announcement: {
-          ...settings.announcement,
-          text: settingsForm.announcementText,
-          enabled: settingsForm.announcementEnabled,
         },
         contacts: {
           ...settings.contacts,
@@ -2244,24 +2167,6 @@ export default function AdminPage() {
 
             {/* 5.5 Customer Perks VIP */}
             <button
-              onClick={() => setActiveTab("customerPerks")}
-              className={`shrink-0 md:w-full flex items-center justify-between px-3.5 py-2.5 sm:py-3 rounded-2xl font-bold text-xs lg:text-sm transition-all overflow-hidden cursor-pointer ${
-                activeTab === "customerPerks"
-                  ? "bg-[#3d502d] text-white shadow-md ring-2 ring-emerald-400/40"
-                  : "text-gray-300 hover:bg-[#233019] hover:text-white"
-              }`}
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <Gift className="w-4 h-4 shrink-0 text-amber-300" />
-                <span className="truncate">{ADMIN_I18N[adminLang].tabs.customerPerks}</span>
-              </div>
-              <span className="shrink-0 ms-2 px-2 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-400 to-amber-500 text-black shadow-xs">
-                VIP
-              </span>
-            </button>
-
-            {/* 5. Customers */}
-            <button
               onClick={() => setActiveTab("customers")}
               className={`shrink-0 md:w-full flex items-center justify-between px-3.5 py-2.5 sm:py-3 rounded-2xl font-bold text-xs lg:text-sm transition-all overflow-hidden cursor-pointer ${
                 activeTab === "customers"
@@ -2270,27 +2175,12 @@ export default function AdminPage() {
               }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <Users className="w-4 h-4 shrink-0 text-emerald-300" />
+                <Gift className="w-4 h-4 shrink-0 text-amber-300" />
                 <span className="truncate">{ADMIN_I18N[adminLang].tabs.customers}</span>
               </div>
-              <span className="shrink-0 ms-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#485c36] text-white">
-                {customersList.length}
+              <span className="shrink-0 ms-2 px-2 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-400 to-amber-500 text-black shadow-xs">
+                VIP
               </span>
-            </button>
-
-            {/* 6. Analytics */}
-            <button
-              onClick={() => setActiveTab("analytics")}
-              className={`shrink-0 md:w-full flex items-center justify-between px-3.5 py-2.5 sm:py-3 rounded-2xl font-bold text-xs lg:text-sm transition-all overflow-hidden cursor-pointer ${
-                activeTab === "analytics"
-                  ? "bg-[#3d502d] text-white shadow-md ring-2 ring-emerald-400/40"
-                  : "text-gray-300 hover:bg-[#233019] hover:text-white"
-              }`}
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <TrendingUp className="w-4 h-4 shrink-0 text-emerald-300" />
-                <span className="truncate">{ADMIN_I18N[adminLang].tabs.analytics || (adminLang === "ar" ? "التقارير والمبيعات" : "Analytics")}</span>
-              </div>
             </button>
 
             {/* 6.5 Pages Management (تعديل صفحات الموقع) */}
@@ -2326,24 +2216,6 @@ export default function AdminPage() {
               </div>
               <span className="shrink-0 ms-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-700 text-emerald-100">
                 CMS
-              </span>
-            </button>
-
-            {/* 7.5 Theme & Dominant Colors Studio */}
-            <button
-              onClick={() => setActiveTab("theme")}
-              className={`shrink-0 md:w-full flex items-center justify-between px-3.5 py-2.5 sm:py-3 rounded-2xl font-bold text-xs lg:text-sm transition-all overflow-hidden cursor-pointer ${
-                activeTab === "theme"
-                  ? "bg-[#3d502d] text-white shadow-md ring-2 ring-emerald-400/40"
-                  : "text-gray-300 hover:bg-[#233019] hover:text-white"
-              }`}
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <Palette className="w-4 h-4 shrink-0 text-amber-300" />
-                <span className="truncate">{adminLang === "ar" ? "ألوان وهوية المتجر" : "Theme & Colors"}</span>
-              </div>
-              <span className="shrink-0 ms-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                PRO
               </span>
             </button>
 
@@ -2443,7 +2315,7 @@ export default function AdminPage() {
                     {orders.length} <span className="text-base font-bold text-gray-600">طلب</span>
                   </div>
                   <div className="text-xs font-bold text-purple-800 mt-2">
-                    {ADMIN_I18N[adminLang].overview.aov} {analytics?.summary?.aov || 440} {ADMIN_I18N[adminLang].currency}
+                    {ADMIN_I18N[adminLang].overview.aov} {analytics?.summary?.aov || 0} {ADMIN_I18N[adminLang].currency}
                   </div>
                 </div>
               </div>
@@ -4056,98 +3928,9 @@ export default function AdminPage() {
           )}
 
           {/* ========================================================= */}
-          {/* TAB 5: CUSTOMER CRM DIRECTORY                             */}
-          {/* ========================================================= */}
-          {activeTab === "customers" && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-[#dbe2bd] shadow-sm">
-                <div>
-                  <h2 className="font-bold text-2xl text-gray-900">سجل العملاء وإدارة العلاقات (CRM)</h2>
-                  <p className="text-xs text-gray-600 mt-1 font-semibold">
-                    قائمة متكاملة بالعملاء المستخرجين تلقائياً من الطلبات الحقيقية مع إجمالي الإنفاق ومحادثة الواتساب المباشرة.
-                  </p>
-                </div>
-                <button
-                  onClick={exportCustomersCsv}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#3d502d] hover:bg-[#2d3b21] text-white font-bold text-xs shadow transition-all"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>تصدير العملاء CSV</span>
-                </button>
-              </div>
-
-              {/* Search */}
-              <div className="relative w-full">
-                <Search className="w-5 h-5 absolute right-4 top-3.5 text-gray-400" />
-                <input
-                  type="text"
-                  value={customerSearch}
-                  onChange={(e) => setCustomerSearch(e.target.value)}
-                  placeholder="ابحث باسم العميل أو رقم هاتفه أو المحافظة..."
-                  className="w-full py-3 pr-12 pl-4 rounded-2xl bg-white border border-[#dbe2bd] text-sm font-semibold focus:outline-none focus:border-[#3d502d]"
-                />
-              </div>
-
-              {/* Customers Table */}
-              <div className="bg-white rounded-3xl border border-[#dbe2bd] shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-right text-sm">
-                    <thead className="bg-[#f6f9e6] text-[#3d502d] text-xs font-bold border-b border-[#dbe2bd]">
-                      <tr>
-                        <th className="py-4 px-6">اسم العميل</th>
-                        <th className="py-4 px-6">رقم الهاتف</th>
-                        <th className="py-4 px-6">المحافظة والمدينة</th>
-                        <th className="py-4 px-6">عدد الطلبات</th>
-                        <th className="py-4 px-6">إجمالي الإنفاق (LTV)</th>
-                        <th className="py-4 px-6">آخر نشاط</th>
-                        <th className="py-4 px-6 text-center">محادثة واتساب</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {customersList.map((customer, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50/80 transition-colors">
-                          <td className="py-4 px-6">
-                            <div className="font-bold text-gray-900">{customer.name}</div>
-                          </td>
-                          <td className="py-4 px-6 font-mono font-bold text-gray-700">
-                            {customer.phone}
-                          </td>
-                          <td className="py-4 px-6 text-gray-700">
-                            {customer.governorate} {customer.city ? `- ${customer.city}` : ""}
-                          </td>
-                          <td className="py-4 px-6 font-mono font-black text-[#3d502d]">
-                            {customer.ordersCount} طلبات
-                          </td>
-                          <td className="py-4 px-6 font-black text-gray-900">
-                            {customer.totalSpent} ج.م
-                          </td>
-                          <td className="py-4 px-6 font-mono text-xs text-gray-500">
-                            {customer.lastOrderDate.substring(0, 10)}
-                          </td>
-                          <td className="py-4 px-6 text-center">
-                            <a
-                              href={`https://wa.me/${customer.phone.replace(/[^0-9]/g, "")}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-800 text-xs font-bold transition-colors"
-                            >
-                              <MessageCircle className="w-3.5 h-3.5" />
-                              <span>مراسلة واتساب</span>
-                            </a>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ========================================================= */}
           {/* TAB 5.5: VIP CUSTOMER PERKS & PERSONALIZED NOTIFICATIONS  */}
           {/* ========================================================= */}
-          {activeTab === "customerPerks" && (() => {
+          {activeTab === "customers" && (() => {
             // 1. Calculate matching orders and stats for each registered customer
             const customersWithStats = registeredCustomers.map((c: any) => {
               const normEmail = (c.email || "").toLowerCase().trim();
@@ -4240,7 +4023,7 @@ export default function AdminPage() {
                         <Gift className="w-5 h-5" />
                       </div>
                       <h2 className="font-amiri text-2xl sm:text-3xl font-bold text-[#fbf9f0]">
-                        {adminLang === "ar" ? "كوبونات وإشعارات العملاء المسجلين VIP" : "VIP Perks & Personalized Notifications"}
+                        {adminLang === "ar" ? "العملاء ومكافآت VIP" : "Customers & VIP Perks"}
                       </h2>
                     </div>
                     <p className="text-xs sm:text-sm text-gray-300 max-w-2xl">
@@ -4251,6 +4034,14 @@ export default function AdminPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={exportCustomersCsv}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+                    >
+                      <Download className="w-4 h-4 text-emerald-300" />
+                      <span>{adminLang === "ar" ? "تصدير العملاء CSV" : "Export CSV"}</span>
+                    </button>
                     <button
                       type="button"
                       onClick={() => setAssignPerkModalOpen(true)}
@@ -5285,7 +5076,7 @@ export default function AdminPage() {
           {/* ========================================================= */}
           {/* TAB 6: DETAILED ANALYTICS & FINANCIAL REPORTS             */}
           {/* ========================================================= */}
-          {activeTab === "analytics" && (
+          {activeTab === "overview" && (
             <div className="space-y-8">
               <div className="bg-white p-6 rounded-3xl border border-[#dbe2bd] shadow-sm">
                 <h2 className="font-bold text-2xl text-gray-900">لوحة التحليلات والمبيعات السريرية</h2>
@@ -5301,22 +5092,11 @@ export default function AdminPage() {
                     <h3 className="font-bold text-base text-gray-900">حجم المبيعات الأسبوعي (7-Day Sales Trend)</h3>
                     <p className="text-xs text-gray-500">قيمة المبيعات اليومية بالجنيه المصري</p>
                   </div>
-                  <div className="text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full">
-                    معدل نمو مستمر +24%
-                  </div>
                 </div>
 
                 <div className="h-64 flex items-end justify-between gap-2 sm:gap-4 pt-8 px-2 border-b border-gray-200">
-                  {(analytics?.salesTrend || [
-                    { day: "السبت", amount: 1250, ordersCount: 3 },
-                    { day: "الأحد", amount: 1840, ordersCount: 4 },
-                    { day: "الإثنين", amount: 2420, ordersCount: 6 },
-                    { day: "الثلاثاء", amount: 1680, ordersCount: 4 },
-                    { day: "الأربعاء", amount: 3100, ordersCount: 7 },
-                    { day: "الخميس", amount: 3950, ordersCount: 9 },
-                    { day: "الجمعة", amount: 2800, ordersCount: 6 },
-                  ]).map((item: any, idx: number) => {
-                    const maxAmount = 4000;
+                  {((analytics?.salesTrend as any[]) || []).map((item: any, idx: number) => {
+                    const maxAmount = Math.max(1, ...((analytics?.salesTrend as any[]) || []).map((d: any) => Number(d.amount) || 0));
                     const heightPercent = Math.min(100, Math.max(15, (item.amount / maxAmount) * 100));
                     return (
                       <div key={idx} className="flex-1 flex flex-col items-center gap-2 group relative">
@@ -5341,12 +5121,7 @@ export default function AdminPage() {
                 <div className="bg-white p-6 rounded-3xl border border-[#dbe2bd] shadow-sm">
                   <h3 className="font-bold text-base text-gray-900 mb-4">التوزيع الجغرافي للطلبات (المحافظات)</h3>
                   <div className="space-y-3.5">
-                    {(analytics?.governorates?.length > 0 ? analytics.governorates : [
-                      { name: "القاهرة", count: 18, percentage: 45 },
-                      { name: "الجيزة", count: 11, percentage: 28 },
-                      { name: "الإسكندرية", count: 7, percentage: 17 },
-                      { name: "الدقهلية", count: 4, percentage: 10 },
-                    ]).map((gov: any, idx: number) => (
+                    {((analytics?.governorates as any[]) || []).map((gov: any, idx: number) => (
                       <div key={idx} className="space-y-1">
                         <div className="flex items-center justify-between text-xs font-bold">
                           <span className="text-gray-800">{gov.name}</span>
@@ -6008,112 +5783,6 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* SECTION 1: GLOBAL SECTION VISIBILITY TOGGLES */}
-              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-5">
-                <div className="flex items-center justify-between flex-wrap gap-2 border-b border-gray-100 pb-4">
-                  <div>
-                    <h3 className="font-bold text-lg text-[#233019] flex items-center gap-2">
-                      <Layers className="w-5 h-5 text-[#485c36]" />
-                      <span>{adminLang === "ar" ? "1. التحكم في إظهار وإخفاء أقسام المتجر (Section Visibility Toggles)" : "1. Storefront Section Visibility Toggles"}</span>
-                    </h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {adminLang === "ar"
-                        ? "أي قسم تلغي علامة الصح منه يختفي فوراً وبشكل كامل من الصفحة الرئيسية للمتجر."
-                        : "Unchecking any section will immediately remove it from the public homepage."}
-                    </p>
-                  </div>
-                  <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                    {adminLang === "ar" ? "التحكم بـ Checkmark مباشر" : "Instant Checkmark Control"}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {[
-                    { id: "heroSection", nameAr: "قسم الهيرو الرئيسي", nameEn: "Hero Section", desc: "العنوان والبيت الشعري والأسعار والملف السريري", icon: Sparkles },
-                    { id: "aboutSection", nameAr: "قسم عن سُلاف والقصة", nameEn: "About Sulaf & Story", desc: "نبذة عن البراند والفلسفة الأندلسية", icon: FileText },
-                    { id: "artOfCosmeceuticals", nameAr: "فن الـ Cosmeceuticals", nameEn: "Art of Science & Orbs", desc: "لآلئ المكونات التفاعلية والضمان الأوروبي", icon: FlaskConical },
-                    { id: "gallerySection", nameAr: "معرض المستحضرات", nameEn: "Marble Products Gallery", desc: "كاروسيل بطاقات المنتجات على المنصات", icon: Package },
-                    { id: "clinicalStorySection", nameAr: "الأدلة السريرية والدراسات", nameEn: "Clinical Evidence & Stats", desc: "إحصائيات النتائج السريرية وروابط الأبحاث", icon: Activity },
-                    { id: "reviewsSection", nameAr: "تجارب وآراء الأطباء", nameEn: "Doctor & Customer Reviews", desc: "تقييمات وآراء العملاء المعتمدة سريرياً", icon: Award },
-                    { id: "consultationSection", nameAr: "بنر الاستشارة الطبية", nameEn: "WhatsApp Consultation", desc: "دعوة العميل للاستشارة المجانية عبر واتساب", icon: MessageCircle },
-                    { id: "announcementBar", nameAr: "شريط الإعلانات العلوي", nameEn: "Top Announcement Bar", desc: "الشريط العلوي بالشحن المجاني والعروض", icon: Zap },
-                  ].map((sec) => {
-                    const isVisible = (cmsSections as any)[sec.id] !== false;
-                    const IconComponent = sec.icon;
-                    return (
-                      <div
-                        key={sec.id}
-                        onClick={() => {
-                          setCmsSections((prev: any) => ({
-                            ...prev,
-                            [sec.id]: !isVisible,
-                          }));
-                        }}
-                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer select-none flex flex-col justify-between ${
-                          isVisible
-                            ? "bg-emerald-50/60 border-emerald-500/60 shadow-sm hover:border-emerald-600"
-                            : "bg-gray-50 border-gray-200 opacity-60 hover:opacity-90"
-                        }`}
-                      >
-                        <div>
-                          <div className="flex items-center justify-between mb-3">
-                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isVisible ? "bg-emerald-600 text-white" : "bg-gray-300 text-gray-600"}`}>
-                              <IconComponent className="w-5 h-5" />
-                            </div>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isVisible ? "bg-emerald-200 text-emerald-900" : "bg-gray-200 text-gray-700"}`}>
-                              {isVisible ? (adminLang === "ar" ? "معروض ✓" : "Visible ✓") : (adminLang === "ar" ? "مخفي ✕" : "Hidden ✕")}
-                            </span>
-                          </div>
-
-                          <h4 className="font-bold text-sm text-gray-900">
-                            {adminLang === "ar" ? sec.nameAr : sec.nameEn}
-                          </h4>
-                          <p className="text-[11px] text-gray-500 mt-1 line-clamp-2">
-                            {sec.desc}
-                          </p>
-                        </div>
-
-                        <div className="pt-3 mt-3 border-t border-gray-200/60 flex items-center justify-between">
-                          <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-800" onClick={(e) => e.stopPropagation()}>
-                            <input
-                              type="checkbox"
-                              checked={isVisible}
-                              onChange={(e) => {
-                                setCmsSections((prev: any) => ({
-                                  ...prev,
-                                  [sec.id]: e.target.checked,
-                                }));
-                              }}
-                              className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer"
-                            />
-                            <span>{adminLang === "ar" ? "إظهار القسم" : "Show Section"}</span>
-                          </label>
-
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const tabKey = sec.id === "heroSection" ? "hero" :
-                                             sec.id === "aboutSection" ? "about" :
-                                             sec.id === "artOfCosmeceuticals" ? "art" :
-                                             sec.id === "gallerySection" ? "gallery" :
-                                             sec.id === "clinicalStorySection" ? "clinical" :
-                                             sec.id === "reviewsSection" ? "reviews" :
-                                             sec.id === "consultationSection" ? "consultation" : "announcement";
-                              setCmsSubTab(tabKey);
-                            }}
-                            className="text-[11px] font-bold text-[#485c36] hover:underline flex items-center gap-0.5"
-                          >
-                            <span>{adminLang === "ar" ? "تعديل النصوص" : "Edit Texts"}</span>
-                            <ArrowRight className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
               {/* SECTION 2: HOMEPAGE SECTIONS BUILDER & DEDICATED EDITORS */}
               <HomepageSectionBuilder
                 sectionsOrder={cmsSectionsOrder}
@@ -6144,7 +5813,7 @@ export default function AdminPage() {
                 <div>
                   <h3 className="font-bold text-lg text-[#233019] flex items-center gap-2">
                     <Edit className="w-5 h-5 text-[#485c36]" />
-                    <span>{adminLang === "ar" ? "3. محرر النصوص والعناصر مع التحكم بـ Checkmark (Text & Elements Editor)" : "3. Text & Elements Editor with Checkmarks"}</span>
+                    <span>{adminLang === "ar" ? "نصوص الشريط العلوي والفوتر وصفحات الموقع" : "Header, Footer & Site Pages Texts"}</span>
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5">
                     {adminLang === "ar"
@@ -6198,15 +5867,13 @@ export default function AdminPage() {
                 {/* Sub-tab Navigation Pills */}
                 <div className="flex gap-2 overflow-x-auto pb-2 border-b border-gray-100 scrollbar-none">
                   {[
-                    { id: "hero", labelAr: "الهيرو الرئيسي", labelEn: "Hero Section" },
-                    { id: "productPage", labelAr: "صفحة المستحضر", labelEn: "Product Page" },
-                    { id: "about", labelAr: "عن سُلاف", labelEn: "About Sulaf" },
-                    { id: "art", labelAr: "المكونات واللآلئ", labelEn: "Cosmeceuticals" },
-                    { id: "gallery", labelAr: "معرض المستحضرات", labelEn: "Gallery" },
-                    { id: "clinical", labelAr: "الأدلة السريرية", labelEn: "Clinical Evidence" },
-                    { id: "reviews", labelAr: "الآراء والتقييمات", labelEn: "Reviews" },
-                    { id: "consultation", labelAr: "بنر الاستشارة", labelEn: "Consultation" },
-                    { id: "announcement", labelAr: "شريط الإعلانات", labelEn: "Announcement Bar" },
+                    { id: "announcement", labelAr: "الشريط العلوي والفوتر", labelEn: "Top Bar & Footer" },
+                    { id: "productPage", labelAr: "صفحة المنتج", labelEn: "Product Page" },
+                    { id: "philosophyPage", labelAr: "صفحة الفلسفة", labelEn: "Philosophy Page" },
+                    { id: "storyPage", labelAr: "صفحة قصتنا", labelEn: "Story Page" },
+                    { id: "guidePage", labelAr: "دليل الاستخدام", labelEn: "Guide Page" },
+                    { id: "contactPage", labelAr: "صفحة التواصل", labelEn: "Contact Page" },
+                    { id: "policiesPage", labelAr: "الاسترجاع والشروط", labelEn: "Policies Page" },
                   ].map((st) => (
                     <button
                       key={st.id}
@@ -6339,46 +6006,7 @@ export default function AdminPage() {
 
                   return (
                     <div>
-                      {/* SUBTAB 1: HERO */}
-                      {cmsSubTab === "hero" && (
-                        <div className="space-y-4">
-                          <h4 className="text-xs font-bold uppercase text-emerald-800 tracking-wider">
-                            {adminLang === "ar" ? "عناصر ونصوص قسم الهيرو الرئيسي" : "Hero Section Texts & Elements"}
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {renderField("heroBadgeText", "heroBadge", "الشارة السريرية العلوية (Hero Badge)", "Hero Clinical Badge", "مستحضر صيدلاني علاجي سريري متكامل", "Comprehensive Clinical Dermatological Treatment")}
-                            {renderField("heroPrimaryCtaText", "heroPrimaryCta", "زر الطلب الأساسي (Primary CTA)", "Primary Order Button", "اطلبي عبوتك الآن", "Order Your Jar Now")}
-                            {renderField("heroSecondaryCtaText", "heroSecondaryCta", "زر الاستكشاف الثانوي (Secondary CTA)", "Secondary Explore Button", "استكشف منتجاتنا", "Explore Our Products")}
-                            {renderField("heroPriceLabel", "heroPriceCard", "تسمية بطاقة السعر (Price Label)", "Price Card Label", "سعر العبوة الفردية (300 مل)", "Single Jar Price (300ml)")}
-                            {renderField("heroShippingNote", "heroPriceCard", "ملحوظة الشحن ببطاقة السعر", "Shipping Note on Price Card", "شحن مجاني وسريع لكافة المحافظات", "Free & Fast Express Delivery Nationwide")}
-                            {renderField("heroPoemLine1", "heroPoem", "شطر البيت الأول (Poem Line 1)", "Poem First Line", "سُلافُ الفِكرِ في طِبٍّ يَقينٍ", "Pure essence of mindful clinical certainty")}
-                            {renderField("heroPoemLine2", "heroPoem", "شطر البيت الثاني (Poem Line 2)", "Poem Second Line", "يَرُمُّ حِمى النَّضارَةِ كُلَّ حينِ", "Restoring radiant barrier day after day")}
-                            {renderField("heroSubheading", "heroSubheading", "الوصف السريري المفصل (Hero Subheading)", "Hero Clinical Subheading", "تركيبة علاجية متطورة مصممة خصيصاً لإعادة هيكلة الطبقة القرنية...", "Advanced dermatological treatment scientifically formulated to reset stratum corneum...", true)}
-                            {renderField("heroTrustEfficacy", "heroTrustBadges", "شارة ثقة: الفعالية السريرية", "Trust Badge: Clinical Efficacy", "ضمان سريري مثبت معملياً", "Certified Clinical Efficacy")}
-                            {renderField("heroTrustShipping", "heroTrustBadges", "شارة ثقة: الشحن المؤمّن", "Trust Badge: Secure Shipping", "شحن فوري مؤمن لجميع المحافظات", "Fast Doorstep Delivery Nationwide")}
-                          </div>
-
-                          <div className="pt-4 border-t border-gray-100">
-                            <h5 className="text-xs font-bold text-gray-700 mb-3 flex items-center gap-1.5">
-                              <FileText className="w-4 h-4 text-emerald-700" />
-                              <span>{adminLang === "ar" ? "نصوص بطاقة الملف السريري (Clinical Dossier)" : "Clinical Dossier Card Texts"}</span>
-                            </h5>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {renderField("heroDossierTitle", "heroDossier", "عنوان الملف السريري", "Dossier Tagline Title", "الملف السريري للتركيبة", "Clinical Formula Dossier")}
-                              {renderField("heroDossierSubtitle", "heroDossier", "العنوان الفرعي للملف السريري", "Dossier Subtitle", "المعايير الصيدلانية الدوائية المعتمدة", "Pharmaceutical Grade Standards")}
-                              {renderField("heroDossierTrinityTitle", "heroDossierTrinity", "عنوان المركب الثلاثي المقشر", "Triple Clinical Formula Title", "المركب الثلاثي السريري المقشر", "The Triple Clinical Formula")}
-                              {renderField("heroDossierTrinityDesc", "heroDossierTrinity", "شرح المركب الثلاثي المقشر", "Triple Clinical Formula Description", "تقشير تناضحي لطيف يذيب التراكمات الكيراتينية المتصلبة وينهي جلد الوزة من الجذور.", "Osmotic keratolysis dissolving stubborn plugs to eliminate Strawberry Skin at cellular roots.", true)}
-                              {renderField("heroDossierBarrierTitle", "heroDossierBarrier", "عنوان درع السيراميدات", "Barrier Shield Title", "ترميم الحاجز الخلوي", "Barrier Shield Reconstruction")}
-                              {renderField("heroDossierBarrierDesc", "heroDossierBarrier", "شرح درع السيراميدات", "Barrier Shield Description", "ثلاثية سيراميدات متطابقة حيوياً تعيد بناء الغشاء الدهني وتمنع انتكاس الجفاف مجدداً.", "Biomimetic ceramides reconstructing lipid matrices to permanently seal cellular moisture.", true)}
-                              {renderField("heroDossierPurityTitle", "heroDossierPurity", "عنوان النقاء السريري", "Clinical Purity Title", "معايير النقاء السريري", "Clinical Purity Guarantee")}
-                              {renderField("heroDossierPurityDesc", "heroDossierPurity", "شرح النقاء السريري", "Clinical Purity Description", "خالٍ تماماً من الكورتيزون، العطور، والبارابين، وغير مسبب لانسداد المسام نهائياً.", "100% free from cortisone, fragrances, and parabens. Non-comedogenic certified.", true)}
-                              {renderField("heroDossierStatText", "heroDossierStat", "نص النسبة السريرية 98%", "98% Clinical Metric Text", "تحسن موثق في نعومة وملمس الجلد خلال 7 أيام", "Verified skin texture smoothing within 7 days")}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                                            {/* SUBTAB: PRODUCT PAGE (Complete Text & Section Control) */}
+                      {/* SUBTAB: PRODUCT PAGE (Complete Text & Section Control) */}
                       {cmsSubTab === "productPage" && (
                         <div className="space-y-6">
                           <div>
@@ -6934,107 +6562,7 @@ export default function AdminPage() {
                         </div>
                       )}
 
-{/* SUBTAB 2: ABOUT */}
-                      {cmsSubTab === "about" && (
-                        <div className="space-y-4">
-                          <h4 className="text-xs font-bold uppercase text-emerald-800 tracking-wider">
-                            {adminLang === "ar" ? "عناصر ونصوص قسم عن سُلاف والقصة الأندلسية" : "About Sulaf & Story Texts"}
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {renderField("aboutBadgeText", "aboutBadge", "شارة عن سُلاف العلوية", "About Section Badge", "عن سُـلاف • حيث يلتقي العلم الصيدلاني بالجمال", "About Sulaf • Where Pharmaceutical Science Meets Beauty.")}
-                            {renderField("aboutHeadingText", "aboutHeading", "عنوان القصة الرئيسي", "Story Section Heading", "قصة سُـلاف والجمال الأندلسي", "The Sulaf Story & Andalusian Grace")}
-                            {renderField("aboutCtaText", "aboutCta", "زر قراءة القصة", "Read Story Button Text", "اقرأ قصتنا", "Read Our Story")}
-                          </div>
-                          <div className="w-full">
-                            {renderField("aboutParagraphText", "aboutParagraph", "نص قصة سُلاف الرئيسي", "Story Narrative Text", "من عبق الهوية العربية، وسحر الروح الأندلسية، وُلدت سُلاف؛ حيث يلتقي العلم الصيدلاني بفنّ العناية بالجمال.", "Born from the essence of Arab identity and the poetic charm of Andalusia, Sulaf bridges pharmaceutical science with the highest art of beauty care.", true)}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* SUBTAB 3: ART OF COSMECEUTICALS */}
-                      {cmsSubTab === "art" && (
-                        <div className="space-y-4">
-                          <h4 className="text-xs font-bold uppercase text-emerald-800 tracking-wider">
-                            {adminLang === "ar" ? "عناصر ونصوص فن الـ Cosmeceuticals ولآلئ المكونات" : "Art of Cosmeceuticals & Pearls Texts"}
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {renderField("artBadgeText", "artBadge", "شارة قسم المكونات", "Cosmeceuticals Badge", "فن الـ Cosmeceuticals ولآلئ المكونات", "The Art of Cosmeceuticals & Active Pearls")}
-                            {renderField("artHeadingText", "artHeading", "عنوان قسم المكونات", "Cosmeceuticals Heading", "حيث يتحول العلم الصيدلاني إلى فن سريري", "Where Pharmaceutical Science Becomes Clinical Art")}
-                            {renderField("artGuaranteeText", "artGuarantee", "نص ختم الضمان الأوروبي", "European Standard Guarantee Note", "مطابق لأعلى مواصفات النقاء الصيدلاني الأوروبي • معتمد للبشرة الحساسة", "Certified to strict European pharmaceutical purity standards • Hypoallergenic")}
-                          </div>
-                          <div className="w-full">
-                            {renderField("artDescText", "artDesc", "وصف لآلئ المكونات التفاعلية", "Active Pearls Description", "لآلئ ميكروية تحتضن المركب الثلاثي المقشر وسيراميدات الحاجز بنقاء صيدلاني استثنائي.", "Micro-encapsulated pearls preserving peeling actives and biomimetic ceramides in peak purity.", true)}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* SUBTAB 4: GALLERY */}
-                      {cmsSubTab === "gallery" && (
-                        <div className="space-y-4">
-                          <h4 className="text-xs font-bold uppercase text-emerald-800 tracking-wider">
-                            {adminLang === "ar" ? "عناصر ونصوص معرض المستحضرات على المنصات الرخامية" : "Marble Gallery Texts & Elements"}
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {renderField("galleryBadgeText", "galleryBadge", "شارة المعرض الرخامي", "Gallery Badge", "المعرض الرخامي لمستحضرات سُلاف", "Marble Gallery of Sulaf Cosmeceuticals")}
-                            {renderField("galleryHeadingText", "galleryHeading", "عنوان المعرض", "Gallery Heading", "مجموعة المستحضرات السريرية المتخصصة", "Specialized Clinical Skincare Formulations")}
-                            {renderField("galleryViewAllText", "galleryViewAll", "زر عرض كافة المستحضرات", "View All Products Button", "استكشف منتجاتنا", "Explore Our Products")}
-                            {renderField("galleryDescText", "galleryDesc", "وصف المعرض الفرعي", "Gallery Subtitle", "مرري لاستكشاف ابتكاراتنا الصيدلانية على المنصات الرخامية الفاخرة.", "Scroll to explore our pharmaceutical innovations on sculpted marble podiums.")}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* SUBTAB 5: CLINICAL */}
-                      {cmsSubTab === "clinical" && (
-                        <div className="space-y-4">
-                          <h4 className="text-xs font-bold uppercase text-emerald-800 tracking-wider">
-                            {adminLang === "ar" ? "عناصر ونصوص الأدلة السريرية والدراسات المعملية" : "Clinical Evidence & Studies Texts"}
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {renderField("clinicalBadgeText", "clinicalBadge", "شارة الأدلة السريرية", "Clinical Evidence Badge", "الأدلة السريرية والدراسات المعملية", "Clinical Evidence & Lab Studies")}
-                            {renderField("clinicalHeadingText", "clinicalHeading", "عنوان الأدلة السريرية", "Clinical Evidence Heading", "فعالية حقيقية مبنية على قياسات مجهرية", "Proven Efficacy Grounded in Microscopic Metrics")}
-                            {renderField("clinicalReadResearchText", "clinicalButtons", "زر قراءة الأبحاث المعملية", "Read Research Button", "قراءة الأبحاث المعملية", "Read Clinical Research")}
-                            {renderField("clinicalUsageGuideText", "clinicalButtons", "زر دليل الاستخدام السريري", "Usage Protocol Guide Button", "دليل الاستخدام السريري", "Clinical Protocol Guide")}
-                          </div>
-                          <div className="w-full">
-                            {renderField("clinicalDescText", "clinicalDesc", "شرح الفلسفة السريرية", "Clinical Philosophy Narrative", "لا نعتمد على الوعود الترويجية، بل على تركيزات مثبتة دوائياً تعيد بناء وظيفة الحاجز الواقي.", "We reject superficial promises, deploying certified pharmaceutical concentrations that reset barrier defense.", true)}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* SUBTAB 6: REVIEWS */}
-                      {cmsSubTab === "reviews" && (
-                        <div className="space-y-4">
-                          <h4 className="text-xs font-bold uppercase text-emerald-800 tracking-wider">
-                            {adminLang === "ar" ? "عناصر ونصوص آراء وتجارب الأطباء والعملاء" : "Doctor & Customer Reviews Texts"}
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {renderField("reviewsBadgeText", "reviewsBadge", "شارة قسم التقييمات", "Reviews Section Badge", "آراء أطباء الجلدية وتجارب العملاء", "Dermatologist Endorsements & Real Client Experiences")}
-                            {renderField("reviewsHeadingText", "reviewsHeading", "عنوان قسم التقييمات", "Reviews Section Heading", "ثقة سريرية موثقة من عيادات الجلدية", "Documented Clinical Trust Across Dermatology Clinics")}
-                          </div>
-                          <div className="w-full">
-                            {renderField("reviewsDescText", "reviewsDesc", "وصف قسم التقييمات", "Reviews Description", "تجارب موثقة لأطباء وعملاء عانوا من جلد الوزة والخشونة المتصلبة.", "Verified case studies from physicians and patients overcoming Keratosis Pilaris.", true)}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* SUBTAB 7: CONSULTATION */}
-                      {cmsSubTab === "consultation" && (
-                        <div className="space-y-4">
-                          <h4 className="text-xs font-bold uppercase text-emerald-800 tracking-wider">
-                            {adminLang === "ar" ? "عناصر ونصوص بنر الاستشارة الجلدية عبر واتساب" : "WhatsApp Consultation Banner Texts"}
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {renderField("consultationBadgeText", "consultationBadge", "شارة بنر الاستشارة", "Consultation Badge", "خدمة الاستشارة السريرية المباشرة", "Direct Clinical Consultation Service")}
-                            {renderField("consultationHeadingText", "consultationHeading", "عنوان بنر الاستشارة", "Consultation Heading", "هل تعانين من حيرة حول نوع خشونة بشرتك؟", "Unsure which protocol fits your skin texture?")}
-                            {renderField("consultationButtonText", "consultationButton", "زر محادثة الواتساب", "WhatsApp Chat Button Text", "تحدثي مع صيدلانية الآن عبر واتساب", "Chat with a Clinical Pharmacist on WhatsApp")}
-                          </div>
-                          <div className="w-full">
-                            {renderField("consultationDescText", "consultationDesc", "وصف بنر الاستشارة", "Consultation Description", "فريقنا الصيدلاني جاهز عبر واتساب لتشخيص حالتك وتقديم الخطة العلاجية الأنسب مجاناً.", "Our clinical pharmacists are ready on WhatsApp to evaluate your case and guide you for free.", true)}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* SUBTAB 8: ANNOUNCEMENT */}
+{/* SUBTAB 8: ANNOUNCEMENT */}
                       {cmsSubTab === "announcement" && (
                         <div className="space-y-4">
                           <h4 className="text-xs font-bold uppercase text-emerald-800 tracking-wider">
@@ -7042,9 +6570,33 @@ export default function AdminPage() {
                           </h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {renderField("announcementBadge", "announcementBadge", "شارة شريط الإعلانات العلوي", "Announcement Ribbon Badge", "عرض حصري", "Exclusive Offer")}
+                            <div className="p-4 rounded-2xl border border-gray-200 bg-gray-50/50 flex items-center justify-between gap-4">
+                              <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-900 select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={cmsSections.announcementBar !== false}
+                                  onChange={(e) => setCmsSections((prev: any) => ({ ...prev, announcementBar: e.target.checked }))}
+                                  className="w-4 h-4 text-emerald-600 rounded cursor-pointer"
+                                />
+                                <span>{adminLang === "ar" ? "إظهار الشريط العلوي بالمتجر" : "Show top announcement bar"}</span>
+                              </label>
+                              <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${cmsSections.announcementBar !== false ? "bg-emerald-100 text-emerald-800" : "bg-gray-200 text-gray-600"}`}>
+                                {cmsSections.announcementBar !== false ? (adminLang === "ar" ? "معروض ✓" : "Visible ✓") : (adminLang === "ar" ? "مخفي ✕" : "Hidden ✕")}
+                              </span>
+                            </div>
                           </div>
                           <div className="w-full">
                             {renderField("announcementText", "announcementText", "نص شريط الإعلانات العلوي", "Announcement Ribbon Text", "شحن مجاني لكافة المحافظات عند طلب عبوتين أو أكثر • دفع مريح عند الاستلام", "Free express shipping nationwide on orders of 2 or more jars • Cash on Delivery", true)}
+                          </div>
+                          <h4 className="text-xs font-bold uppercase text-emerald-800 tracking-wider pt-4">
+                            {adminLang === "ar" ? "نصوص الفوتر" : "Footer Texts"}
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {renderField("footerTagline", null, "الشعار أسفل اللوجو بالفوتر", "Footer Tagline", "دقة صيدلانية.. وروح أندلسية.", "Clinical Precision. Andalusian Soul.")}
+                            {renderField("footerNewsletterTitle", null, "عنوان النشرة البريدية", "Newsletter Title", "النشرة السريرية", "Join Our Newsletter")}
+                          </div>
+                          <div className="w-full">
+                            {renderField("footerNewsletterDesc", null, "وصف النشرة البريدية", "Newsletter Description", "كوني أول من يعلم بالإصدارات الجديدة ونصائح العناية السريرية.", "Be the first to know about new launches, exclusive offers and skincare tips.", true)}
                           </div>
                         </div>
                       )}
@@ -7056,872 +6608,12 @@ export default function AdminPage() {
             </div>
           )}
 
-          {activeTab === "theme" && (
-            <div className="space-y-8 w-full min-w-0">
-              {/* Header Box */}
-              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#dbe2bd] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold mb-2">
-                    <Palette className="w-3.5 h-3.5 text-amber-700" />
-                    <span>{adminLang === "ar" ? "استوديو الألوان وهوية المتجر البصرية" : "Theme & Brand Identity Studio"}</span>
-                  </div>
-                  <h2 className="font-bold text-2xl text-gray-900">
-                    {adminLang === "ar" ? "التحكم في الألوان السائدة لواجهة الموقع" : "Storefront Dominant Colors Control"}
-                  </h2>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-1 font-semibold">
-                    {adminLang === "ar"
-                      ? "تحكم كامل في اللون الرئيسي، الثانوي، الذهبي، ولون الخلفيات والكروت. يمكنك اختيار نمط جاهز أو تخصيص الألوان يدوياً مع معاينة حية فورية."
-                      : "Customize brand primary, secondary, gold, canvas, and card colors with one-click luxury presets and live preview."}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={handleResetThemeToDefault}
-                    className="px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-bold text-xs hover:bg-gray-100 transition-colors cursor-pointer flex items-center gap-1.5"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>{adminLang === "ar" ? "استعادة ألوان سُلاف الأصلية" : "Reset to Sulaf Default"}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleSaveThemeDirectly}
-                    disabled={isThemeSaving}
-                    className="px-6 py-2.5 rounded-xl bg-[#3d502d] hover:bg-[#2b3a1f] text-white font-bold text-xs transition-all shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-                    <span>{isThemeSaving ? (adminLang === "ar" ? "جاري الحفظ..." : "Saving...") : (adminLang === "ar" ? "حفظ وتطبيق الألوان فوراً ✓" : "Save & Apply Colors ✓")}</span>
-                  </button>
-
-                  <Link
-                    href="/"
-                    target="_blank"
-                    className="px-4 py-2.5 rounded-xl bg-[#e8ecd0] hover:bg-[#dbe2bd] text-[#233019] font-bold text-xs transition-colors flex items-center gap-1.5"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    <span>{adminLang === "ar" ? "معاينة المتجر" : "Preview Store"}</span>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Section 1: Ready-made Luxury Palettes (أنماط لونية فاخرة جاهزة) */}
-              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-4">
-                <div className="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-gray-100">
-                  <div>
-                    <h3 className="font-bold text-lg text-[#233019] flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-amber-500" />
-                      <span>{adminLang === "ar" ? "1. أنماط وقوالب لونية ملكية جاهزة بلمسة واحدة" : "1. Ready-Made Luxury Color Palettes"}</span>
-                    </h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {adminLang === "ar"
-                        ? "مجموعات متناسقة صُممت بعناية وفق أرقى معايير تصميم براندات الـ Cosmeceuticals الفاخرة."
-                        : "Carefully calibrated color schemes matching world-class cosmeceuticals design standards."}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 pt-2">
-                  {LUXURY_THEME_PRESETS.map((preset) => {
-                    const isSelected =
-                      settingsForm.themePrimary.toLowerCase() === preset.colors.primary.toLowerCase() &&
-                      settingsForm.themeBackground.toLowerCase() === preset.colors.background.toLowerCase();
-
-                    return (
-                      <div
-                        key={preset.id}
-                        onClick={() => handleApplyThemePreset(preset)}
-                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative flex flex-col justify-between gap-3 text-right ${
-                          isSelected
-                            ? "border-[#3d502d] ring-2 ring-[#3d502d]/30 bg-[#f6f9e6]/50 shadow-sm"
-                            : "border-gray-200 hover:border-gray-400 bg-white hover:shadow-xs"
-                        }`}
-                      >
-                        <div>
-                          <div className="flex items-center justify-between mb-1.5">
-                            <span className="font-black text-xs text-gray-900 block line-clamp-1">
-                              {adminLang === "ar" ? preset.nameAr : preset.nameEn}
-                            </span>
-                            {isSelected && (
-                              <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
-                            )}
-                          </div>
-                          <p className="text-[11px] text-gray-500 leading-relaxed line-clamp-2">
-                            {preset.descAr}
-                          </p>
-                        </div>
-
-                        {/* Color Swatch Bars */}
-                        <div className="space-y-1.5 pt-2 border-t border-gray-100">
-                          <div className="flex items-center gap-1.5">
-                            <span
-                              className="w-5 h-5 rounded-full shadow-2xs border border-black/10 shrink-0"
-                              style={{ backgroundColor: preset.colors.primary }}
-                              title="الرئيسي"
-                            />
-                            <span
-                              className="w-5 h-5 rounded-full shadow-2xs border border-black/10 shrink-0"
-                              style={{ backgroundColor: preset.colors.secondary }}
-                              title="الثانوي"
-                            />
-                            <span
-                              className="w-5 h-5 rounded-full shadow-2xs border border-black/10 shrink-0"
-                              style={{ backgroundColor: preset.colors.gold }}
-                              title="الذهبي"
-                            />
-                            <span
-                              className="w-5 h-5 rounded-full shadow-2xs border border-black/10 shrink-0"
-                              style={{ backgroundColor: preset.colors.background }}
-                              title="الخلفية"
-                            />
-                            <span
-                              className="w-5 h-5 rounded-full shadow-2xs border border-black/10 shrink-0"
-                              style={{ backgroundColor: preset.colors.surface }}
-                              title="الكروت"
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            className={`w-full py-1.5 rounded-lg text-[11px] font-bold transition-all text-center ${
-                              isSelected
-                                ? "bg-[#3d502d] text-white"
-                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                            }`}
-                          >
-                            {isSelected ? (adminLang === "ar" ? "النسق المطبق حالياً ✓" : "Active ✓") : (adminLang === "ar" ? "تطبيق هذا النسق" : "Apply Palette")}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Section 2: Custom Color Pickers (منتقيات الألوان المخصصة) */}
-              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-5">
-                <div className="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-gray-100">
-                  <div>
-                    <h3 className="font-bold text-lg text-[#233019] flex items-center gap-2">
-                      <Sliders className="w-5 h-5 text-[#485c36]" />
-                      <span>{adminLang === "ar" ? "2. تخصيص درجات الألوان السائدة بدقة (Custom Color Controls)" : "2. Custom Color Controls"}</span>
-                    </h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {adminLang === "ar"
-                        ? "يمكنك الضغط على أي لون لتفتح منتقي الألوان أو كتابة كود الـ HEX المفضل لديك مباشرة."
-                        : "Click any color swatch to open the color picker or directly type a custom HEX code."}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
-                  {/* 1. Primary Color */}
-                  <div className="p-4 rounded-2xl border border-gray-200 bg-[#fcfdfa] space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-black text-xs sm:text-sm text-gray-900">
-                        {adminLang === "ar" ? "اللون الرئيسي للعلامة (Primary Brand)" : "Primary Brand Color"}
-                      </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900">
-                        أساسي
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-gray-500">
-                      {adminLang === "ar" ? "الأزرار الرئيسية، الهيدر، أزرار الشراء، الشارات النشطة." : "Primary buttons, headers, action CTAs, active tags."}
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-gray-300 shadow-2xs shrink-0 cursor-pointer">
-                        <input
-                          type="color"
-                          value={settingsForm.themePrimary}
-                          onChange={(e) => setSettingsForm({ ...settingsForm, themePrimary: e.target.value })}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        />
-                        <div
-                          className="w-full h-full"
-                          style={{ backgroundColor: settingsForm.themePrimary }}
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        value={settingsForm.themePrimary}
-                        onChange={(e) => setSettingsForm({ ...settingsForm, themePrimary: e.target.value })}
-                        className="flex-1 px-3 py-2 rounded-xl border border-gray-300 font-mono text-xs font-bold text-gray-900 focus:outline-none focus:border-[#3d502d]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* 2. Secondary Color (Burgundy) */}
-                  <div className="p-4 rounded-2xl border border-gray-200 bg-[#fcfdfa] space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-black text-xs sm:text-sm text-gray-900">
-                        {adminLang === "ar" ? "اللون الثانوي / الأكسنت (Secondary Accent)" : "Secondary Accent Color"}
-                      </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-100 text-rose-900">
-                        تمييز
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-gray-500">
-                      {adminLang === "ar" ? "شارات الأدلة السريرية، أرقام الخصم، الأختام الطبية." : "Clinical evidence badges, discount rates, medical seals."}
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-gray-300 shadow-2xs shrink-0 cursor-pointer">
-                        <input
-                          type="color"
-                          value={settingsForm.themeSecondary}
-                          onChange={(e) => setSettingsForm({ ...settingsForm, themeSecondary: e.target.value })}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        />
-                        <div
-                          className="w-full h-full"
-                          style={{ backgroundColor: settingsForm.themeSecondary }}
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        value={settingsForm.themeSecondary}
-                        onChange={(e) => setSettingsForm({ ...settingsForm, themeSecondary: e.target.value })}
-                        className="flex-1 px-3 py-2 rounded-xl border border-gray-300 font-mono text-xs font-bold text-gray-900 focus:outline-none focus:border-[#3d502d]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* 3. Gold Accent */}
-                  <div className="p-4 rounded-2xl border border-gray-200 bg-[#fcfdfa] space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-black text-xs sm:text-sm text-gray-900">
-                        {adminLang === "ar" ? "اللون الذهبي المعتق (Gold Accent)" : "Luxury Gold Accent"}
-                      </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900">
-                        فخامة
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-gray-500">
-                      {adminLang === "ar" ? "الإطارات الذهبية، نجوم التقييم، شارات الـ VIP، الخطوط الزخرفية." : "Golden borders, review stars, VIP badges, filigree lines."}
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-gray-300 shadow-2xs shrink-0 cursor-pointer">
-                        <input
-                          type="color"
-                          value={settingsForm.themeGold}
-                          onChange={(e) => setSettingsForm({ ...settingsForm, themeGold: e.target.value })}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        />
-                        <div
-                          className="w-full h-full"
-                          style={{ backgroundColor: settingsForm.themeGold }}
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        value={settingsForm.themeGold}
-                        onChange={(e) => setSettingsForm({ ...settingsForm, themeGold: e.target.value })}
-                        className="flex-1 px-3 py-2 rounded-xl border border-gray-300 font-mono text-xs font-bold text-gray-900 focus:outline-none focus:border-[#3d502d]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* 4. Canvas Background */}
-                  <div className="p-4 rounded-2xl border border-gray-200 bg-[#fcfdfa] space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-black text-xs sm:text-sm text-gray-900">
-                        {adminLang === "ar" ? "لون خلفية المتجر العامة (Canvas Background)" : "Canvas Background Color"}
-                      </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-800">
-                        خلفية
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-gray-500">
-                      {adminLang === "ar" ? "الخلفية العامة لكافة صفحات المتجر والرق العاجي." : "Main page background tone and parchment layers."}
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-gray-300 shadow-2xs shrink-0 cursor-pointer">
-                        <input
-                          type="color"
-                          value={settingsForm.themeBackground}
-                          onChange={(e) => setSettingsForm({ ...settingsForm, themeBackground: e.target.value })}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        />
-                        <div
-                          className="w-full h-full"
-                          style={{ backgroundColor: settingsForm.themeBackground }}
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        value={settingsForm.themeBackground}
-                        onChange={(e) => setSettingsForm({ ...settingsForm, themeBackground: e.target.value })}
-                        className="flex-1 px-3 py-2 rounded-xl border border-gray-300 font-mono text-xs font-bold text-gray-900 focus:outline-none focus:border-[#3d502d]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* 5. Surface / Card Color */}
-                  <div className="p-4 rounded-2xl border border-gray-200 bg-[#fcfdfa] space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-black text-xs sm:text-sm text-gray-900">
-                        {adminLang === "ar" ? "لون كروت وبطاقات المحتوى (Card Surface)" : "Card Surface Color"}
-                      </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-800">
-                        بطاقات
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-gray-500">
-                      {adminLang === "ar" ? "خلفية بطاقات المستحضرات، صناديق المحتوى، القوائم البيضاء." : "Product cards backdrop, modals, dossier surface."}
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-gray-300 shadow-2xs shrink-0 cursor-pointer">
-                        <input
-                          type="color"
-                          value={settingsForm.themeSurface}
-                          onChange={(e) => setSettingsForm({ ...settingsForm, themeSurface: e.target.value })}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        />
-                        <div
-                          className="w-full h-full"
-                          style={{ backgroundColor: settingsForm.themeSurface }}
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        value={settingsForm.themeSurface}
-                        onChange={(e) => setSettingsForm({ ...settingsForm, themeSurface: e.target.value })}
-                        className="flex-1 px-3 py-2 rounded-xl border border-gray-300 font-mono text-xs font-bold text-gray-900 focus:outline-none focus:border-[#3d502d]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* 6. Text Color */}
-                  <div className="p-4 rounded-2xl border border-gray-200 bg-[#fcfdfa] space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-black text-xs sm:text-sm text-gray-900">
-                        {adminLang === "ar" ? "لون النصوص الرئيسي (Typography Text)" : "Typography Text Color"}
-                      </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-800">
-                        نصوص
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-gray-500">
-                      {adminLang === "ar" ? "عناوين ونصوص المتجر وتفاصيل التركيبات." : "Headings, body typography, product details."}
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-gray-300 shadow-2xs shrink-0 cursor-pointer">
-                        <input
-                          type="color"
-                          value={settingsForm.themeText}
-                          onChange={(e) => setSettingsForm({ ...settingsForm, themeText: e.target.value })}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        />
-                        <div
-                          className="w-full h-full"
-                          style={{ backgroundColor: settingsForm.themeText }}
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        value={settingsForm.themeText}
-                        onChange={(e) => setSettingsForm({ ...settingsForm, themeText: e.target.value })}
-                        className="flex-1 px-3 py-2 rounded-xl border border-gray-300 font-mono text-xs font-bold text-gray-900 focus:outline-none focus:border-[#3d502d]"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Section 3: Live Interactive Preview Studio (استوديو المعاينة الحية المباشرة) */}
-              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-4">
-                <div className="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-gray-100">
-                  <div>
-                    <h3 className="font-bold text-lg text-[#233019] flex items-center gap-2">
-                      <Eye className="w-5 h-5 text-emerald-700" />
-                      <span>{adminLang === "ar" ? "3. استوديو المعاينة الحية التفاعلية (Live Storefront Preview)" : "3. Live Interactive Storefront Preview"}</span>
-                    </h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {adminLang === "ar"
-                        ? "هذه المعاينة تعكس تلقائياً الألوان التي اخترتها بالأعلى في الزمن الحقيقي لتتأكد من تناسقها قبل الحفظ."
-                        : "Real-time preview of how components, cards, buttons, and typography harmonize together."}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Simulated Storefront Container */}
-                <div
-                  className="p-6 sm:p-8 rounded-3xl border-2 transition-all shadow-inner relative overflow-hidden"
-                  style={{
-                    backgroundColor: settingsForm.themeBackground,
-                    borderColor: settingsForm.themeGold,
-                  }}
-                >
-                  <div className="max-w-md mx-auto space-y-5 font-cairo">
-                    {/* Simulated Top Mini Bar */}
-                    <div className="flex items-center justify-between pb-3 border-b border-black/10">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="font-amiri font-bold text-lg"
-                          style={{ color: settingsForm.themePrimary }}
-                        >
-                          سُـلاف | SULAF
-                        </span>
-                      </div>
-                      <span
-                        className="text-[11px] font-bold px-2.5 py-1 rounded-full text-white shadow-2xs"
-                        style={{ backgroundColor: settingsForm.themePrimary }}
-                      >
-                        متجر معتمد ✓
-                      </span>
-                    </div>
-
-                    {/* Simulated Product Card */}
-                    <div
-                      className="p-5 rounded-2xl border shadow-sm space-y-3.5 transition-all"
-                      style={{
-                        backgroundColor: settingsForm.themeSurface,
-                        borderColor: settingsForm.themeGold,
-                      }}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <span
-                            className="text-[10px] font-extrabold uppercase tracking-wider block"
-                            style={{ color: settingsForm.themeSecondary }}
-                          >
-                            كوزموسوتيكالز • ترخيص سريري
-                          </span>
-                          <h4
-                            className="font-black text-base mt-0.5"
-                            style={{ color: settingsForm.themeText }}
-                          >
-                            كريم سُلاف لترميم ونعومة البشرة (Absolutes)
-                          </h4>
-                        </div>
-                        <span
-                          className="text-[10px] font-bold px-2 py-0.5 rounded-md text-white shrink-0"
-                          style={{ backgroundColor: settingsForm.themeSecondary }}
-                        >
-                          -20% خصم
-                        </span>
-                      </div>
-
-                      {/* Stars & Rating */}
-                      <div className="flex items-center gap-1.5 text-xs">
-                        <div className="flex items-center text-sm" style={{ color: settingsForm.themeGold }}>
-                          {"★".repeat(5)}
-                        </div>
-                        <span className="font-bold text-[11px]" style={{ color: settingsForm.themeText }}>
-                          4.98 (128 تقييم صيدلاني موثق)
-                        </span>
-                      </div>
-
-                      <p className="text-xs leading-relaxed opacity-80" style={{ color: settingsForm.themeText }}>
-                        تركيبة علاجية متقدمة بيوريا 30% وحمض اللاكتيك والساليسيليك لإعادة النعومة الحريرية بدون احتكاك.
-                      </p>
-
-                      <div className="pt-2 border-t border-black/5 flex items-center justify-between gap-3">
-                        <div>
-                          <span className="text-[10px] text-gray-500 block font-semibold">السعر الرسمي:</span>
-                          <span
-                            className="font-black text-lg"
-                            style={{ color: settingsForm.themeSecondary }}
-                          >
-                            420 ج.م
-                          </span>
-                        </div>
-
-                        <button
-                          type="button"
-                          className="px-5 py-2.5 rounded-xl font-bold text-xs text-white shadow-md transition-transform active:scale-95 cursor-pointer"
-                          style={{ backgroundColor: settingsForm.themePrimary }}
-                        >
-                          أضف للسلة الآن 🛍️
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom Action Bar */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-[#dbe2bd] shadow-sm">
-                <div className="flex items-center gap-2 text-xs text-gray-600 font-bold">
-                  <Sparkles className="w-4 h-4 text-amber-500" />
-                  <span>{adminLang === "ar" ? "يتم حفظ التعديلات وحقنها مباشرة في الموقع وكافة الصفحات." : "Changes are saved and injected across all site pages instantly."}</span>
-                </div>
-
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <button
-                    type="button"
-                    onClick={handleResetThemeToDefault}
-                    className="flex-1 sm:flex-initial px-5 py-3 rounded-xl border border-gray-300 text-gray-700 font-bold text-xs hover:bg-gray-100 transition-colors cursor-pointer"
-                  >
-                    {adminLang === "ar" ? "استعادة الافتراضيات" : "Reset Defaults"}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleSaveThemeDirectly}
-                    disabled={isThemeSaving}
-                    className="flex-1 sm:flex-initial px-8 py-3 rounded-xl bg-[#3d502d] hover:bg-[#2b3a1f] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-                    <span>{isThemeSaving ? (adminLang === "ar" ? "جاري الحفظ..." : "Saving...") : (adminLang === "ar" ? "حفظ وتطبيق الألوان الآن ✓" : "Save & Apply Colors ✓")}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "reviews" && (() => {
-            const pendingCount = reviewsList.filter((r) => r.status === "PENDING").length;
-            const approvedCount = reviewsList.filter((r) => r.status === "APPROVED").length;
-            const rejectedCount = reviewsList.filter((r) => r.status === "REJECTED").length;
-
-            const filteredReviews = reviewsList.filter((rev) => {
-              if (reviewFilter !== "ALL" && rev.status !== reviewFilter) return false;
-              if (reviewSearch.trim()) {
-                const q = reviewSearch.toLowerCase().trim();
-                const authorMatch = (rev.authorName || "").toLowerCase().includes(q);
-                const commentMatch = (rev.comment || "").toLowerCase().includes(q);
-                const productMatch = (rev.productName || "").toLowerCase().includes(q);
-                const roleMatch = (rev.authorRole || "").toLowerCase().includes(q);
-                if (!authorMatch && !commentMatch && !productMatch && !roleMatch) return false;
-              }
-              return true;
-            });
-
-            const isSectionVisible = settings.sectionsVisibility?.reviewsSection !== false;
-
-            return (
-              <div className="space-y-6">
-                {/* Header & Overview Stats */}
-                <div className="bg-white p-6 rounded-3xl border border-[#dbe2bd] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Star className="w-6 h-6 text-amber-500 fill-amber-500" />
-                      <h2 className="font-bold text-2xl text-gray-900 font-cairo">
-                        {adminLang === "ar" ? "إدارة تقييمات وآراء العملاء والفيدباك" : "Customer Reviews & Feedback Management"}
-                      </h2>
-                    </div>
-                    <p className="text-xs text-gray-600 mt-1 font-semibold font-cairo">
-                      {adminLang === "ar"
-                        ? "مراجعة واعتماد الفيدباك الوارد من صفحة المنتج، إضافة آراء يدوياً، والتحكم في إظهار القسم بالصفحة الرئيسية."
-                        : "Review and approve product feedback, manually add reviews, and toggle homepage section visibility."}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <button
-                      onClick={() => setAddReviewModalOpen(true)}
-                      className="px-5 py-2.5 rounded-2xl bg-[#3d502d] hover:bg-[#2e3d22] text-white font-bold text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer font-cairo"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>{adminLang === "ar" ? "+ إضافة رأي عميل يدوياً" : "+ Add Review Manually"}</span>
-                    </button>
-
-                    <button
-                      onClick={() => loadLiveBackendData()}
-                      className="p-2.5 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all cursor-pointer"
-                      title={adminLang === "ar" ? "تحديث التقييمات" : "Refresh"}
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Section Visibility & Homepage Display Card */}
-                <div className="p-5 rounded-3xl bg-gradient-to-r from-[#f6f9e6] to-[#edf4d3] border border-[#dbe2bd] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
-                  <div className="space-y-1 text-start">
-                    <div className="flex items-center gap-2">
-                      <Eye className="w-4 h-4 text-[#3d502d]" />
-                      <span className="font-cairo font-bold text-sm text-[#1c2616]">
-                        {adminLang === "ar" ? "عرض قسم آراء الأطباء والعملاء في الصفحة الرئيسية:" : "Homepage Reviews Section Display:"}
-                      </span>
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-xs font-cairo font-bold ${
-                          isSectionVisible
-                            ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                            : "bg-gray-200 text-gray-700 border border-gray-300"
-                        }`}
-                      >
-                        {isSectionVisible
-                          ? (adminLang === "ar" ? "مفعل وظاهر بالواجهة ✓" : "Active on Homepage ✓")
-                          : (adminLang === "ar" ? "مخفي حالياً ✕" : "Hidden from Homepage ✕")}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-600 font-cairo">
-                      {adminLang === "ar"
-                        ? "يمكنك إخفاء أو إظهار قسم التقييمات كاملاً في الواجهة بضغطة واحدة دون الحاجة للدخول لصفحة CMS."
-                        : "Toggle the entire reviews section on the homepage without navigating to CMS settings."}
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={toggleReviewsSectionVisibility}
-                    className={`px-4 py-2 rounded-2xl font-cairo font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs ${
-                      isSectionVisible
-                        ? "bg-rose-100 text-rose-800 hover:bg-rose-200 border border-rose-300"
-                        : "bg-emerald-700 text-white hover:bg-emerald-800 shadow-sm"
-                    }`}
-                  >
-                    <span>
-                      {isSectionVisible
-                        ? (adminLang === "ar" ? "إخفاء القسم من الواجهة" : "Hide from Homepage")
-                        : (adminLang === "ar" ? "إظهار وتفعيل القسم بالواجهة" : "Show on Homepage")}
-                    </span>
-                  </button>
-                </div>
-
-                {/* Stats Cards Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                  <div
-                    onClick={() => setReviewFilter("ALL")}
-                    className={`p-4 rounded-2xl border cursor-pointer transition-all ${
-                      reviewFilter === "ALL" ? "bg-white border-[#3d502d] ring-2 ring-[#3d502d]/20 shadow-sm" : "bg-white/60 border-gray-200 hover:bg-white"
-                    }`}
-                  >
-                    <div className="text-xs text-gray-500 font-cairo font-bold">إجمالي الآراء المسجلة</div>
-                    <div className="text-2xl font-black text-gray-900 mt-1 font-cairo">{reviewsList.length}</div>
-                    <div className="text-[11px] text-gray-500 font-cairo mt-1">عرض كل التقييمات</div>
-                  </div>
-
-                  <div
-                    onClick={() => setReviewFilter("PENDING")}
-                    className={`p-4 rounded-2xl border cursor-pointer transition-all ${
-                      reviewFilter === "PENDING" ? "bg-amber-50/80 border-amber-400 ring-2 ring-amber-400/30 shadow-sm" : "bg-white/60 border-gray-200 hover:bg-amber-50/40"
-                    }`}
-                  >
-                    <div className="text-xs text-amber-800 font-cairo font-bold flex items-center justify-between">
-                      <span>قيد المراجعة والاعتماد</span>
-                      {pendingCount > 0 && <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />}
-                    </div>
-                    <div className="text-2xl font-black text-amber-900 mt-1 font-cairo">{pendingCount}</div>
-                    <div className="text-[11px] text-amber-700 font-cairo mt-1 font-bold">بانتظار موافقة المدير</div>
-                  </div>
-
-                  <div
-                    onClick={() => setReviewFilter("APPROVED")}
-                    className={`p-4 rounded-2xl border cursor-pointer transition-all ${
-                      reviewFilter === "APPROVED" ? "bg-emerald-50/80 border-emerald-400 ring-2 ring-emerald-400/30 shadow-sm" : "bg-white/60 border-gray-200 hover:bg-emerald-50/40"
-                    }`}
-                  >
-                    <div className="text-xs text-emerald-800 font-cairo font-bold">معتمد ومنشور بالمتجر</div>
-                    <div className="text-2xl font-black text-emerald-900 mt-1 font-cairo">{approvedCount}</div>
-                    <div className="text-[11px] text-emerald-700 font-cairo mt-1 font-bold">ظاهر للزوار والعملاء</div>
-                  </div>
-
-                  <div
-                    onClick={() => setReviewFilter("REJECTED")}
-                    className={`p-4 rounded-2xl border cursor-pointer transition-all ${
-                      reviewFilter === "REJECTED" ? "bg-rose-50/80 border-rose-400 ring-2 ring-rose-400/30 shadow-sm" : "bg-white/60 border-gray-200 hover:bg-rose-50/40"
-                    }`}
-                  >
-                    <div className="text-xs text-rose-800 font-cairo font-bold">تقييمات مرفوضة</div>
-                    <div className="text-2xl font-black text-rose-900 mt-1 font-cairo">{rejectedCount}</div>
-                    <div className="text-[11px] text-rose-700 font-cairo mt-1">غير منشورة بالمتجر</div>
-                  </div>
-                </div>
-
-                {/* Filters & Search Toolbar */}
-                <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
-                  <div className="w-full md:w-96 relative">
-                    <Search className="w-4 h-4 text-gray-400 absolute start-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      value={reviewSearch}
-                      onChange={(e) => setReviewSearch(e.target.value)}
-                      placeholder={adminLang === "ar" ? "بحث باسم العميل، المنتج، أو نص الرأي..." : "Search by customer, product, or review text..."}
-                      className="w-full ps-9 pe-4 py-2 rounded-xl border border-gray-200 bg-gray-50 text-xs font-cairo text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3d502d]"
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none font-cairo">
-                    {[
-                      { id: "ALL", label: "الكل" },
-                      { id: "PENDING", label: `قيد المراجعة (${pendingCount})` },
-                      { id: "APPROVED", label: `المنشور (${approvedCount})` },
-                      { id: "REJECTED", label: `المرفوض (${rejectedCount})` },
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setReviewFilter(tab.id as any)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                          reviewFilter === tab.id
-                            ? "bg-[#3d502d] text-white shadow-xs"
-                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Reviews List */}
-                {filteredReviews.length === 0 ? (
-                  <div className="bg-white p-12 rounded-3xl border border-dashed border-gray-300 text-center space-y-3 font-cairo">
-                    <div className="w-14 h-14 mx-auto rounded-full bg-amber-100 flex items-center justify-center text-amber-700">
-                      <Star className="w-7 h-7" />
-                    </div>
-                    <h3 className="font-bold text-base text-gray-800">
-                      {reviewSearch ? "لا توجد نتائج مطابقة لبحثك" : "لا توجد تقييمات في هذا التبويب حالياً"}
-                    </h3>
-                    <p className="text-xs text-gray-500 max-w-md mx-auto">
-                      {reviewSearch
-                        ? "جرب البحث بكلمة مختلفة أو اختر تبويب 'الكل'."
-                        : "عندما يقوم العملاء بكتابة فيدباك من صفحة المنتج، سيظهر هنا مباشرة للمراجعة والاعتماد. أو يمكنك إضافة آراء يدوياً الآن."}
-                    </p>
-                    <button
-                      onClick={() => setAddReviewModalOpen(true)}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3d502d] text-white text-xs font-bold hover:bg-[#2d3b21] transition-all cursor-pointer mt-2"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>+ إضافة رأي عميل يدوياً</span>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {filteredReviews.map((rev) => (
-                      <div
-                        key={rev.id}
-                        className={`bg-white p-5 sm:p-6 rounded-3xl border transition-all shadow-xs ${
-                          rev.status === "PENDING"
-                            ? "border-amber-300 ring-2 ring-amber-300/20 bg-amber-50/20"
-                            : "border-gray-200"
-                        }`}
-                      >
-                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                          {/* Info Column */}
-                          <div className="space-y-2.5 flex-1 text-start font-cairo">
-                            <div className="flex items-center flex-wrap gap-2.5">
-                              <span className="font-bold text-base text-gray-900">{rev.authorName}</span>
-                              {rev.authorRole && (
-                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#3d502d]/10 text-[#3d502d]">
-                                  {rev.authorRole}
-                                </span>
-                              )}
-
-                              {/* Status Badge */}
-                              {rev.status === "PENDING" && (
-                                <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
-                                  <Clock className="w-3.5 h-3.5" />
-                                  <span>قيد المراجعة (في انتظار الاعتماد)</span>
-                                </span>
-                              )}
-                              {rev.status === "APPROVED" && (
-                                <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1">
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                  <span>معتمد ومنشور بالمتجر ✓</span>
-                                </span>
-                              )}
-                              {rev.status === "REJECTED" && (
-                                <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-900 border border-rose-300 flex items-center gap-1">
-                                  <XCircle className="w-3.5 h-3.5" />
-                                  <span>مرفوض</span>
-                                </span>
-                              )}
-
-                              {rev.isVerifiedPurchase && (
-                                <span className="text-[11px] font-bold text-emerald-700 flex items-center gap-1">
-                                  <ShieldCheck className="w-3.5 h-3.5" />
-                                  <span>شراء موثق</span>
-                                </span>
-                              )}
-                            </div>
-
-                            {/* Stars & Product */}
-                            <div className="flex items-center flex-wrap gap-3 text-xs text-gray-500 font-mono">
-                              <div className="flex items-center">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star
-                                    key={i}
-                                    className={`w-4 h-4 ${
-                                      i < rev.rating
-                                        ? "fill-amber-500 text-amber-500"
-                                        : "text-gray-300"
-                                    }`}
-                                  />
-                                ))}
-                                <span className="ms-1.5 font-bold text-gray-700">{rev.rating}/5</span>
-                              </div>
-
-                              <span>•</span>
-                              <span>المنتج: <strong className="text-gray-800">{rev.productName || "Absolutes Smoothing Body Cream"}</strong></span>
-                              <span>•</span>
-                              <span>التاريخ: {new Date(rev.createdAt).toLocaleString(adminLang === "ar" ? "ar-EG" : "en-US")}</span>
-                            </div>
-
-                            {/* Review Title & Body */}
-                            {rev.title && (
-                              <h4 className="font-bold text-sm text-[#3d502d]">{rev.title}</h4>
-                            )}
-                            <p className="text-xs sm:text-sm text-gray-800 leading-relaxed whitespace-pre-line bg-gray-50/70 p-3.5 rounded-2xl border border-gray-100">
-                              {rev.comment}
-                            </p>
-                          </div>
-
-                          {/* Action Buttons Column */}
-                          <div className="flex flex-row md:flex-col items-center justify-end gap-2 shrink-0 font-cairo">
-                            {rev.status === "PENDING" && (
-                              <>
-                                <button
-                                  onClick={() => handleApproveReview(rev.id)}
-                                  className="flex-1 md:w-36 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                                >
-                                  <Check className="w-4 h-4" />
-                                  <span>اعتماد ونشر ✓</span>
-                                </button>
-                                <button
-                                  onClick={() => handleRejectReview(rev.id)}
-                                  className="py-2 px-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
-                                >
-                                  <X className="w-4 h-4" />
-                                  <span>رفض</span>
-                                </button>
-                              </>
-                            )}
-
-                            {rev.status === "APPROVED" && (
-                              <button
-                                onClick={() => handleUnapproveReview(rev.id)}
-                                className="py-2 px-3 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
-                              >
-                                <Clock className="w-4 h-4" />
-                                <span>إلغاء النشر</span>
-                              </button>
-                            )}
-
-                            {rev.status === "REJECTED" && (
-                              <button
-                                onClick={() => handleApproveReview(rev.id)}
-                                className="py-2 px-3 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
-                              >
-                                <Check className="w-4 h-4" />
-                                <span>إعادة اعتماد</span>
-                              </button>
-                            )}
-
-                            <button
-                              onClick={() => handleDeleteReview(rev.id)}
-                              className="py-2 px-3 rounded-xl text-rose-600 hover:bg-rose-50 font-bold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
-                              title="حذف نهائي"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              <span>حذف</span>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-
           {activeTab === "settings" && (
             <div className="space-y-8">
               <div className="bg-white p-6 rounded-3xl border border-[#dbe2bd] shadow-sm">
                 <h2 className="font-bold text-2xl text-gray-900">إعدادات المتجر وبوابة الدفع Paymob</h2>
                 <p className="text-xs text-gray-600 mt-1 font-semibold">
-                  التحكم في بيانات إنستاباي، فودافون كاش، مصاريف الشحن، مفاتيح Paymob، وشريط إعلانات المتجر.
+                  التحكم في بيانات إنستاباي، فودافون كاش، العربون، مصاريف الشحن، عروض الكميات، مفاتيح Paymob، وحقول الدفع.
                 </p>
               </div>
 
@@ -8410,133 +7102,6 @@ export default function AdminPage() {
                         <span>{paymobTestResult.message || paymobTestResult.error}</span>
                       </div>
                     )}
-                  </div>
-                </div>
-
-                {/* Brand Story & Taglines Management Card */}
-                <div className="bg-white p-6 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-base text-[#3d502d] flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-amber-500" />
-                      <span>إدارة قصة البراند والشعار الفرعي (Our Story & Taglines)</span>
-                    </h3>
-                    <span className="text-xs bg-[#e8ecd0] text-[#3d502d] font-bold px-3 py-1 rounded-full">
-                      تتحدث لحظياً في صفحة قصتنا والفوتر
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-800 mb-2">الشعار بالهيدر (Tagline Line 1)</label>
-                      <input
-                        type="text"
-                        value={settingsForm.taglineLine1}
-                        onChange={(e) => setSettingsForm({ ...settingsForm, taglineLine1: e.target.value })}
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm font-semibold"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-800 mb-2">الشعار بالإنجليزية (Tagline Line 2)</label>
-                      <input
-                        type="text"
-                        value={settingsForm.taglineLine2}
-                        onChange={(e) => setSettingsForm({ ...settingsForm, taglineLine2: e.target.value })}
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm font-semibold"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 pt-2">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-800 mb-1">الفقرة 1 (النشأة والروح الأندلسية):</label>
-                      <textarea
-                        rows={2}
-                        value={settingsForm.storyP1}
-                        onChange={(e) => setSettingsForm({ ...settingsForm, storyP1: e.target.value })}
-                        className="w-full px-4 py-2 rounded-xl border border-gray-300 text-xs font-medium"
-                      ></textarea>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-gray-800 mb-1">الفقرة 2 (فلسفة العناية والتوازن):</label>
-                      <textarea
-                        rows={2}
-                        value={settingsForm.storyP2}
-                        onChange={(e) => setSettingsForm({ ...settingsForm, storyP2: e.target.value })}
-                        className="w-full px-4 py-2 rounded-xl border border-gray-300 text-xs font-medium"
-                      ></textarea>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-gray-800 mb-1">الفقرة 3 (لغة الرفق الصيدلاني):</label>
-                      <textarea
-                        rows={2}
-                        value={settingsForm.storyP3}
-                        onChange={(e) => setSettingsForm({ ...settingsForm, storyP3: e.target.value })}
-                        className="w-full px-4 py-2 rounded-xl border border-gray-300 text-xs font-medium"
-                      ></textarea>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-gray-800 mb-1">الفقرة 4 (العلم والتراث المعاصر):</label>
-                      <textarea
-                        rows={2}
-                        value={settingsForm.storyP4}
-                        onChange={(e) => setSettingsForm({ ...settingsForm, storyP4: e.target.value })}
-                        className="w-full px-4 py-2 rounded-xl border border-gray-300 text-xs font-medium"
-                      ></textarea>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-bold text-gray-800 mb-1">الفقرة الختامية الكاليغرافية:</label>
-                        <input
-                          type="text"
-                          value={settingsForm.storyClosing}
-                          onChange={(e) => setSettingsForm({ ...settingsForm, storyClosing: e.target.value })}
-                          className="w-full px-4 py-2 rounded-xl border border-gray-300 text-xs font-bold text-[#610b0d]"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-gray-800 mb-1">السطر الزخرفي الذهبي:</label>
-                        <input
-                          type="text"
-                          value={settingsForm.storyDecorative}
-                          onChange={(e) => setSettingsForm({ ...settingsForm, storyDecorative: e.target.value })}
-                          className="w-full px-4 py-2 rounded-xl border border-gray-300 text-xs font-bold text-[#d4af37]"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 4. Announcement Bar */}
-                <div className="bg-white p-6 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-base text-[#3d502d] flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-amber-500" />
-                      <span>شريط إعلانات الواجهة الرئيسية</span>
-                    </h3>
-                    <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-800">
-                      <input
-                        type="checkbox"
-                        checked={settingsForm.announcementEnabled}
-                        onChange={(e) => setSettingsForm({ ...settingsForm, announcementEnabled: e.target.checked })}
-                        className="rounded text-[#3d502d] w-4 h-4"
-                      />
-                      <span>تفعيل الشريط بالواجهة</span>
-                    </label>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-gray-800 mb-2">نص الإعلان</label>
-                    <input
-                      type="text"
-                      value={settingsForm.announcementText}
-                      onChange={(e) => setSettingsForm({ ...settingsForm, announcementText: e.target.value })}
-                      placeholder="نص الإعلان الظاهر أعلى المتجر..."
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm font-semibold text-gray-900 focus:border-[#3d502d] focus:outline-none"
-                    />
                   </div>
                 </div>
 

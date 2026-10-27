@@ -101,6 +101,11 @@ export function DoctorReviewsSection() {
                   (isArabic ? "شهادات وتجارب عميلات سُـلاف" : "Verified Client Notes")}
               </h2>
             )}
+            {vis.reviewsDesc !== false && custom.reviewsDescText && (
+              <p className="text-xs text-[#485c36]/75 max-w-md pt-0.5">
+                {custom.reviewsDescText}
+              </p>
+            )}
           </div>
 
           <button
@@ -111,7 +116,7 @@ export function DoctorReviewsSection() {
             }}
             className="self-start sm:self-auto px-6 py-2.5 rounded-full border border-[#485c36] text-[#485c36] hover:bg-[#485c36] hover:text-[#f6f9e6] text-xs font-bold transition-colors cursor-pointer"
           >
-            {isArabic ? "تدوين تجربتكِ +" : "Write a Note +"}
+            {custom.reviewsAddBtnText || (isArabic ? "تدوين تجربتكِ +" : "Write a Note +")}
           </button>
         </div>
 

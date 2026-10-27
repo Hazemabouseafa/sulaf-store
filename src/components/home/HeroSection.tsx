@@ -115,31 +115,31 @@ export function HeroSection() {
     {
       num: "01",
       icon: Sparkles,
-      title: isArabic ? t.hero.clinicalDose : "30% PURE UREA",
-      desc: isArabic ? t.hero.clinicalDoseDesc : "30% Pure Urea + 2% Medical Salicylic Acid",
+      title: custom.ritualArch1Title || (isArabic ? t.hero.clinicalDose : "30% PURE UREA"),
+      desc: custom.ritualArch1Desc || (isArabic ? t.hero.clinicalDoseDesc : "30% Pure Urea + 2% Medical Salicylic Acid"),
       href: "/product/absolutes-smoothing-body-cream",
     },
     {
       num: "02",
       icon: Diamond,
-      title: isArabic ? t.hero.barrierRepair : "BARRIER REPAIR",
-      desc: isArabic ? t.hero.barrierRepairDesc : "Phyto-ceramides & ammonium lactate",
+      title: custom.ritualArch2Title || (isArabic ? t.hero.barrierRepair : "BARRIER REPAIR"),
+      desc: custom.ritualArch2Desc || (isArabic ? t.hero.barrierRepairDesc : "Phyto-ceramides & ammonium lactate"),
       href: "/shop",
     },
     {
       num: "03",
       icon: Sparkles,
-      title: isArabic ? t.hero.fastAbsorption : "SILKY ABSORPTION",
-      desc: isArabic ? t.hero.fastAbsorptionDesc : "Non-greasy finish tailored for warm climates",
+      title: custom.ritualArch3Title || (isArabic ? t.hero.fastAbsorption : "SILKY ABSORPTION"),
+      desc: custom.ritualArch3Desc || (isArabic ? t.hero.fastAbsorptionDesc : "Non-greasy finish tailored for warm climates"),
       href: "/shop",
     },
     {
       num: "04",
       icon: Leaf,
-      title: isArabic ? "نتائج من اليوم السابع" : "7-DAY SILK RESET",
-      desc: isArabic
+      title: custom.ritualArch4Title || (isArabic ? "نتائج من اليوم السابع" : "7-DAY SILK RESET"),
+      desc: custom.ritualArch4Desc || (isArabic
         ? "القضاء الجذري على مظهر جلد الوزة والخشونة المتصلبة"
-        : "Eliminate keratosis pilaris & severe roughness",
+        : "Eliminate keratosis pilaris & severe roughness"),
       href: "/guide",
     },
   ];
@@ -179,11 +179,11 @@ export function HeroSection() {
                   className="space-y-1.5"
                 >
                   <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[#485c36] block">
-                    {t.hero.clinicalHeritage}
+                    {custom.heroHeritageText || t.hero.clinicalHeritage}
                   </span>
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-[#610b0d] font-bold">
-                      {custom.heroBadgeText || t.hero.badge}
+                      {custom.heroBadgeText || (isArabic ? settings.hero.badge || t.hero.badge : t.hero.badge)}
                     </span>
                     <motion.span
                       initial={{ width: 0 }}
@@ -475,7 +475,7 @@ export function HeroSection() {
               className="lg:col-span-4 lg:border-e border-[#f6f9e6]/15 lg:pe-8 space-y-4 text-start"
             >
               <span className="font-mono text-[10px] tracking-[0.28em] uppercase text-[#f3a5a1] block">
-                {isArabic ? "طقوس سُـلاف السريرية" : "OUR RITUAL"}
+                {custom.ritualBadgeText || (isArabic ? "طقوس سُـلاف السريرية" : "OUR RITUAL")}
               </span>
 
               <h2
@@ -485,23 +485,19 @@ export function HeroSection() {
                     : "font-cormorant text-3xl sm:text-5xl leading-[1.1]"
                 } font-normal text-[#f6f9e6]`}
               >
-                {isArabic ? (
+                {custom.ritualHeadingText || (isArabic ? settings.hero.heading || t.hero.heading : t.hero.heading)}
+                {(custom.ritualHeadingAccent || isArabic) && (
                   <>
-                    {t.hero.heading}
                     <br />
-                    <span className="italic text-[#f3a5a1]">برفقٍ لا ينهزم.</span>
-                  </>
-                ) : (
-                  <>
-                    {t.hero.heading}
+                    <span className="italic text-[#f3a5a1]">
+                      {custom.ritualHeadingAccent || (isArabic ? "برفقٍ لا ينهزم." : "")}
+                    </span>
                   </>
                 )}
               </h2>
 
               <p className="text-xs sm:text-sm text-[#f6f9e6]/75 leading-relaxed max-w-xs">
-                {isArabic
-                  ? t.gallery.desc
-                  : t.gallery.desc}
+                {custom.ritualDescText || t.gallery.desc}
               </p>
 
               <div className="pt-2">
@@ -509,7 +505,7 @@ export function HeroSection() {
                   href="/guide"
                   className="inline-flex items-center gap-2 text-xs font-bold text-[#f6f9e6] hover:text-[#f3a5a1] border-b border-[#f6f9e6]/40 pb-1 transition-colors"
                 >
-                  <span>{isArabic ? t.clinicalEvidence.usageGuide : "Discover the Ritual"}</span>
+                  <span>{custom.ritualLinkText || (isArabic ? t.clinicalEvidence.usageGuide : "Discover the Ritual")}</span>
                   <ArrowIcon className="w-3.5 h-3.5" />
                 </Link>
               </div>

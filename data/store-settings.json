@@ -14,7 +14,7 @@
   },
   "announcement": {
     "enabled": true,
-    "text": "شحن مجاني وسريع لكافة المحافظات على الطلبات فوق 800 ج — اطلبي عبوتك الآن بضمان النتائج ا محمد",
+    "text": "شحن مجاني وسريع لكافة المحافظات على الطلبات فوق 800 ج — اطلبي عبوتك الآن بضمان النتائج",
     "badge": "عرض إطلاق محدود"
   },
   "hero": {
@@ -75,9 +75,9 @@
     "clinicalDesc": true,
     "clinicalStats": true,
     "clinicalButtons": true,
-    "reviewsBadge": false,
-    "reviewsHeading": false,
-    "reviewsDesc": false,
+    "reviewsBadge": true,
+    "reviewsHeading": true,
+    "reviewsDesc": true,
     "consultationBadge": true,
     "consultationHeading": true,
     "consultationDesc": true,

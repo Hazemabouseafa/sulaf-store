@@ -186,18 +186,22 @@ export interface ElementVisibilitySettings {
 }
 
 export interface CustomContentSettings {
-  // Announcement
+  // Announcement & Footer
   announcementText?: string;
   announcementBadge?: string;
+  footerTagline?: string;
+  footerNewsletterTitle?: string;
+  footerNewsletterDesc?: string;
 
-  // Hero Texts
+  // Section 1: Hero Top Archway Texts
+  heroHeritageText?: string;
   heroBadgeText?: string;
   heroPoemLine1?: string;
   heroPoemLine2?: string;
   heroSubheading?: string;
-  heroPriceLabel?: string;
   heroPrimaryCtaText?: string;
   heroSecondaryCtaText?: string;
+  heroPriceLabel?: string;
   heroShippingNote?: string;
   heroTrustEfficacy?: string;
   heroTrustShipping?: string;
@@ -211,6 +215,21 @@ export interface CustomContentSettings {
   heroDossierPurityDesc?: string;
   heroDossierStatText?: string;
 
+  // Section 2: Dark Forest Ritual Band & 4 Arches
+  ritualBadgeText?: string;
+  ritualHeadingText?: string;
+  ritualHeadingAccent?: string;
+  ritualDescText?: string;
+  ritualLinkText?: string;
+  ritualArch1Title?: string;
+  ritualArch1Desc?: string;
+  ritualArch2Title?: string;
+  ritualArch2Desc?: string;
+  ritualArch3Title?: string;
+  ritualArch3Desc?: string;
+  ritualArch4Title?: string;
+  ritualArch4Desc?: string;
+
   // About Texts
   aboutBadgeText?: string;
   aboutHeadingText?: string;
@@ -223,11 +242,37 @@ export interface CustomContentSettings {
   artDescText?: string;
   artGuaranteeText?: string;
 
-  // Gallery Texts
+  // Section 3: Gallery & 5 Arches Texts
   galleryBadgeText?: string;
   galleryHeadingText?: string;
   galleryDescText?: string;
   galleryViewAllText?: string;
+  arch1Title?: string;
+  arch1Sub?: string;
+  arch2Title?: string;
+  arch2Sub?: string;
+  arch3Title?: string;
+  arch3Sub?: string;
+  arch4Title?: string;
+  arch4Sub?: string;
+  arch5Title?: string;
+  arch5Sub?: string;
+
+  // Section 4: Best Seller Mandala Showcase
+  bestSellerBadgeText?: string;
+  bestSellerQuoteText?: string;
+
+  // Section 5: The Sulaf Difference (4 Pillars)
+  diffBadgeText?: string;
+  diffHeadingText?: string;
+  diff1Title?: string;
+  diff1Desc?: string;
+  diff2Title?: string;
+  diff2Desc?: string;
+  diff3Title?: string;
+  diff3Desc?: string;
+  diff4Title?: string;
+  diff4Desc?: string;
 
   // Clinical Evidence Texts
   clinicalBadgeText?: string;
@@ -236,16 +281,20 @@ export interface CustomContentSettings {
   clinicalReadResearchText?: string;
   clinicalUsageGuideText?: string;
 
-  // Reviews Texts
+  // Section 6: Reviews Texts
   reviewsBadgeText?: string;
   reviewsHeadingText?: string;
   reviewsDescText?: string;
+  reviewsAddBtnText?: string;
 
-  // Consultation Texts
+  // Section 7: Consultation Banner Texts
   consultationBadgeText?: string;
   consultationHeadingText?: string;
   consultationDescText?: string;
+  consultationShopBtnText?: string;
   consultationButtonText?: string;
+  consultationSideLabel1?: string;
+  consultationSideLabel2?: string;
 
   // Product Page Texts
   productPodiumTag?: string;

@@ -57,63 +57,41 @@ interface HomepageSectionBuilderProps {
   showToast: (msg: string, type?: "success" | "error") => void;
 }
 
-const BUILTIN_META: Record<
-  HomepageSectionKey,
-  { nameAr: string; nameEn: string; descAr: string; descEn: string; icon: any; color: string }
+const BUILTIN_META: Partial<
+  Record<
+    HomepageSectionKey,
+    { nameAr: string; nameEn: string; descAr: string; descEn: string; icon: any; color: string }
+  >
 > = {
   heroSection: {
-    nameAr: "قسم الهيرو الرئيسي",
-    nameEn: "Hero Section",
-    descAr: "العنوان، البيت الشعري، الشارات السريرية، وبطاقات الملف الدوائي",
-    descEn: "Main banner, poetic signature, badges, and clinical dossier",
+    nameAr: "قسم الهيرو والبوابة الأندلسية وشريط الـ 4 أقواس",
+    nameEn: "Hero Archway & 4 Ritual Arches Band",
+    descAr: "البيت الشعري، الوصف، الأزرار، وشريط الطقوس الأخضر الداكن بالأقواس الأربعة",
+    descEn: "Main archway hero, poetic verse, CTAs, and dark forest 4-arch ritual band",
     icon: Sparkles,
     color: "bg-emerald-600",
   },
-  aboutSection: {
-    nameAr: "قسم عن سُلاف والفلسفة",
-    nameEn: "About Sulaf & Philosophy",
-    descAr: "نبذة عن البراند والهوية الأندلسية وفلسفة العناية بالبشرة",
-    descEn: "Brand heritage, Andalusian philosophy, and care vision",
-    icon: FileText,
-    color: "bg-amber-600",
-  },
-  artOfCosmeceuticals: {
-    nameAr: "فن الـ Cosmeceuticals واللآلئ",
-    nameEn: "Art of Cosmeceuticals & Orbs",
-    descAr: "لآلئ المكونات النشطة التفاعلية والضمان الأوروبي المعتمد",
-    descEn: "Interactive clinical pearl orbs and European standards",
-    icon: Layers,
-    color: "bg-indigo-600",
-  },
   gallerySection: {
-    nameAr: "معرض المستحضرات الرخامي",
-    nameEn: "Marble Podium Products Gallery",
-    descAr: "شريط عرض المنتجات والمنصات الرخامية مع المعاينة السريعة",
-    descEn: "Horizontal product carousel on marble pedestals",
+    nameAr: "معرض الـ 5 أقواس والأكثر مبيعاً وميثاق الثقة",
+    nameEn: "5-Arch Gallery, Best Seller Showcase & 4 Pillars",
+    descAr: "بطاقات الـ 5 أقواس، منصة الأكثر مبيعاً التفاعلية، وأعمدة ميثاق الثقة الأربعة",
+    descEn: "5 arched cards, interactive best-seller mandala showcase, and 4 trust pillars",
     icon: Package,
     color: "bg-teal-600",
   },
-  clinicalStorySection: {
-    nameAr: "الأدلة السريرية والدراسات",
-    nameEn: "Clinical Evidence & Studies",
-    descAr: "الإحصائيات الموثقة معملياً وروابط استكشاف الأبحاث",
-    descEn: "Laboratory metrics, efficacy stats, and clinical research links",
-    icon: Activity,
-    color: "bg-blue-600",
-  },
   reviewsSection: {
-    nameAr: "تجارب الأطباء والعملاء",
-    nameEn: "Doctor & Customer Verified Reviews",
-    descAr: "تقييمات أطباء الجلدية وآراء العملاء الموثقة مع التقييم بالنجوم",
-    descEn: "Dermatologist endorsements and verified buyer testimonials",
+    nameAr: "دفتر التجارب وتقييمات العميلات الموثقة",
+    nameEn: "Verified Client Notes & Reviews",
+    descAr: "عنوان وشارة قسم التقييمات وزر إضافة تجربة جديدة",
+    descEn: "Reviews section badge, heading, description, and add note button",
     icon: Award,
     color: "bg-rose-600",
   },
   consultationSection: {
-    nameAr: "بنر الاستشارة عبر واتساب",
-    nameEn: "WhatsApp Dermatological Consultation",
-    descAr: "دعوة العميل للاستشارة الصيدلانية السريعة المباشرة",
-    descEn: "Direct WhatsApp doctor inquiry and guidance banner",
+    nameAr: "بنر الاستشارة الصيدلانية والانطلاق",
+    nameEn: "Bottom Consultation & Ritual Strip",
+    descAr: "شريط ختام الصفحة مع زر التسوق وزر استشارة الصيدلي عبر واتساب",
+    descEn: "Bottom call-to-action strip with Shop Now and WhatsApp Pharmacist buttons",
     icon: MessageCircle,
     color: "bg-green-600",
   },
@@ -481,7 +459,7 @@ export function HomepageSectionBuilder({
             // A. BUILT-IN SECTION
             if (secId in BUILTIN_META) {
               const key = secId as HomepageSectionKey;
-              const meta = BUILTIN_META[key];
+              const meta = BUILTIN_META[key]!;
               const Icon = meta.icon;
               const isVisible = (cmsSections as any)[key] !== false;
 
@@ -1224,187 +1202,275 @@ function renderBuiltinSectionFields(
     onUpdateElements({ ...elements, [elKey]: !elements[elKey] });
   };
 
-  // 1. HERO SECTION
+  // 1. HERO SECTION + RITUAL 4 ARCHES
   if (key === "heroSection") {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FieldInput
-          label={isEn ? "Poem Line 1" : "شطر البيت الأول (Hero Poem 1)"}
-          value={current.heroPoemLine1 || ""}
-          onChange={(v) => updateField("heroPoemLine1", v)}
-          placeholder={isEn ? "Pure essence of mindful clinical certainty" : "سُلافُ الفِكرِ في طِبٍّ يَقينٍ"}
-          isEn={isEn}
-        />
-        <FieldInput
-          label={isEn ? "Poem Line 2" : "شطر البيت الثاني (Hero Poem 2)"}
-          value={current.heroPoemLine2 || ""}
-          onChange={(v) => updateField("heroPoemLine2", v)}
-          placeholder={isEn ? "Restoring radiant barrier day after day" : "يَرُمُّ حِمى النَّضارَةِ كُلَّ حينِ"}
-          isEn={isEn}
-        />
-        <FieldInput
-          label={isEn ? "Hero Badge Tag" : "الشارة السريرية العلوية (Hero Badge)"}
-          value={current.heroBadgeText || ""}
-          onChange={(v) => updateField("heroBadgeText", v)}
-          placeholder={isEn ? "Pharmaceutical Cosmeceuticals Science" : "حيث يلتقي العلم الصيدلاني بالجمال"}
-          isEn={isEn}
-        />
-        <FieldInput
-          label={isEn ? "Primary Order Button Text" : "نص زر الطلب الأساسي (Primary CTA)"}
-          value={current.heroPrimaryCtaText || ""}
-          onChange={(v) => updateField("heroPrimaryCtaText", v)}
-          placeholder={isEn ? "Order Your Jar Now" : "اطلبي عبوتك الآن"}
-          isEn={isEn}
-        />
-        <div className="md:col-span-2">
-          <FieldInput
-            label={isEn ? "Hero Subheading / Clinical Description" : "الوصف السريري المفصل (Hero Subheading)"}
-            value={current.heroSubheading || ""}
-            onChange={(v) => updateField("heroSubheading", v)}
-            placeholder={isEn ? "Advanced clinical reset for rough, bumpy skin..." : "من عبق الهوية العربية، وسحر الروح الأندلسية، وُلدت سُلاف..."}
-            isTextarea
-            isEn={isEn}
-          />
+      <div className="space-y-6">
+        <div>
+          <h6 className="text-xs font-bold text-[#485c36] mb-3 pb-1.5 border-b border-gray-200">
+            {isEn ? "Part 1: Top Sunlit Archway Hero" : "أولاً: الهيرو العلوي (البوابة الأندلسية والقصيدة)"}
+          </h6>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FieldInput
+              label={isEn ? "Top Micro Heritage Label" : "السطر التراثي الصغير أعلى الشارة"}
+              value={current.heroHeritageText || ""}
+              onChange={(v) => updateField("heroHeritageText", v)}
+              placeholder={isEn ? "Andalusian Heritage × Pharmaceutical Science" : "أصالة التراث العربي × دقة العلم الصيدلاني"}
+              isEn={isEn}
+            />
+            <FieldInput
+              label={isEn ? "Hero Badge Tag" : "الشارة السريرية العلوية (Hero Badge)"}
+              value={current.heroBadgeText || ""}
+              onChange={(v) => updateField("heroBadgeText", v)}
+              placeholder={isEn ? "Where Pharmaceutical Science Meets Beauty." : "حيث يلتقي العلم الصيدلاني بالجمال"}
+              isEn={isEn}
+            />
+            <FieldInput
+              label={isEn ? "Poem Line 1" : "شطر البيت الأول (Hero Poem 1)"}
+              value={current.heroPoemLine1 || ""}
+              onChange={(v) => updateField("heroPoemLine1", v)}
+              placeholder={isEn ? "Whatever gentle care heals us, Sulaf is within it," : "ما كان في رِفقٍ يُداوينا سُلافُ به"}
+              isEn={isEn}
+            />
+            <FieldInput
+              label={isEn ? "Poem Line 2" : "شطر البيت الثاني (Hero Poem 2)"}
+              value={current.heroPoemLine2 || ""}
+              onChange={(v) => updateField("heroPoemLine2", v)}
+              placeholder={isEn ? "Transforming into beauty that never fades." : "إلّا تحوّل حُسنًا لا ينهزمُ"}
+              isEn={isEn}
+            />
+            <div className="md:col-span-2">
+              <FieldInput
+                label={isEn ? "Hero Subheading / Clinical Description" : "الوصف السريري المفصل (Hero Subheading)"}
+                value={current.heroSubheading || ""}
+                onChange={(v) => updateField("heroSubheading", v)}
+                placeholder={isEn ? "Born from Arab identity and the poetic soul of Andalusia..." : "من عبق الهوية العربية، وسحر الروح الأندلسية، وُلدت سُلاف..."}
+                isTextarea
+                isEn={isEn}
+              />
+            </div>
+            <FieldInput
+              label={isEn ? "Primary Order Button Text" : "نص زر الطلب الأساسي (Primary CTA)"}
+              value={current.heroPrimaryCtaText || ""}
+              onChange={(v) => updateField("heroPrimaryCtaText", v)}
+              placeholder={isEn ? "Order Your Jar Now" : "اطلبي عبوتك الآن"}
+              isEn={isEn}
+            />
+            <FieldInput
+              label={isEn ? "Secondary Explore Button Text" : "نص زر الاستكشاف الثانوي (Secondary CTA)"}
+              value={current.heroSecondaryCtaText || ""}
+              onChange={(v) => updateField("heroSecondaryCtaText", v)}
+              placeholder={isEn ? "Explore Philosophy" : "اكتشفي الفلسفة الصيدلانية"}
+              isEn={isEn}
+            />
+          </div>
+        </div>
+
+        <div>
+          <h6 className="text-xs font-bold text-[#485c36] mb-3 pb-1.5 border-b border-gray-200">
+            {isEn ? "Part 2: Dark Forest Ritual Band & 4 Arches" : "ثانياً: الشريط الأخضر الداكن (طقوس سُلاف والـ 4 أقواس)"}
+          </h6>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FieldInput
+              label={isEn ? "Ritual Badge" : "شارة قسم الطقوس"}
+              value={current.ritualBadgeText || ""}
+              onChange={(v) => updateField("ritualBadgeText", v)}
+              placeholder={isEn ? "OUR RITUAL" : "طقوس سُـلاف السريرية"}
+              isEn={isEn}
+            />
+            <FieldInput
+              label={isEn ? "Ritual Main Heading" : "العنوان الرئيسي للشريط الأخضر"}
+              value={current.ritualHeadingText || ""}
+              onChange={(v) => updateField("ritualHeadingText", v)}
+              placeholder={isEn ? "Andalusian Beauty Meets Clinical Dermatology" : "الجمال الأندلسي يلتقي بالطب السريري"}
+              isEn={isEn}
+            />
+            <FieldInput
+              label={isEn ? "Ritual Heading Rose Accent" : "السطر الوردي المائل تحت العنوان"}
+              value={current.ritualHeadingAccent || ""}
+              onChange={(v) => updateField("ritualHeadingAccent", v)}
+              placeholder={isEn ? "" : "برفقٍ لا ينهزم."}
+              isEn={isEn}
+            />
+            <FieldInput
+              label={isEn ? "Ritual Guide Link Text" : "نص رابط دليل الاستخدام"}
+              value={current.ritualLinkText || ""}
+              onChange={(v) => updateField("ritualLinkText", v)}
+              placeholder={isEn ? "Discover the Ritual" : "دليل الاستخدام السريري"}
+              isEn={isEn}
+            />
+            <div className="md:col-span-2">
+              <FieldInput
+                label={isEn ? "Ritual Description" : "وصف قسم الطقوس"}
+                value={current.ritualDescText || ""}
+                onChange={(v) => updateField("ritualDescText", v)}
+                placeholder={isEn ? "Carefully crafted formulations..." : "نجمع بين المعرفة الصيدلانية وفهم احتياجات البشرة..."}
+                isTextarea
+                isEn={isEn}
+              />
+            </div>
+
+            <FieldInput
+              label={isEn ? "Arch 01 Title" : "عنوان القوس 01"}
+              value={current.ritualArch1Title || ""}
+              onChange={(v) => updateField("ritualArch1Title", v)}
+              placeholder={isEn ? "30% PURE UREA" : "جرعة سريرية مركزة"}
+              isEn={isEn}
+            />
+            <FieldInput
+              label={isEn ? "Arch 01 Description" : "وصف القوس 01"}
+              value={current.ritualArch1Desc || ""}
+              onChange={(v) => updateField("ritualArch1Desc", v)}
+              placeholder={isEn ? "30% Pure Urea + 2% Medical Salicylic Acid" : "30% يوريا نقية + 2% حمض الساليسيليك الطبي"}
+              isEn={isEn}
+            />
+            <FieldInput
+              label={isEn ? "Arch 02 Title" : "عنوان القوس 02"}
+              value={current.ritualArch2Title || ""}
+              onChange={(v) => updateField("ritualArch2Title", v)}
+              placeholder={isEn ? "BARRIER REPAIR" : "إصلاح الحاجز الجلدي"}
+              isEn={isEn}
+            />
+            <FieldInput
+              label={isEn ? "Arch 02 Description" : "وصف القوس 02"}
+              value={current.ritualArch2Desc || ""}
+              onChange={(v) => updateField("ritualArch2Desc", v)}
+              placeholder={isEn ? "Phyto-ceramides & ammonium lactate" : "مدعم بالسيراميدات النباتية ولاكتات الأمونيوم"}
+              isEn={isEn}
+            />
+            <FieldInput
+              label={isEn ? "Arch 03 Title" : "عنوان القوس 03"}
+              value={current.ritualArch3Title || ""}
+              onChange={(v) => updateField("ritualArch3Title", v)}
+              placeholder={isEn ? "SILKY ABSORPTION" : "امتصاص حريري فوري"}
+              isEn={isEn}
+            />
+            <FieldInput
+              label={isEn ? "Arch 03 Description" : "وصف القوس 03"}
+              value={current.ritualArch3Desc || ""}
+              onChange={(v) => updateField("ritualArch3Desc", v)}
+              placeholder={isEn ? "Non-greasy finish tailored for warm climates" : "قوام غير دهني مصمم خصيصاً للأجواء العربية"}
+              isEn={isEn}
+            />
+            <FieldInput
+              label={isEn ? "Arch 04 Title" : "عنوان القوس 04"}
+              value={current.ritualArch4Title || ""}
+              onChange={(v) => updateField("ritualArch4Title", v)}
+              placeholder={isEn ? "7-DAY SILK RESET" : "نتائج من اليوم السابع"}
+              isEn={isEn}
+            />
+            <FieldInput
+              label={isEn ? "Arch 04 Description" : "وصف القوس 04"}
+              value={current.ritualArch4Desc || ""}
+              onChange={(v) => updateField("ritualArch4Desc", v)}
+              placeholder={isEn ? "Eliminate keratosis pilaris & severe roughness" : "القضاء الجذري على مظهر جلد الوزة والخشونة المتصلبة"}
+              isEn={isEn}
+            />
+          </div>
         </div>
       </div>
     );
   }
 
-  // 2. ABOUT SECTION
-  if (key === "aboutSection") {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FieldInput
-          label={isEn ? "About Badge" : "شارة قسم عن سُلاف (About Badge)"}
-          value={current.aboutBadgeText || ""}
-          onChange={(v) => updateField("aboutBadgeText", v)}
-          placeholder={isEn ? "The Sulaf Story" : "الهوية والفلسفة"}
-          isEn={isEn}
-        />
-        <FieldInput
-          label={isEn ? "About Heading" : "عنوان القسم (Heading)"}
-          value={current.aboutHeadingText || ""}
-          onChange={(v) => updateField("aboutHeadingText", v)}
-          placeholder={isEn ? "Where Heritage Meets Science" : "حيث يلتقي العلم الصيدلاني بفن الجمال"}
-          isEn={isEn}
-        />
-        <div className="md:col-span-2">
-          <FieldInput
-            label={isEn ? "About Story Paragraph" : "نص القصة والفلسفة (Paragraph)"}
-            value={current.aboutParagraphText || ""}
-            onChange={(v) => updateField("aboutParagraphText", v)}
-            placeholder={isEn ? "Our story began with a desire to..." : "نؤمن أن الجمال ليس مجرد مظهر، بل رحلة من الفهم والعناية والتوازن..."}
-            isTextarea
-            isEn={isEn}
-          />
-        </div>
-        <FieldInput
-          label={isEn ? "Explore Button Text" : "نص زر الاستكشاف (CTA Text)"}
-          value={current.aboutCtaText || ""}
-          onChange={(v) => updateField("aboutCtaText", v)}
-          placeholder={isEn ? "Read Full Philosophy" : "استكشف الفلسفة الصيدلانية"}
-          isEn={isEn}
-        />
-      </div>
-    );
-  }
-
-  // 3. ART OF COSMECEUTICALS
-  if (key === "artOfCosmeceuticals") {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FieldInput
-          label={isEn ? "Badge Tag" : "شارة فن الكوزمسيوتيكالز (Badge)"}
-          value={current.artBadgeText || ""}
-          onChange={(v) => updateField("artBadgeText", v)}
-          placeholder={isEn ? "Active Actives" : "لآلئ المكونات الفعالة"}
-          isEn={isEn}
-        />
-        <FieldInput
-          label={isEn ? "Heading" : "العنوان الرئيسي (Heading)"}
-          value={current.artHeadingText || ""}
-          onChange={(v) => updateField("artHeadingText", v)}
-          placeholder={isEn ? "Art of Cosmeceuticals" : "فن التركيبات الصيدلانية التناضحية"}
-          isEn={isEn}
-        />
-        <div className="md:col-span-2">
-          <FieldInput
-            label={isEn ? "Description" : "الشرح السريري للمكونات (Description)"}
-            value={current.artDescText || ""}
-            onChange={(v) => updateField("artDescText", v)}
-            placeholder={isEn ? "Every drop is engineered with..." : "مزيج مدروس بعناية من اليوريا النقية وحمض الساليسيليك والسيراميدات..."}
-            isTextarea
-            isEn={isEn}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // 4. GALLERY SECTION
+  // 2. GALLERY SECTION (5 Arches + Best Seller + 4 Trust Pillars)
   if (key === "gallerySection") {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FieldInput
-          label={isEn ? "Gallery Badge" : "شارة المعرض (Gallery Badge)"}
-          value={current.galleryBadgeText || ""}
-          onChange={(v) => updateField("galleryBadgeText", v)}
-          placeholder={isEn ? "Luxury Formulations" : "المستحضرات السريرية المعتمدة"}
-          isEn={isEn}
-        />
-        <FieldInput
-          label={isEn ? "Gallery Heading" : "عنوان المعرض (Heading)"}
-          value={current.galleryHeadingText || ""}
-          onChange={(v) => updateField("galleryHeadingText", v)}
-          placeholder={isEn ? "Architectural Formulations" : "روائع الابتكار الصيدلاني على منصات الرخام"}
-          isEn={isEn}
-        />
-        <div className="md:col-span-2">
-          <FieldInput
-            label={isEn ? "Gallery Description" : "نبذة المعرض (Description)"}
-            value={current.galleryDescText || ""}
-            onChange={(v) => updateField("galleryDescText", v)}
-            placeholder={isEn ? "Discover our full clinical range..." : "استكشفي مستحضرات سُـلاف المصممة لترميم وإعادة حيوية حاجز الجلد."}
-            isEn={isEn}
-          />
+      <div className="space-y-6">
+        <div>
+          <h6 className="text-xs font-bold text-[#485c36] mb-3 pb-1.5 border-b border-gray-200">
+            {isEn ? "Part 1: 5-Arch Collection Header & Cards" : "أولاً: معرض الـ 5 أقواس وعناوين البطاقات"}
+          </h6>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FieldInput
+              label={isEn ? "Gallery Badge" : "شارة المعرض (Gallery Badge)"}
+              value={current.galleryBadgeText || ""}
+              onChange={(v) => updateField("galleryBadgeText", v)}
+              placeholder={isEn ? "Sulaf Clinical Collection" : "مجموعة سُلاف العلاجية"}
+              isEn={isEn}
+            />
+            <FieldInput
+              label={isEn ? "Gallery Heading" : "عنوان المعرض (Heading)"}
+              value={current.galleryHeadingText || ""}
+              onChange={(v) => updateField("galleryHeadingText", v)}
+              placeholder={isEn ? "Crafted for Skin Perfection" : "تركيبات صيدلانية مصممة بعناية"}
+              isEn={isEn}
+            />
+            <FieldInput
+              label={isEn ? "Gallery Description" : "نبذة المعرض (Description)"}
+              value={current.galleryDescText || ""}
+              onChange={(v) => updateField("galleryDescText", v)}
+              placeholder={isEn ? "Explore our clinical formulations..." : "نجمع بين المعرفة الصيدلانية، وفهم احتياجات البشرة..."}
+              isEn={isEn}
+            />
+            <FieldInput
+              label={isEn ? "View All Link Text" : "نص رابط تصفح جميع المنتجات"}
+              value={current.galleryViewAllText || ""}
+              onChange={(v) => updateField("galleryViewAllText", v)}
+              placeholder={isEn ? "Browse All Products" : "تصفح جميع المنتجات"}
+              isEn={isEn}
+            />
+
+            <FieldInput label={isEn ? "Arch 01 Title" : "عنوان القوس 01"} value={current.arch1Title || ""} onChange={(v) => updateField("arch1Title", v)} placeholder={isEn ? "Cleansers" : "بلسم التنظيف"} isEn={isEn} />
+            <FieldInput label={isEn ? "Arch 01 Subtitle" : "وصف القوس 01"} value={current.arch1Sub || ""} onChange={(v) => updateField("arch1Sub", v)} placeholder={isEn ? "Purify & refresh" : "تنقية وإذابة الشوائب"} isEn={isEn} />
+            <FieldInput label={isEn ? "Arch 02 Title" : "عنوان القوس 02"} value={current.arch2Title || ""} onChange={(v) => updateField("arch2Title", v)} placeholder={isEn ? "Serums" : "إكسير الحاجز"} isEn={isEn} />
+            <FieldInput label={isEn ? "Arch 02 Subtitle" : "وصف القوس 02"} value={current.arch2Sub || ""} onChange={(v) => updateField("arch2Sub", v)} placeholder={isEn ? "Targeted solutions" : "ترميم مركز بالسيراميد"} isEn={isEn} />
+            <FieldInput label={isEn ? "Arch 03 Title" : "عنوان القوس 03"} value={current.arch3Title || ""} onChange={(v) => updateField("arch3Title", v)} placeholder={isEn ? "Moisturizers" : "كريمات اليوريا 30%"} isEn={isEn} />
+            <FieldInput label={isEn ? "Arch 03 Subtitle" : "وصف القوس 03"} value={current.arch3Sub || ""} onChange={(v) => updateField("arch3Sub", v)} placeholder={isEn ? "Nourish & restore" : "علاج جلد الوزة والخشونة"} isEn={isEn} />
+            <FieldInput label={isEn ? "Arch 04 Title" : "عنوان القوس 04"} value={current.arch4Title || ""} onChange={(v) => updateField("arch4Title", v)} placeholder={isEn ? "Treatments" : "العلاجات المركزة"} isEn={isEn} />
+            <FieldInput label={isEn ? "Arch 04 Subtitle" : "وصف القوس 04"} value={current.arch4Sub || ""} onChange={(v) => updateField("arch4Sub", v)} placeholder={isEn ? "Advanced care" : "عناية سريرية متطورة"} isEn={isEn} />
+            <FieldInput label={isEn ? "Arch 05 Title" : "عنوان القوس 05"} value={current.arch5Title || ""} onChange={(v) => updateField("arch5Title", v)} placeholder={isEn ? "Toners" : "تونر الأحماض"} isEn={isEn} />
+            <FieldInput label={isEn ? "Arch 05 Subtitle" : "وصف القوس 05"} value={current.arch5Sub || ""} onChange={(v) => updateField("arch5Sub", v)} placeholder={isEn ? "Balance & prepare" : "توازن وتجديد المسام"} isEn={isEn} />
+          </div>
+        </div>
+
+        <div>
+          <h6 className="text-xs font-bold text-[#485c36] mb-3 pb-1.5 border-b border-gray-200">
+            {isEn ? "Part 2: Best Seller Mandala Showcase & 4 Trust Pillars" : "ثانياً: منصة الأكثر مبيعاً وشريط ميثاق الثقة (4 أعمدة)"}
+          </h6>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FieldInput
+              label={isEn ? "Best Seller Badge" : "شارة قسم الأكثر مبيعاً"}
+              value={current.bestSellerBadgeText || ""}
+              onChange={(v) => updateField("bestSellerBadgeText", v)}
+              placeholder={isEn ? "BEST SELLER" : "الأكثر مبيعاً واعتماداً"}
+              isEn={isEn}
+            />
+            <FieldInput
+              label={isEn ? "Best Seller Side Quote" : "البيت الشعري/الاقتباس الجانبي في الأكثر مبيعاً"}
+              value={current.bestSellerQuoteText || ""}
+              onChange={(v) => updateField("bestSellerQuoteText", v)}
+              placeholder={isEn ? "Whatever gentle care heals us..." : "ما كان في رِفقٍ يُداوينا سُلافُ به.. إلّا تحوّل حُسنًا لا ينهزمُ"}
+              isEn={isEn}
+            />
+            <FieldInput
+              label={isEn ? "Trust Strip Badge" : "شارة ميثاق الثقة"}
+              value={current.diffBadgeText || ""}
+              onChange={(v) => updateField("diffBadgeText", v)}
+              placeholder={isEn ? "THE SULAF DIFFERENCE" : "ميثاق الثقة في سُـلاف"}
+              isEn={isEn}
+            />
+            <FieldInput
+              label={isEn ? "Trust Strip Heading" : "عنوان ميثاق الثقة"}
+              value={current.diffHeadingText || ""}
+              onChange={(v) => updateField("diffHeadingText", v)}
+              placeholder={isEn ? "More Than Skincare. A Lasting Ritual." : "حيث يلتقي العلم الصيدلاني بالجمال."}
+              isEn={isEn}
+            />
+            <FieldInput label={isEn ? "Pillar 1 Title" : "عنوان العمود 1"} value={current.diff1Title || ""} onChange={(v) => updateField("diff1Title", v)} placeholder={isEn ? "Premium Ingredients" : "جرعة سريرية مركزة"} isEn={isEn} />
+            <FieldInput label={isEn ? "Pillar 1 Desc" : "وصف العمود 1"} value={current.diff1Desc || ""} onChange={(v) => updateField("diff1Desc", v)} placeholder={isEn ? "Naturally sourced, carefully selected." : "30% يوريا نقية + 2% حمض الساليسيليك الطبي"} isEn={isEn} />
+            <FieldInput label={isEn ? "Pillar 2 Title" : "عنوان العمود 2"} value={current.diff2Title || ""} onChange={(v) => updateField("diff2Title", v)} placeholder={isEn ? "Dermatologically Tested" : "امتصاص حريري فوري"} isEn={isEn} />
+            <FieldInput label={isEn ? "Pillar 2 Desc" : "وصف العمود 2"} value={current.diff2Desc || ""} onChange={(v) => updateField("diff2Desc", v)} placeholder={isEn ? "Safe, effective, and skin-friendly." : "قوام غير دهني مصمم خصيصاً للأجواء العربية"} isEn={isEn} />
+            <FieldInput label={isEn ? "Pillar 3 Title" : "عنوان العمود 3"} value={current.diff3Title || ""} onChange={(v) => updateField("diff3Title", v)} placeholder={isEn ? "Heritage Inspired" : "إصلاح الحاجز الجلدي"} isEn={isEn} />
+            <FieldInput label={isEn ? "Pillar 3 Desc" : "وصف العمود 3"} value={current.diff3Desc || ""} onChange={(v) => updateField("diff3Desc", v)} placeholder={isEn ? "Centuries of wisdom, modernized." : "مدعم بالسيراميدات النباتية ولاكتات الأمونيوم"} isEn={isEn} />
+            <FieldInput label={isEn ? "Pillar 4 Title" : "عنوان العمود 4"} value={current.diff4Title || ""} onChange={(v) => updateField("diff4Title", v)} placeholder={isEn ? "Real Results" : "معاينة العبوة قبل الدفع"} isEn={isEn} />
+            <FieldInput label={isEn ? "Pillar 4 Desc" : "وصف العمود 4"} value={current.diff4Desc || ""} onChange={(v) => updateField("diff4Desc", v)} placeholder={isEn ? "Healthier skin, lasting confidence." : "شحن فوري مؤمن لجميع المحافظات مع حق المعاينة."} isEn={isEn} />
+          </div>
         </div>
       </div>
     );
   }
 
-  // 5. CLINICAL STORY SECTION
-  if (key === "clinicalStorySection") {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FieldInput
-          label={isEn ? "Clinical Badge" : "شارة الأدلة السريرية (Badge)"}
-          value={current.clinicalBadgeText || ""}
-          onChange={(v) => updateField("clinicalBadgeText", v)}
-          placeholder={isEn ? "Clinical Studies" : "الأدلة السريرية والدراسات المعملية"}
-          isEn={isEn}
-        />
-        <FieldInput
-          label={isEn ? "Clinical Heading" : "عنوان النتائج (Heading)"}
-          value={current.clinicalHeadingText || ""}
-          onChange={(v) => updateField("clinicalHeadingText", v)}
-          placeholder={isEn ? "Verified Efficacy Within 7 Days" : "نتائج سريرية مثبتة معملياً من أول 7 أيام"}
-          isEn={isEn}
-        />
-        <div className="md:col-span-2">
-          <FieldInput
-            label={isEn ? "Clinical Description" : "الشرح السريري (Description)"}
-            value={current.clinicalDescText || ""}
-            onChange={(v) => updateField("clinicalDescText", v)}
-            placeholder={isEn ? "Over 98% of users observed..." : "أثبتت الدراسات المعملية أن 98% من الحالات تلاشت لديهم خشونة جلد الوزة بشكل دائم."}
-            isTextarea
-            isEn={isEn}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // 6. REVIEWS SECTION
+  // 3. REVIEWS SECTION
   if (key === "reviewsSection") {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1412,60 +1478,70 @@ function renderBuiltinSectionFields(
           label={isEn ? "Reviews Badge" : "شارة قسم الآراء (Badge)"}
           value={current.reviewsBadgeText || ""}
           onChange={(v) => updateField("reviewsBadgeText", v)}
-          placeholder={isEn ? "Customer Reviews" : "تجارب حقيقية موثقة"}
+          placeholder={isEn ? "CLINICAL TESTIMONIALS" : "دفتر التجارب الموثقة"}
           isEn={isEn}
         />
         <FieldInput
           label={isEn ? "Reviews Heading" : "عنوان القسم (Heading)"}
           value={current.reviewsHeadingText || ""}
           onChange={(v) => updateField("reviewsHeadingText", v)}
-          placeholder={isEn ? "Endorsed by Top Dermatologists" : "شهادات أطباء الجلدية وتجارب العميلات"}
+          placeholder={isEn ? "Verified Client Notes" : "شهادات وتجارب عميلات سُـلاف"}
           isEn={isEn}
         />
-        <div className="md:col-span-2">
-          <FieldInput
-            label={isEn ? "Reviews Description" : "نبذة التقييمات (Description)"}
-            value={current.reviewsDescText || ""}
-            onChange={(v) => updateField("reviewsDescText", v)}
-            placeholder={isEn ? "Hear from verified purchasers..." : "تقييم 4.96 من 5 بناءً على أكثر من 128 مراجعة سريرية معتمدة."}
-            isEn={isEn}
-          />
-        </div>
+        <FieldInput
+          label={isEn ? "Reviews Subtitle" : "وصف إضافي تحت العنوان (اختياري)"}
+          value={current.reviewsDescText || ""}
+          onChange={(v) => updateField("reviewsDescText", v)}
+          placeholder={isEn ? "Verified purchaser experiences" : "تجارب حقيقية موثقة من عميلات سلاف"}
+          isEn={isEn}
+        />
+        <FieldInput
+          label={isEn ? "Write Review Button Text" : "نص زر إضافة تجربة"}
+          value={current.reviewsAddBtnText || ""}
+          onChange={(v) => updateField("reviewsAddBtnText", v)}
+          placeholder={isEn ? "Write a Note +" : "تدوين تجربتكِ +"}
+          isEn={isEn}
+        />
       </div>
     );
   }
 
-  // 7. CONSULTATION SECTION
+  // 4. CONSULTATION SECTION
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FieldInput
-        label={isEn ? "Consultation Badge" : "شارة الاستشارة (Badge)"}
-        value={current.consultationBadgeText || ""}
-        onChange={(v) => updateField("consultationBadgeText", v)}
-        placeholder={isEn ? "Expert Advice" : "استشارة صيدلانية متخصصة"}
-        isEn={isEn}
-      />
-      <FieldInput
-        label={isEn ? "Consultation Heading" : "عنوان البنر (Heading)"}
+        label={isEn ? "Consultation Heading" : "عنوان شريط الانطلاق والاستشارة (Heading)"}
         value={current.consultationHeadingText || ""}
         onChange={(v) => updateField("consultationHeadingText", v)}
-        placeholder={isEn ? "Have questions about strawberry skin?" : "هل تعانين من حيرة في اختيار روتينك المناسب؟"}
+        placeholder={isEn ? "Your Best Skin Journey Starts Here" : "رحلتكِ نحو بشرة حريرية لا تُهزم تبدأ من هنا"}
         isEn={isEn}
       />
-      <div className="md:col-span-2">
-        <FieldInput
-          label={isEn ? "Consultation Description" : "نص الدعوة للاستشارة (Description)"}
-          value={current.consultationDescText || ""}
-          onChange={(v) => updateField("consultationDescText", v)}
-          placeholder={isEn ? "Our clinical team is available on WhatsApp..." : "فريقنا الصيدلاني جاهز للرد على كافة استفساراتك وتقديم استشارة مجانية مخصصة لنوع بشرتك عبر واتساب."}
-          isEn={isEn}
-        />
-      </div>
       <FieldInput
-        label={isEn ? "WhatsApp Button Text" : "نص زر الواتساب (Button Text)"}
+        label={isEn ? "Shop Now Button Text" : "نص زر التسوق الرئيسي"}
+        value={current.consultationShopBtnText || ""}
+        onChange={(v) => updateField("consultationShopBtnText", v)}
+        placeholder={isEn ? "Shop Now" : "تسوقي الآن"}
+        isEn={isEn}
+      />
+      <FieldInput
+        label={isEn ? "WhatsApp Button Text" : "نص زر استشارة الواتساب"}
         value={current.consultationButtonText || ""}
         onChange={(v) => updateField("consultationButtonText", v)}
         placeholder={isEn ? "Chat on WhatsApp" : "تحدثي مع الصيدلي عبر واتساب"}
+        isEn={isEn}
+      />
+      <FieldInput
+        label={isEn ? "Side Micro Label 1" : "الكلمة الجانبية الأولى"}
+        value={current.consultationSideLabel1 || ""}
+        onChange={(v) => updateField("consultationSideLabel1", v)}
+        placeholder={isEn ? "DISCOVER" : "اكتشفي"}
+        isEn={isEn}
+      />
+      <FieldInput
+        label={isEn ? "Side Micro Label 2" : "الكلمة الجانبية الثانية البارزة"}
+        value={current.consultationSideLabel2 || ""}
+        onChange={(v) => updateField("consultationSideLabel2", v)}
+        placeholder={isEn ? "THE RITUAL" : "بروتوكول سُـلاف"}
         isEn={isEn}
       />
     </div>

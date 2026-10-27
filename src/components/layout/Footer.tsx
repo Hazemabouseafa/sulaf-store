@@ -21,6 +21,7 @@ export function Footer() {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
 
+  const custom = isArabic ? (settings.customContent || {}) : (settings.customContentEn || {});
   const ArrowIcon = isArabic ? ArrowLeft : ArrowRight;
 
   function handleSubscribe(e: React.FormEvent) {
@@ -74,16 +75,17 @@ export function Footer() {
                 isArabic ? "font-amiri text-lg" : "font-cormorant italic text-base"
               } text-[#f6f9e6]/85 tracking-wide`}
             >
-              {isArabic
-                ? "دقة صيدلانية.. وروح أندلسية."
-                : "Clinical Precision. Andalusian Soul."}
+              {custom.footerTagline ||
+                (isArabic
+                  ? "دقة صيدلانية.. وروح أندلسية."
+                  : "Clinical Precision. Andalusian Soul.")}
             </p>
 
             <div className="pt-2 flex items-center gap-2.5">
               <a
                 href={`https://wa.me/${
                   settings.contacts?.whatsapp
-                    ? settings.contacts.whatsapp.replace("+", "")
+                    ? settings.contacts.whatsapp.replace(/[^0-9]/g, "")
                     : SULAF_SETTINGS.whatsappNumber
                 }`}
                 target="_blank"
@@ -94,7 +96,7 @@ export function Footer() {
                 <MessageCircle className="w-4 h-4" />
               </a>
               <a
-                href="mailto:care@sulaf.com"
+                href={`mailto:${settings.contacts?.email || "care@sulaf.com"}`}
                 className="w-8 h-8 rounded-lg border border-[#f6f9e6]/25 hover:border-[#f3a5a1] flex items-center justify-center text-[#f6f9e6]/80 hover:text-[#f3a5a1] transition-colors"
                 aria-label="Email"
               >
@@ -198,12 +200,13 @@ export function Footer() {
           {/* Col 5: Join Our Newsletter (2 Cols) */}
           <div className="lg:col-span-2 space-y-3 text-xs text-start">
             <h4 className="font-cormorant text-base font-bold text-[#f6f9e6]">
-              {isArabic ? "النشرة السريرية" : "Join Our Newsletter"}
+              {custom.footerNewsletterTitle || (isArabic ? "النشرة السريرية" : "Join Our Newsletter")}
             </h4>
             <p className="text-[11px] text-[#f6f9e6]/70 leading-relaxed">
-              {isArabic
-                ? "كوني أول من يعلم بالإصدارات الجديدة ونصائح العناية السريرية."
-                : "Be the first to know about new launches, exclusive offers and skincare tips."}
+              {custom.footerNewsletterDesc ||
+                (isArabic
+                  ? "كوني أول من يعلم بالإصدارات الجديدة ونصائح العناية السريرية."
+                  : "Be the first to know about new launches, exclusive offers and skincare tips.")}
             </p>
             <form onSubmit={handleSubscribe} className="relative pt-1">
               <input

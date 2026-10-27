@@ -46,14 +46,35 @@ export function CartDrawer() {
 
   if (!isOpen) return null;
 
-  const finalTotal = Math.max(0, subtotal - discountAmount);
+  // Multi-product Promo & Volume Discount (matching CheckoutPage)
+  const totalItemsCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const multiPromo = settings.multiProductPromo || {
+    enabled: true,
+    minQuantity: 2,
+    discountType: "PERCENTAGE" as const,
+    discountValue: 10,
+    freeShippingEnabled: true,
+  };
+  const isMultiPromoEligible = multiPromo.enabled && totalItemsCount >= (multiPromo.minQuantity || 2);
+  let multiProductDiscount = 0;
+  if (isMultiPromoEligible) {
+    if (multiPromo.discountType === "PERCENTAGE") {
+      multiProductDiscount = Math.round((subtotal * multiPromo.discountValue) / 100);
+    } else {
+      multiProductDiscount = multiPromo.discountValue;
+    }
+  }
+  const combinedDiscount = discountAmount + multiProductDiscount;
+
+  const finalTotal = Math.max(0, subtotal - combinedDiscount);
   const remainingCod = isDepositMode ? Math.max(0, finalTotal - depositAmount) : 0;
   const payNowAmount = isDepositMode ? Math.min(finalTotal, depositAmount) : finalTotal;
 
-  // Free shipping progress
+  // Free shipping progress (Threshold OR Multi-item Promo)
   const freeShippingThreshold = settings.shipping?.freeShippingThreshold || SULAF_SETTINGS.freeShippingThreshold;
-  const progressPercent = Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100));
-  const diffToFree = freeShippingThreshold - subtotal;
+  const isFreeShippingViaPromo = isMultiPromoEligible && multiPromo.freeShippingEnabled;
+  const progressPercent = isFreeShippingViaPromo ? 100 : Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100));
+  const diffToFree = isFreeShippingViaPromo ? 0 : freeShippingThreshold - subtotal;
   const currency = isArabic ? "ج.م" : "EGP";
   const ArrowIcon = isArabic ? ArrowLeft : ArrowRight;
 
@@ -292,6 +313,16 @@ export function CartDrawer() {
                 <span>{t.cart.subtotal}</span>
                 <span>{subtotal} {currency}</span>
               </div>
+              {multiProductDiscount > 0 && (
+                <div className="flex justify-between text-emerald-700 font-semibold">
+                  <span>
+                    {isArabic
+                      ? `خصم شراء ${multiPromo.minQuantity}+ قطع (${multiPromo.discountType === "PERCENTAGE" ? `${multiPromo.discountValue}%` : `${multiPromo.discountValue} ${currency}`})`
+                      : `Multi-item Promo (${multiPromo.minQuantity}+ items)`}
+                  </span>
+                  <span>-{multiProductDiscount} {currency}</span>
+                </div>
+              )}
               {discountAmount > 0 && (
                 <div className="flex justify-between text-green-700 font-semibold">
                   <span>{t.cart.discount}</span>

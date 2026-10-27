@@ -198,7 +198,8 @@ export default function CheckoutPage() {
               `Address: ${governorate} - ${city}\n` +
               `Attached is my transfer receipt.`
         );
-        window.open(`https://wa.me/${SULAF_SETTINGS.whatsappNumber}?text=${msg}`, "_blank");
+        const waNumber = (settings.contacts?.whatsapp || SULAF_SETTINGS.whatsappNumber).replace(/[^0-9]/g, "");
+        window.open(`https://wa.me/${waNumber}?text=${msg}`, "_blank");
       }
     } catch (err) {
       console.error(err);
