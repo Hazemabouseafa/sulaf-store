@@ -29,7 +29,7 @@ export function Footer() {
 
       {/* Hero Quote Ribbon */}
       <div className="relative z-10 max-w-5xl mx-auto px-4 text-center mb-16 pb-12 border-b border-[#f6f9e6]/15">
-        <p className={`${isArabic ? "font-amiri text-2xl md:text-3xl" : "font-cormorant italic text-2xl md:text-3xl"} text-[#f3e5ab] italic leading-relaxed`}>
+        <p className={`${isArabic ? "font-amiri text-2xl md:text-3xl" : "font-cormorant italic text-2xl md:text-3xl"} text-[#f3a5a1] italic leading-relaxed`}>
           {isArabic
             ? `«${settings.hero.poemLine1} ${settings.hero.poemLine2}»`
             : t.footer.quote}
@@ -114,12 +114,12 @@ export function Footer() {
 
           {/* Col 3: Customer Care & Tracking */}
           <div className="space-y-3 text-xs">
-            <h4 className="font-amiri text-lg font-bold text-[#f3e5ab]">
+            <h4 className="font-amiri text-lg font-bold text-[#f3a5a1]">
               {isArabic ? "خدمة العملاء والشحن" : "Care & Delivery"}
             </h4>
             <ul className="space-y-2 text-[#f6f9e6]/80">
               <li>
-                <Link href="/account" className="hover:text-white transition-colors font-semibold text-[#f3e5ab]">
+                <Link href="/account" className="hover:text-white transition-colors font-semibold text-[#f3a5a1]">
                   {isArabic ? "حسابي وتسجيل الدخول" : "My Account & Login"}
                 </Link>
               </li>
