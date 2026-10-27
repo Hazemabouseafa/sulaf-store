@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { OrderRecord } from "@/lib/orders/order-store";
 import { ProductData } from "@/lib/data/mock-data";
-import { VisualRichEditor } from "@/components/admin/VisualRichEditor";
+import { PageContentEditor } from "@/components/admin/PageContentEditor";
 import { HomepageSectionBuilder } from "@/components/admin/HomepageSectionBuilder";
 import { CouponData } from "@/lib/coupons/coupon-store";
 import { ReviewItem } from "@/lib/reviews/review-store";
@@ -5385,7 +5385,7 @@ export default function AdminPage() {
                       </div>
 
                       {pageEditorTab === "edit" ? (
-                        <VisualRichEditor
+                        <PageContentEditor
                           value={pageEditorLang === "ar" ? (pageEditorForm.contentAr || "") : (pageEditorForm.contentEn || "")}
                           onChange={(newHtml) => {
                             if (pageEditorLang === "ar") {

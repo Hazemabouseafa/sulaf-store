@@ -153,7 +153,7 @@ export default function CustomPageClient({ slug, initialPage }: CustomPageClient
               [&_ul]:list-disc [&_ul]:ps-6 [&_ul]:space-y-2
               [&_li]:text-gray-700 [&_li]:text-xs [&_li]:sm:text-sm
               [&_strong]:text-[#1c2616] [&_strong]:font-bold
-              [&_blockquote]:border-s-4 [&_blockquote]:border-[#d4af37] [&_blockquote]:ps-4 [&_blockquote]:italic [&_blockquote]:bg-[#fbf9f0] [&_blockquote]:py-2 [&_blockquote]:rounded-r-xl"
+              [&_ol]:list-decimal [&_ol]:ps-6 [&_ol]:space-y-2 [&_h4]:font-bold [&_a]:text-[#610b0d] [&_a]:underline [&_img]:max-w-full [&_img]:rounded-2xl [&_table]:w-full [&_table]:border-collapse [&_blockquote]:border-s-4 [&_blockquote]:border-[#d4af37] [&_blockquote]:ps-4 [&_blockquote]:italic [&_blockquote]:bg-[#fbf9f0] [&_blockquote]:py-2 [&_blockquote]:rounded-r-xl"
             dangerouslySetInnerHTML={{ __html: rawContent || "" }}
           />
         </div>
