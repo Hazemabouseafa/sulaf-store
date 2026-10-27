@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ProductData } from "@/lib/data/mock-data";
 import { useProducts } from "@/lib/products/product-store";
 import { useCart } from "@/lib/cart/cart-context";
@@ -97,7 +97,7 @@ export function HorizontalGallerySection() {
     },
   ];
 
-  const featuredProduct = allProducts[selectedBestSellerIdx] || allProducts[1] || allProducts[0];
+  const featuredProduct = allProducts[selectedBestSellerIdx] || allProducts[0];
 
   function handleBestSellerAdd() {
     if (!featuredProduct) return;
@@ -115,12 +115,17 @@ export function HorizontalGallerySection() {
         <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-14">
           
           {/* Top Split Header */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end"
+          >
             <div className="lg:col-span-6 space-y-2 text-start">
               {vis.galleryBadge !== false && (
                 <span className="font-mono text-[10px] tracking-[0.28em] uppercase text-[#610b0d] font-bold block">
-                  {custom.galleryBadgeText ||
-                    (isArabic ? "المجموعة السريرية المختارة" : "FEATURED COLLECTION")}
+                  {custom.galleryBadgeText || t.gallery.badge}
                 </span>
               )}
 
@@ -132,20 +137,7 @@ export function HorizontalGallerySection() {
                       : "font-cormorant text-4xl sm:text-5xl leading-[1.08]"
                   } font-normal text-[#18271b]`}
                 >
-                  {custom.galleryHeadingText ||
-                    (isArabic ? (
-                      <>
-                        علم الجمال الأندلسي
-                        <br />
-                        والترميم الصيدلاني
-                      </>
-                    ) : (
-                      <>
-                        The Science of
-                        <br />
-                        Andalusian Beauty
-                      </>
-                    ))}
+                  {custom.galleryHeadingText || t.gallery.heading}
                 </h2>
               )}
             </div>
@@ -153,10 +145,7 @@ export function HorizontalGallerySection() {
             <div className="lg:col-span-6 lg:border-s border-[#485c36]/25 lg:ps-10 space-y-3 text-start">
               {vis.galleryDesc !== false && (
                 <p className="text-xs sm:text-sm text-[#18271b]/80 leading-relaxed max-w-md">
-                  {custom.galleryDescText ||
-                    (isArabic
-                      ? "تركيبات علاجية متطورة مستلهمة من خلاصات التراث الأندلسي، ومصاغة بدقة العلم الصيدلاني الحديث لعلاج الخشونة وجلد الوزة."
-                      : "Advanced formulations inspired by Andalusian botanicals, combined with modern dermatological science.")}
+                  {custom.galleryDescText || t.gallery.desc}
                 </p>
               )}
 
@@ -166,39 +155,41 @@ export function HorizontalGallerySection() {
                     href="/shop"
                     className="inline-flex items-center gap-2 text-xs font-bold text-[#18271b] hover:text-[#610b0d] border-b border-[#18271b]/45 pb-1 transition-colors"
                   >
-                    <span>
-                      {custom.galleryViewAllText ||
-                        (isArabic ? "عرض جميع المستحضرات" : "View All Products")}
-                    </span>
+                    <span>{custom.galleryViewAllText || t.gallery.viewAll}</span>
                     <ArrowIcon className="w-3.5 h-3.5" />
                   </Link>
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
 
-          {/* 5 Sculptural Arches Row */}
+          {/* 5 Sculptural Arches Row with Fluid Hover Lift & Staggered Reveal */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 pt-2">
             {fiveArches.map((arch, idx) => {
               const linkedProd = allProducts[arch.productIndex] || allProducts[0];
               return (
                 <motion.div
                   key={idx}
-                  initial={{ opacity: 0, y: 18 }}
+                  initial={{ opacity: 0, y: 26 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.45, delay: idx * 0.07 }}
+                  transition={{
+                    duration: 0.65,
+                    delay: idx * 0.09,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                  whileHover={{ y: -10 }}
                   className="relative group"
                 >
-                  {/* Decorative Background Accents behind specific arches matching reference */}
+                  {/* Decorative Background Accents behind specific arches */}
                   {arch.accentType === "sand" && (
-                    <div className="absolute -top-2 -right-1.5 inset-x-2 h-36 rounded-t-full border-t-4 border-r-4 border-[#cbb994]/60 pointer-events-none" />
+                    <div className="absolute -top-2 -right-1.5 inset-x-2 h-36 rounded-t-full border-t-4 border-r-4 border-[#cbb994]/60 pointer-events-none transition-transform duration-500 group-hover:scale-105" />
                   )}
 
                   {arch.accentType === "darkCrescent" && (
                     <>
-                      <div className="absolute top-6 -left-2.5 w-16 h-40 rounded-l-full bg-[#18271b] pointer-events-none" />
-                      <div className="absolute -bottom-1 -right-2 w-12 h-44 bg-[#18271b] rounded-br-xl pointer-events-none" />
+                      <div className="absolute top-6 -left-2.5 w-16 h-40 rounded-l-full bg-[#18271b] pointer-events-none transition-transform duration-500 group-hover:-translate-x-1" />
+                      <div className="absolute -bottom-1 -right-2 w-12 h-44 bg-[#18271b] rounded-br-xl pointer-events-none transition-transform duration-500 group-hover:translate-x-1" />
                       <div className="absolute -top-2 inset-x-3 h-28 rounded-t-full border border-[#485c36]/30 rotate-6 pointer-events-none" />
                     </>
                   )}
@@ -212,14 +203,21 @@ export function HorizontalGallerySection() {
                   {/* Main Arch Card */}
                   <div
                     onClick={() => router.push(arch.href)}
-                    className={`relative z-10 rounded-t-full bg-[#f4f1e6] pt-9 pb-7 px-4 flex flex-col items-center text-center justify-between min-h-[255px] cursor-pointer transition-all ${
+                    className={`relative z-10 rounded-t-full bg-[#f4f1e6] group-hover:bg-[#faf8f0] pt-9 pb-7 px-4 flex flex-col items-center text-center justify-between min-h-[255px] cursor-pointer transition-all duration-300 shadow-[0_8px_24px_rgba(24,39,27,0.04)] group-hover:shadow-[0_18px_38px_rgba(24,39,27,0.12)] ${
                       arch.accentType === "roseBorder"
                         ? "border border-[#ca384a]/45 hover:border-[#ca384a]"
                         : "border border-[#485c36]/25 hover:border-[#18271b]"
                     }`}
                   >
-                    {/* Top Minimal Botanical / Geometric Symbol */}
-                    <div
+                    {/* Top Minimal Botanical / Geometric Symbol with gentle float */}
+                    <motion.div
+                      animate={{ y: [0, -4, 0] }}
+                      transition={{
+                        duration: 3.5,
+                        delay: idx * 0.3,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
                       className={`${
                         arch.accentType === "roseBorder"
                           ? "text-[#ca384a]/80"
@@ -233,7 +231,7 @@ export function HorizontalGallerySection() {
                       ) : (
                         <Sparkles className="w-5 h-5 stroke-[1.3]" />
                       )}
-                    </div>
+                    </motion.div>
 
                     {/* Center Number + Serif Title + Subtitle */}
                     <div className="space-y-1.5 my-4">
@@ -258,7 +256,7 @@ export function HorizontalGallerySection() {
                     </div>
 
                     {/* Bottom Circular Arrow Button */}
-                    <div className="w-8 h-8 rounded-full border border-[#18271b]/30 group-hover:bg-[#18271b] group-hover:text-[#f6f9e6] flex items-center justify-center transition-colors">
+                    <div className="w-8 h-8 rounded-full border border-[#18271b]/30 group-hover:bg-[#18271b] group-hover:text-[#f6f9e6] flex items-center justify-center transition-all duration-300 group-hover:scale-110">
                       <ArrowIcon className="w-3.5 h-3.5" />
                     </div>
                   </div>
@@ -271,7 +269,7 @@ export function HorizontalGallerySection() {
       </section>
 
       {/* ===================================================================== */}
-      {/* SECTION 4: DARK FOREST BEST-SELLER BAND WITH MANDALA & ARCH PORTAL    */}
+      {/* SECTION 4: DARK FOREST BEST-SELLER BAND WITH ANIMATED MANDALA         */}
       {/* ===================================================================== */}
       <section className="relative bg-[#18271b] text-[#f6f9e6] py-20 sm:py-24 overflow-hidden">
         {/* Decorative Botanical Leaf Curves in Bottom Right Corner */}
@@ -295,27 +293,37 @@ export function HorizontalGallerySection() {
         <div className="max-w-6xl mx-auto px-6 sm:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             
-            {/* Col 1: Giant Wireframe Rosette + Lit 3D Andalusian Archway Niche (4 Cols) */}
+            {/* Col 1: Giant Rotating Wireframe Rosette + Lit 3D Andalusian Archway Niche (4 Cols) */}
             <div className="lg:col-span-4 relative flex items-center justify-center min-h-[300px]">
-              {/* Large Champagne-Gold Wireframe Mandala on the Left */}
-              <div
+              {/* Large Champagne-Gold Wireframe Mandala rotating smoothly */}
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 110, repeat: Infinity, ease: "linear" }}
                 className={`text-[#c5b37a]/75 ${
                   isArabic ? "-ml-10" : "-mr-10"
                 } relative z-10 pointer-events-none`}
               >
                 <SulafRosette className="w-52 h-52 sm:w-60 sm:h-60" strokeWidth={0.9} />
-              </div>
+              </motion.div>
 
               {/* Sunlit 3D Andalusian Archway Portal beside it */}
-              <div className="w-40 sm:w-44 h-64 sm:h-72 rounded-t-full overflow-hidden border border-[#f6f9e6]/20 shadow-2xl relative flex items-end justify-center bg-gradient-to-b from-[#dfd5c0] via-[#efeae0] to-[#cfc4ae]">
-                {/* Inner Olive Shadow Archway Depth */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.94 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                className="w-40 sm:w-44 h-64 sm:h-72 rounded-t-full overflow-hidden border border-[#f6f9e6]/20 shadow-2xl relative flex items-end justify-center bg-gradient-to-b from-[#dfd5c0] via-[#efeae0] to-[#cfc4ae]"
+              >
                 <div className="absolute inset-y-0 right-0 w-[44%] bg-gradient-to-b from-[#2f4431] to-[#1e2e20]" />
-                {/* Inner Illuminated Archway Opening */}
                 <div className="w-24 h-48 rounded-t-full bg-gradient-to-b from-[#f5f0e6] to-[#e2d9c5] relative z-10 mr-4 shadow-inner flex items-end justify-start p-2">
-                  {/* Small Olive Branch Silhouette */}
-                  <Leaf className="w-6 h-6 text-[#18271b]/80 rotate-45" />
+                  <motion.div
+                    animate={{ rotate: [40, 48, 40] }}
+                    transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <Leaf className="w-6 h-6 text-[#18271b]/80" />
+                  </motion.div>
                 </div>
-              </div>
+              </motion.div>
             </div>
 
             {/* Col 2: Best Seller Product Details & 3 Circular Ingredient Badges (5 Cols) */}
@@ -332,9 +340,9 @@ export function HorizontalGallerySection() {
                       key={p.id}
                       type="button"
                       onClick={() => setSelectedBestSellerIdx(idx)}
-                      className={`font-mono text-[10px] px-2 py-0.5 rounded-full transition-colors cursor-pointer ${
+                      className={`font-mono text-[10px] px-2.5 py-0.5 rounded-full transition-all cursor-pointer ${
                         selectedBestSellerIdx === idx
-                          ? "bg-[#f3a5a1] text-[#18271b] font-bold"
+                          ? "bg-[#f3a5a1] text-[#18271b] font-bold scale-105"
                           : "text-[#f6f9e6]/60 hover:text-[#f6f9e6] border border-[#f6f9e6]/20"
                       }`}
                     >
@@ -344,48 +352,63 @@ export function HorizontalGallerySection() {
                 </div>
               </div>
 
-              <h3
-                className={`${
-                  isArabic
-                    ? "font-amiri text-3xl sm:text-4xl leading-snug"
-                    : "font-cormorant text-3xl sm:text-4xl leading-tight"
-                } font-normal text-[#f6f9e6]`}
-              >
-                {featuredProduct
-                  ? isArabic
-                    ? featuredProduct.nameAr
-                    : featuredProduct.nameEn
-                  : "Sulaf Barrier Restoration Elixir"}
-              </h3>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={featuredProduct?.id || selectedBestSellerIdx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                  className="space-y-4"
+                >
+                  <h3
+                    className={`${
+                      isArabic
+                        ? "font-amiri text-3xl sm:text-4xl leading-snug"
+                        : "font-cormorant text-3xl sm:text-4xl leading-tight"
+                    } font-normal text-[#f6f9e6]`}
+                  >
+                    {featuredProduct
+                      ? isArabic
+                        ? featuredProduct.nameAr
+                        : featuredProduct.nameEn
+                      : "Absolutes Smoothing Body Cream"}
+                  </h3>
 
-              <p className="text-xs text-[#f6f9e6]/70 tracking-wider">
-                {isArabic
-                  ? "ترميم الحاجز  ·  تنعيم فائق  ·  توازن فسيولوجي"
-                  : "Repair  ·  Strengthen  ·  Balance"}
-              </p>
+                  <p className="text-xs text-[#f6f9e6]/75 leading-relaxed">
+                    {featuredProduct
+                      ? isArabic
+                        ? featuredProduct.subtitleAr
+                        : featuredProduct.subtitleEn
+                      : ""}
+                  </p>
 
-              {/* 3 Circular Ingredient Badges */}
-              <div className="pt-1 flex flex-wrap items-center gap-4">
-                {(featuredProduct?.activeIngredients?.slice(0, 3) || []).map((ing) => (
-                  <div key={ing.id} className="inline-flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-full border border-[#f6f9e6]/30 flex items-center justify-center text-[#f3a5a1]">
-                      <Droplet className="w-3.5 h-3.5 stroke-[1.4]" />
-                    </span>
-                    <span className="text-xs text-[#f6f9e6]/90">
-                      {ing.concentration} {isArabic ? ing.nameAr : ing.nameEn}
-                    </span>
+                  {/* 3 Circular Ingredient Badges */}
+                  <div className="pt-1 flex flex-wrap items-center gap-4">
+                    {(featuredProduct?.activeIngredients?.slice(0, 3) || []).map((ing) => (
+                      <div key={ing.id} className="inline-flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-full border border-[#f6f9e6]/30 flex items-center justify-center text-[#f3a5a1]">
+                          <Droplet className="w-3.5 h-3.5 stroke-[1.4]" />
+                        </span>
+                        <span className="text-xs text-[#f6f9e6]/90">
+                          {ing.concentration} {isArabic ? ing.nameAr : ing.nameEn}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </motion.div>
+              </AnimatePresence>
 
               {/* Price + Add to Bag Pill Button */}
               <div className="pt-5 border-t border-[#f6f9e6]/15 flex items-center gap-6">
                 <span className="font-mono text-xl font-bold text-[#f6f9e6]">
-                  {featuredProduct?.price || 490} {currency}
+                  {featuredProduct?.price || 480} {currency}
                 </span>
 
-                <button
+                <motion.button
                   type="button"
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
                   onClick={handleBestSellerAdd}
                   className="px-6 py-2.5 rounded-full border border-[#f6f9e6]/40 hover:bg-[#ca384a] hover:border-[#ca384a] text-[#f6f9e6] text-xs font-bold inline-flex items-center gap-2.5 transition-all cursor-pointer"
                 >
@@ -396,11 +419,11 @@ export function HorizontalGallerySection() {
                     </>
                   ) : (
                     <>
-                      <span>{isArabic ? "أضيفي إلى الحقيبة" : "Add to Bag"}</span>
+                      <span>{t.product.addToBag}</span>
                       <ArrowIcon className="w-3.5 h-3.5" />
                     </>
                   )}
-                </button>
+                </motion.button>
               </div>
             </div>
 
@@ -415,11 +438,11 @@ export function HorizontalGallerySection() {
                   isArabic
                     ? "font-amiri text-lg leading-relaxed"
                     : "font-cormorant text-lg leading-relaxed"
-                } text-[#f6f9e6]/85 max-w-[210px]`}
+                } text-[#f6f9e6]/85 max-w-[220px]`}
               >
                 {isArabic
-                  ? "لأن البشرة السليمة المتوازنة هي الأساس الحقيقي لكل جمال لا ينهزم."
-                  : "Because healthy skin is the foundation of lasting beauty."}
+                  ? `${t.brand.poemLine1}.. ${t.brand.poemLine2}`
+                  : `${t.brand.poemLine1} ${t.brand.poemLine2}`}
               </p>
 
               <div className="flex items-center gap-2 text-[#c5b37a] pt-2">
@@ -453,9 +476,7 @@ export function HorizontalGallerySection() {
               >
                 {isArabic ? (
                   <>
-                    أكثر من مجرد عناية.
-                    <br />
-                    طقس سريري يدوم أثره.
+                    {t.brand.tagline}
                   </>
                 ) : (
                   <>
@@ -469,39 +490,44 @@ export function HorizontalGallerySection() {
             {/* Right/End 4 Icon Columns with Vertical Dividers (8 Cols) */}
             <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x rtl:sm:divide-x-reverse divide-[#485c36]/20 border-s border-[#485c36]/20">
               
-              <div className="py-4 px-4 flex flex-col items-center text-center space-y-2">
+              <motion.div
+                whileHover={{ y: -4 }}
+                className="py-4 px-4 flex flex-col items-center text-center space-y-2"
+              >
                 <Leaf className="w-6 h-6 text-[#18271b] stroke-[1.4]" />
                 <h3
                   className={`${
                     isArabic ? "font-amiri text-lg" : "font-cormorant text-base"
                   } font-bold text-[#18271b]`}
                 >
-                  {isArabic ? "مكونات علاجية نقية" : "Premium Ingredients"}
+                  {isArabic ? t.hero.clinicalDose : "Premium Ingredients"}
                 </h3>
                 <p className="text-[11px] text-[#485c36]/80 leading-relaxed">
-                  {isArabic
-                    ? "30% يوريا نقية و10% لاكتات مختارة بعناية."
-                    : "Naturally sourced, carefully selected."}
+                  {isArabic ? t.hero.clinicalDoseDesc : "Naturally sourced, carefully selected."}
                 </p>
-              </div>
+              </motion.div>
 
-              <div className="py-4 px-4 flex flex-col items-center text-center space-y-2">
+              <motion.div
+                whileHover={{ y: -4 }}
+                className="py-4 px-4 flex flex-col items-center text-center space-y-2"
+              >
                 <FlaskConical className="w-6 h-6 text-[#18271b] stroke-[1.4]" />
                 <h3
                   className={`${
                     isArabic ? "font-amiri text-lg" : "font-cormorant text-base"
                   } font-bold text-[#18271b]`}
                 >
-                  {isArabic ? "مختبر سريرياً وآمِن" : "Dermatologically Tested"}
+                  {isArabic ? t.hero.fastAbsorption : "Dermatologically Tested"}
                 </h3>
                 <p className="text-[11px] text-[#485c36]/80 leading-relaxed">
-                  {isArabic
-                    ? "توازن فسيولوجي pH 5.2 لطيف على البشرة."
-                    : "Safe, effective, and skin-friendly."}
+                  {isArabic ? t.hero.fastAbsorptionDesc : "Safe, effective, and skin-friendly."}
                 </p>
-              </div>
+              </motion.div>
 
-              <div className="py-4 px-4 flex flex-col items-center text-center space-y-2">
+              <motion.div
+                whileHover={{ y: -4 }}
+                className="py-4 px-4 flex flex-col items-center text-center space-y-2"
+              >
                 <div className="text-[#18271b]">
                   <SulafRosette className="w-6 h-6" strokeWidth={1.8} />
                 </div>
@@ -510,30 +536,31 @@ export function HorizontalGallerySection() {
                     isArabic ? "font-amiri text-lg" : "font-cormorant text-base"
                   } font-bold text-[#18271b]`}
                 >
-                  {isArabic ? "إلهام أندلسي أصيل" : "Heritage Inspired"}
+                  {isArabic ? t.hero.barrierRepair : "Heritage Inspired"}
                 </h3>
                 <p className="text-[11px] text-[#485c36]/80 leading-relaxed">
-                  {isArabic
-                    ? "قرون من الحكمة الأندلسية بصياغة حديثة."
-                    : "Centuries of wisdom, modernized."}
+                  {isArabic ? t.hero.barrierRepairDesc : "Centuries of wisdom, modernized."}
                 </p>
-              </div>
+              </motion.div>
 
-              <div className="py-4 px-4 flex flex-col items-center text-center space-y-2">
+              <motion.div
+                whileHover={{ y: -4 }}
+                className="py-4 px-4 flex flex-col items-center text-center space-y-2"
+              >
                 <Heart className="w-6 h-6 text-[#18271b] stroke-[1.4]" />
                 <h3
                   className={`${
                     isArabic ? "font-amiri text-lg" : "font-cormorant text-base"
                   } font-bold text-[#18271b]`}
                 >
-                  {isArabic ? "نتائج حقيقية ومعاينة" : "Real Results"}
+                  {isArabic ? "معاينة العبوة قبل الدفع" : "Real Results"}
                 </h3>
                 <p className="text-[11px] text-[#485c36]/80 leading-relaxed">
                   {isArabic
-                    ? "ملمس حريري موثق ومعاينة قبل الاستلام."
+                    ? "شحن فوري مؤمن لجميع المحافظات مع حق المعاينة."
                     : "Healthier skin, lasting confidence."}
                 </p>
-              </div>
+              </motion.div>
 
             </div>
 

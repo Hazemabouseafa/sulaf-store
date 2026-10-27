@@ -26,8 +26,8 @@ export function SulafFlowerIcon({
       className={`relative inline-flex items-center justify-center shrink-0 ${className}`}
     >
       <Image
-        src="/brand/sulaf-flower-symbol.png"
-        alt="سلاف زهرة أندلسية"
+        src="/brand/sulaf-logo-official.png"
+        alt="سُلاف | Sulaf"
         width={size}
         height={size}
         style={{ width: size, height: size }}
@@ -40,80 +40,51 @@ export function SulafFlowerIcon({
   );
 }
 
+/**
+ * Official Sulaf Logo Component — Renders ONLY the official attached logo lockup
+ * (/brand/sulaf-logo-official.png) with ZERO extra text beside it.
+ */
 export function SulafLogo({
-  variant = "horizontal",
   size = "md",
   color = "burgundy",
-  showPoem = false,
   className = "",
   href = "/",
 }: SulafLogoProps) {
-  const sizeMap = {
-    sm: { flower: 32, textH: "h-6", textSize: "text-lg", sub: "text-[10px]" },
-    md: { flower: 46, textH: "h-9", textSize: "text-2xl", sub: "text-xs" },
-    lg: { flower: 64, textH: "h-12", textSize: "text-3xl", sub: "text-sm" },
-    xl: { flower: 90, textH: "h-16", textSize: "text-4xl", sub: "text-base" },
+  const dimensions = {
+    sm: { boxW: 115, boxH: 44, imgSize: 120 },
+    md: { boxW: 145, boxH: 54, imgSize: 150 },
+    lg: { boxW: 185, boxH: 68, imgSize: 190 },
+    xl: { boxW: 230, boxH: 84, imgSize: 235 },
   };
 
-  const currentSize = sizeMap[size];
+  const current = dimensions[size];
 
   const content = (
-    <div className={`inline-flex items-center gap-3 select-none ${className}`}>
-      {/* 8-Petal Andalusian Flower Symbol */}
-      <SulafFlowerIcon size={currentSize.flower} animated={size === "xl" || size === "lg"} />
-
-      {/* Brand Typography */}
-      <div className="flex flex-col justify-center">
-        <div className="flex items-baseline gap-2">
-          <span
-            className={`font-amiri font-bold tracking-wide leading-none ${currentSize.textSize} ${
-              color === "cream"
-                ? "text-[#f6f9e6]"
-                : color === "green"
-                ? "text-[#485c36]"
-                : color === "gold"
-                ? "text-[#ca384a]"
-                : "text-[#610b0d]"
-            }`}
-          >
-            سُــلَاف
-          </span>
-          <span
-            className={`font-cormorant font-semibold tracking-widest uppercase leading-none opacity-90 ${
-              size === "sm" ? "text-xs" : "text-sm"
-            } ${
-              color === "cream"
-                ? "text-[#f6f9e6]"
-                : color === "green"
-                ? "text-[#485c36]"
-                : color === "gold"
-                ? "text-[#ca384a]"
-                : "text-[#610b0d]"
-            }`}
-          >
-            Sulaf
-          </span>
-        </div>
-        <span
-          className={`font-cairo tracking-wider font-light uppercase opacity-75 ${currentSize.sub} ${
-            color === "cream" ? "text-[#f6f9e6]/80" : "text-[#485c36]/90"
-          }`}
-        >
-          Cosmeceuticals
-        </span>
-
-        {showPoem && (
-          <p className="mt-1 font-amiri text-xs text-[#f3a5a1] italic opacity-90 max-w-xs">
-            «ما كان في رفقٍ يداوينا سلافُ به إلّا تحوّل حسنًا لا ينهزمُ»
-          </p>
-        )}
-      </div>
+    <div
+      style={{ width: current.boxW, height: current.boxH }}
+      className={`relative inline-flex items-center justify-center overflow-hidden select-none shrink-0 ${className}`}
+    >
+      <Image
+        src="/brand/sulaf-logo-official.png"
+        alt="سُلاف | Sulaf"
+        width={current.imgSize}
+        height={current.imgSize}
+        style={{ width: current.imgSize, height: current.imgSize }}
+        className={`object-contain transition-transform duration-500 group-hover:scale-105 ${
+          color === "cream" ? "brightness-0 invert opacity-95" : ""
+        }`}
+        priority
+      />
     </div>
   );
 
   if (href) {
     return (
-      <Link href={href} className="group transition-opacity hover:opacity-95">
+      <Link
+        href={href}
+        className="inline-flex items-center focus:outline-none group"
+        aria-label="سُـلاف | Sulaf"
+      >
         {content}
       </Link>
     );
