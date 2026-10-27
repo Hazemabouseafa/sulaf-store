@@ -17,16 +17,17 @@ import {
   Leaf,
   FlaskConical,
   Heart,
+  Droplet,
+  Sparkles,
   Check,
-  ShoppingBag,
 } from "lucide-react";
 
 export function HorizontalGallerySection() {
   const router = useRouter();
   const { addItem } = useCart();
   const [selectedQuickView, setSelectedQuickView] = useState<ProductData | null>(null);
-  const [addedId, setAddedId] = useState<string | null>(null);
-  const [activeDot, setActiveDot] = useState<number>(0);
+  const [selectedBestSellerIdx, setSelectedBestSellerIdx] = useState<number>(0);
+  const [addedBestSeller, setAddedBestSeller] = useState(false);
 
   const { isArabic, t } = useLanguage();
   const { settings } = useStoreSettings();
@@ -42,56 +43,84 @@ export function HorizontalGallerySection() {
   const currency = isArabic ? "ج.م" : "EGP";
   const ArrowIcon = isArabic ? ArrowLeft : ArrowRight;
 
-  const categoryLabelsAr = ["كريمات الترميم", "إكسير الحاجز", "بلسم التنظيف", "تونر الأحماض"];
-  const categoryLabelsEn = ["MOISTURIZERS", "SERUMS", "CLEANSERS", "TONERS"];
-
-  const benefitTripletsAr = [
-    "30% يوريا · 10% لاكتات · تنعيم",
-    "سيراميد · ترميم · توازن",
-    "إذابة · تنقية · نعومة",
-    "تقشير لطيف · نضارة · تجديد",
+  // The 5 Arched Showcase Cards matching Section 3 of the reference image
+  const fiveArches = [
+    {
+      num: "01",
+      titleAr: "بلسم التنظيف",
+      titleEn: "Cleansers",
+      subAr: "تنقية وإذابة الشوائب",
+      subEn: "Purify & refresh",
+      href: `/product/${allProducts[2]?.slug || "sulaf-melt-cleansing-balm"}`,
+      productIndex: 2,
+      accentType: "sand" as const,
+    },
+    {
+      num: "02",
+      titleAr: "إكسير الحاجز",
+      titleEn: "Serums",
+      subAr: "ترميم مركز بالسيراميد",
+      subEn: "Targeted solutions",
+      href: `/product/${allProducts[1]?.slug || "sulaf-barrier-restoration-elixir"}`,
+      productIndex: 1,
+      accentType: "plain" as const,
+    },
+    {
+      num: "03",
+      titleAr: "كريمات اليوريا 30%",
+      titleEn: "Moisturizers",
+      subAr: "علاج جلد الوزة والخشونة",
+      subEn: "Nourish & restore",
+      href: `/product/${allProducts[0]?.slug || "absolutes-smoothing-body-cream"}`,
+      productIndex: 0,
+      accentType: "darkCrescent" as const,
+    },
+    {
+      num: "04",
+      titleAr: "العلاجات المركزة",
+      titleEn: "Treatments",
+      subAr: "عناية سريرية متطورة",
+      subEn: "Advanced care",
+      href: `/product/${allProducts[0]?.slug || "absolutes-smoothing-body-cream"}`,
+      productIndex: 0,
+      accentType: "roseBorder" as const,
+    },
+    {
+      num: "05",
+      titleAr: "تونر الأحماض",
+      titleEn: "Toners",
+      subAr: "توازن وتجديد المسام",
+      subEn: "Balance & prepare",
+      href: `/product/${allProducts[3]?.slug || "sulaf-andalusian-aha-clarifying-toner"}`,
+      productIndex: 3,
+      accentType: "cornerNode" as const,
+    },
   ];
-  const benefitTripletsEn = [
-    "Nourish · Restore · Replenish",
-    "Repair · Strengthen · Balance",
-    "Dissolve · Purify · Soften",
-    "Clarify · Refine · Renew",
-  ];
 
-  function handleAdd(e: React.MouseEvent, prod: ProductData) {
-    e.preventDefault();
-    e.stopPropagation();
-    addItem(prod);
-    setAddedId(prod.id);
-    setTimeout(() => setAddedId(null), 1600);
+  const featuredProduct = allProducts[selectedBestSellerIdx] || allProducts[1] || allProducts[0];
+
+  function handleBestSellerAdd() {
+    if (!featuredProduct) return;
+    addItem(featuredProduct);
+    setAddedBestSeller(true);
+    setTimeout(() => setAddedBestSeller(false), 1800);
   }
 
   return (
     <div className="w-full font-cairo">
       {/* ===================================================================== */}
-      {/* SECTION 3: "TARGETED FORMULAS. VISIBLE RESULTS." (01, 02, 03, 04)     */}
+      {/* SECTION 3: "THE SCIENCE OF ANDALUSIAN BEAUTY" — 5 ARCHED CARDS        */}
       {/* ===================================================================== */}
-      <section className="relative bg-[#f6f9e6] text-[#22301e] py-20 sm:py-24 overflow-hidden">
-        {/* Far Left/Start Decorative Vertical Line with 4-Pointed Star (✦) */}
-        <div
-          className={`hidden xl:flex flex-col items-center absolute inset-y-0 ${
-            isArabic ? "right-10" : "left-10"
-          } pointer-events-none`}
-        >
-          <div className="w-px flex-1 bg-[#485c36]/20" />
-          <FourPointStar className="w-4 h-4 text-[#22301e] my-2" />
-          <div className="w-px flex-1 bg-[#485c36]/20" />
-        </div>
-
-        <div className="max-w-6xl mx-auto px-6 sm:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-            
-            {/* Left/Start Editorial Column (4 Cols) */}
-            <div className="lg:col-span-4 space-y-4 text-start">
+      <section className="relative bg-[#f4f1e6] text-[#18271b] py-20 sm:py-24 overflow-hidden">
+        <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-14">
+          
+          {/* Top Split Header */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
+            <div className="lg:col-span-6 space-y-2 text-start">
               {vis.galleryBadge !== false && (
                 <span className="font-mono text-[10px] tracking-[0.28em] uppercase text-[#610b0d] font-bold block">
                   {custom.galleryBadgeText ||
-                    (isArabic ? "طقوس سُـلاف السريرية" : "THE SULAF RITUAL")}
+                    (isArabic ? "المجموعة السريرية المختارة" : "FEATURED COLLECTION")}
                 </span>
               )}
 
@@ -99,368 +128,413 @@ export function HorizontalGallerySection() {
                 <h2
                   className={`${
                     isArabic
-                      ? "font-amiri text-3xl sm:text-4xl leading-snug"
-                      : "font-cormorant text-3xl sm:text-4xl leading-tight"
-                  } font-normal text-[#1e2b18]`}
+                      ? "font-amiri text-3xl sm:text-5xl leading-snug"
+                      : "font-cormorant text-4xl sm:text-5xl leading-[1.08]"
+                  } font-normal text-[#18271b]`}
                 >
                   {custom.galleryHeadingText ||
                     (isArabic ? (
                       <>
-                        تركيبات علاجية مركزة.
+                        علم الجمال الأندلسي
                         <br />
-                        نتائج سريرية ملموسة.
+                        والترميم الصيدلاني
                       </>
                     ) : (
                       <>
-                        Targeted Formulas.
+                        The Science of
                         <br />
-                        Visible Results.
+                        Andalusian Beauty
                       </>
                     ))}
                 </h2>
               )}
+            </div>
 
+            <div className="lg:col-span-6 lg:border-s border-[#485c36]/25 lg:ps-10 space-y-3 text-start">
               {vis.galleryDesc !== false && (
-                <p className="text-xs sm:text-sm text-[#485c36]/85 leading-relaxed max-w-xs">
+                <p className="text-xs sm:text-sm text-[#18271b]/80 leading-relaxed max-w-md">
                   {custom.galleryDescText ||
                     (isArabic
-                      ? "كل مستحضر هو ثمرة بحث صيدلاني دقيق، وتراكيز فعالة نقية تحترم التوازن الفسيولوجي الطبيعي لبشرتكِ."
-                      : "Each product is a result of careful research, premium ingredients, and a deep respect for your skin's natural balance.")}
+                      ? "تركيبات علاجية متطورة مستلهمة من خلاصات التراث الأندلسي، ومصاغة بدقة العلم الصيدلاني الحديث لعلاج الخشونة وجلد الوزة."
+                      : "Advanced formulations inspired by Andalusian botanicals, combined with modern dermatological science.")}
                 </p>
               )}
 
               {vis.galleryViewAll !== false && (
-                <div className="pt-3">
+                <div>
                   <Link
                     href="/shop"
-                    className="inline-flex items-center gap-2 text-xs font-bold text-[#1e2b18] hover:text-[#610b0d] border-b border-[#1e2b18]/40 pb-1 transition-colors"
+                    className="inline-flex items-center gap-2 text-xs font-bold text-[#18271b] hover:text-[#610b0d] border-b border-[#18271b]/45 pb-1 transition-colors"
                   >
                     <span>
                       {custom.galleryViewAllText ||
-                        (isArabic ? "تصفحي جميع المستحضرات" : "Shop All Products")}
+                        (isArabic ? "عرض جميع المستحضرات" : "View All Products")}
                     </span>
                     <ArrowIcon className="w-3.5 h-3.5" />
                   </Link>
                 </div>
               )}
             </div>
-
-            {/* Right/End 4 Numbered Cards (8 Cols) */}
-            <div className="lg:col-span-8 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {allProducts.slice(0, 4).map((prod, idx) => {
-                  const num = String(idx + 1).padStart(2, "0");
-                  const isAdded = addedId === prod.id;
-                  const prodName = isArabic ? prod.nameAr : prod.nameEn;
-                  const catLabel = isArabic
-                    ? categoryLabelsAr[idx % categoryLabelsAr.length]
-                    : categoryLabelsEn[idx % categoryLabelsEn.length];
-                  const triplet = isArabic
-                    ? benefitTripletsAr[idx % benefitTripletsAr.length]
-                    : benefitTripletsEn[idx % benefitTripletsEn.length];
-
-                  return (
-                    <motion.article
-                      key={prod.id}
-                      initial={{ opacity: 0, y: 16 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.45, delay: idx * 0.08 }}
-                      onClick={() => {
-                        setActiveDot(idx);
-                        router.push(`/product/${prod.slug}`);
-                      }}
-                      className="group rounded-xl bg-[#f9fbf0] border border-[#485c36]/15 hover:border-[#610b0d]/50 p-5 flex flex-col justify-between min-h-[255px] shadow-[0_6px_22px_rgba(34,48,30,0.05)] hover:shadow-[0_12px_30px_rgba(34,48,30,0.1)] transition-all cursor-pointer text-start"
-                    >
-                      {/* Top: Number + Crimson Vertical Stem */}
-                      <div>
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono text-xs text-[#22301e] font-bold pl-1.5 border-s-2 border-[#610b0d]">
-                            {num}
-                          </span>
-                          <span className="font-mono text-xs font-bold text-[#610b0d]">
-                            {prod.price} {currency}
-                          </span>
-                        </div>
-                        <div className="w-px h-6 bg-[#ca384a]/60 my-3 ms-0.5" />
-                      </div>
-
-                      {/* Middle: Category, Serif Title, 3-Word Dot Summary */}
-                      <div className="space-y-1.5 my-2">
-                        <span className="font-mono text-[9px] tracking-[0.22em] uppercase text-[#485c36]/75 block">
-                          {catLabel}
-                        </span>
-
-                        <h3
-                          className={`${
-                            isArabic
-                              ? "font-amiri text-xl leading-snug"
-                              : "font-cormorant text-lg leading-snug"
-                          } font-bold text-[#1e2b18] group-hover:text-[#610b0d] transition-colors line-clamp-2 min-h-[2.75rem]`}
-                        >
-                          {prodName}
-                        </h3>
-
-                        <p className="text-[10px] text-[#485c36]/75 pt-1">
-                          {triplet}
-                        </p>
-                      </div>
-
-                      {/* Bottom: Shop Now + Quick Add Icon */}
-                      <div className="pt-4 mt-2 border-t border-[#485c36]/10 flex items-center justify-between gap-2">
-                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#1e2b18] group-hover:text-[#610b0d] transition-colors">
-                          <span>{isArabic ? "اطلبي الآن" : "Shop Now"}</span>
-                          <ArrowIcon className="w-3 h-3" />
-                        </span>
-
-                        <button
-                          type="button"
-                          onClick={(e) => handleAdd(e, prod)}
-                          className={`p-1.5 rounded-full transition-colors cursor-pointer ${
-                            isAdded
-                              ? "bg-[#610b0d] text-[#f3a5a1]"
-                              : "bg-[#485c36]/10 hover:bg-[#485c36] text-[#485c36] hover:text-[#f6f9e6]"
-                          }`}
-                          title={t.product.addToBag}
-                          aria-label={t.product.addToBag}
-                        >
-                          {isAdded ? (
-                            <Check className="w-3.5 h-3.5" />
-                          ) : (
-                            <ShoppingBag className="w-3.5 h-3.5" />
-                          )}
-                        </button>
-                      </div>
-                    </motion.article>
-                  );
-                })}
-              </div>
-
-              {/* Pagination Dots & Arrows matching reference image */}
-              <div className="flex items-center justify-center gap-3 pt-2 text-[#485c36]">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setActiveDot((prev) => (prev - 1 + allProducts.length) % allProducts.length)
-                  }
-                  className="p-1 hover:text-[#610b0d] transition-colors cursor-pointer"
-                  aria-label="Previous"
-                >
-                  {isArabic ? <ArrowRight className="w-3.5 h-3.5" /> : <ArrowLeft className="w-3.5 h-3.5" />}
-                </button>
-
-                <div className="flex items-center gap-2">
-                  {allProducts.slice(0, 4).map((_, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setActiveDot(i)}
-                      className={`w-2 h-2 rounded-full transition-all cursor-pointer ${
-                        activeDot === i
-                          ? "bg-[#22301e] scale-110"
-                          : "border border-[#485c36]/50 bg-transparent"
-                      }`}
-                      aria-label={`Slide ${i + 1}`}
-                    />
-                  ))}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveDot((prev) => (prev + 1) % allProducts.length)}
-                  className="p-1 hover:text-[#610b0d] transition-colors cursor-pointer"
-                  aria-label="Next"
-                >
-                  {isArabic ? <ArrowLeft className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-            </div>
-
           </div>
+
+          {/* 5 Sculptural Arches Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 pt-2">
+            {fiveArches.map((arch, idx) => {
+              const linkedProd = allProducts[arch.productIndex] || allProducts[0];
+              return (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 18 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.45, delay: idx * 0.07 }}
+                  className="relative group"
+                >
+                  {/* Decorative Background Accents behind specific arches matching reference */}
+                  {arch.accentType === "sand" && (
+                    <div className="absolute -top-2 -right-1.5 inset-x-2 h-36 rounded-t-full border-t-4 border-r-4 border-[#cbb994]/60 pointer-events-none" />
+                  )}
+
+                  {arch.accentType === "darkCrescent" && (
+                    <>
+                      <div className="absolute top-6 -left-2.5 w-16 h-40 rounded-l-full bg-[#18271b] pointer-events-none" />
+                      <div className="absolute -bottom-1 -right-2 w-12 h-44 bg-[#18271b] rounded-br-xl pointer-events-none" />
+                      <div className="absolute -top-2 inset-x-3 h-28 rounded-t-full border border-[#485c36]/30 rotate-6 pointer-events-none" />
+                    </>
+                  )}
+
+                  {arch.accentType === "cornerNode" && (
+                    <div className="hidden lg:block absolute -top-4 -right-3 w-12 h-full border-t border-r border-[#485c36]/30 pointer-events-none">
+                      <span className="w-3 h-3 rounded-full border border-[#485c36]/50 bg-[#f4f1e6] absolute -top-1.5 -left-1.5" />
+                    </div>
+                  )}
+
+                  {/* Main Arch Card */}
+                  <div
+                    onClick={() => router.push(arch.href)}
+                    className={`relative z-10 rounded-t-full bg-[#f4f1e6] pt-9 pb-7 px-4 flex flex-col items-center text-center justify-between min-h-[255px] cursor-pointer transition-all ${
+                      arch.accentType === "roseBorder"
+                        ? "border border-[#ca384a]/45 hover:border-[#ca384a]"
+                        : "border border-[#485c36]/25 hover:border-[#18271b]"
+                    }`}
+                  >
+                    {/* Top Minimal Botanical / Geometric Symbol */}
+                    <div
+                      className={`${
+                        arch.accentType === "roseBorder"
+                          ? "text-[#ca384a]/80"
+                          : arch.accentType === "sand"
+                          ? "text-[#b69b68]"
+                          : "text-[#485c36]/75"
+                      }`}
+                    >
+                      {idx % 2 === 1 ? (
+                        <Droplet className="w-5 h-5 stroke-[1.3]" />
+                      ) : (
+                        <Sparkles className="w-5 h-5 stroke-[1.3]" />
+                      )}
+                    </div>
+
+                    {/* Center Number + Serif Title + Subtitle */}
+                    <div className="space-y-1.5 my-4">
+                      <span className="font-mono text-[10px] text-[#485c36]/70 block">
+                        {arch.num}
+                      </span>
+                      <h3
+                        className={`${
+                          isArabic ? "font-amiri text-xl" : "font-cormorant text-xl"
+                        } font-bold text-[#18271b] group-hover:text-[#610b0d] transition-colors`}
+                      >
+                        {isArabic ? arch.titleAr : arch.titleEn}
+                      </h3>
+                      <p className="text-[11px] text-[#485c36]/80">
+                        {isArabic ? arch.subAr : arch.subEn}
+                      </p>
+                      {linkedProd && (
+                        <span className="block font-mono text-[10px] font-bold text-[#610b0d] pt-0.5">
+                          {linkedProd.price} {currency}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Bottom Circular Arrow Button */}
+                    <div className="w-8 h-8 rounded-full border border-[#18271b]/30 group-hover:bg-[#18271b] group-hover:text-[#f6f9e6] flex items-center justify-center transition-colors">
+                      <ArrowIcon className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
         </div>
       </section>
 
       {/* ===================================================================== */}
-      {/* SECTION 4: DARK OLIVE WAVY PHILOSOPHY BAND ("Beauty is a Form...")    */}
+      {/* SECTION 4: DARK FOREST BEST-SELLER BAND WITH MANDALA & ARCH PORTAL    */}
       {/* ===================================================================== */}
-      <section className="relative bg-[#354627] text-[#f6f9e6] pt-20 pb-28 sm:pt-24 sm:pb-36 overflow-hidden">
-        {/* Subtle organic botanical veining overlay */}
-        <div
-          className="absolute inset-0 opacity-15 pointer-events-none"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 20% 30%, rgba(246,249,230,0.18) 0%, transparent 55%), radial-gradient(circle at 80% 70%, rgba(97,11,13,0.35) 0%, transparent 50%)",
-          }}
-        />
+      <section className="relative bg-[#18271b] text-[#f6f9e6] py-20 sm:py-24 overflow-hidden">
+        {/* Decorative Botanical Leaf Curves in Bottom Right Corner */}
+        <svg
+          viewBox="0 0 300 200"
+          fill="none"
+          className="absolute bottom-0 right-0 w-72 h-48 text-[#f6f9e6]/10 pointer-events-none"
+        >
+          <path
+            d="M300 200 C220 190, 160 130, 190 40 C240 80, 280 140, 300 200 Z"
+            stroke="currentColor"
+            strokeWidth="1.2"
+          />
+          <path
+            d="M240 200 C160 180, 110 140, 90 80 C150 100, 210 150, 240 200 Z"
+            stroke="currentColor"
+            strokeWidth="1.2"
+          />
+        </svg>
 
         <div className="max-w-6xl mx-auto px-6 sm:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             
-            {/* Col 1: OUR PHILOSOPHY Heading (4 Cols) */}
-            <div className="lg:col-span-4 space-y-3 text-start">
-              <span className="font-mono text-[10px] tracking-[0.28em] uppercase text-[#f3a5a1] block">
-                {isArabic ? "فلسفة سُـلاف السريرية" : "OUR PHILOSOPHY"}
-              </span>
-              <h2
+            {/* Col 1: Giant Wireframe Rosette + Lit 3D Andalusian Archway Niche (4 Cols) */}
+            <div className="lg:col-span-4 relative flex items-center justify-center min-h-[300px]">
+              {/* Large Champagne-Gold Wireframe Mandala on the Left */}
+              <div
+                className={`text-[#c5b37a]/75 ${
+                  isArabic ? "-ml-10" : "-mr-10"
+                } relative z-10 pointer-events-none`}
+              >
+                <SulafRosette className="w-52 h-52 sm:w-60 sm:h-60" strokeWidth={0.9} />
+              </div>
+
+              {/* Sunlit 3D Andalusian Archway Portal beside it */}
+              <div className="w-40 sm:w-44 h-64 sm:h-72 rounded-t-full overflow-hidden border border-[#f6f9e6]/20 shadow-2xl relative flex items-end justify-center bg-gradient-to-b from-[#dfd5c0] via-[#efeae0] to-[#cfc4ae]">
+                {/* Inner Olive Shadow Archway Depth */}
+                <div className="absolute inset-y-0 right-0 w-[44%] bg-gradient-to-b from-[#2f4431] to-[#1e2e20]" />
+                {/* Inner Illuminated Archway Opening */}
+                <div className="w-24 h-48 rounded-t-full bg-gradient-to-b from-[#f5f0e6] to-[#e2d9c5] relative z-10 mr-4 shadow-inner flex items-end justify-start p-2">
+                  {/* Small Olive Branch Silhouette */}
+                  <Leaf className="w-6 h-6 text-[#18271b]/80 rotate-45" />
+                </div>
+              </div>
+            </div>
+
+            {/* Col 2: Best Seller Product Details & 3 Circular Ingredient Badges (5 Cols) */}
+            <div className="lg:col-span-5 lg:border-x border-[#f6f9e6]/15 lg:px-10 space-y-5 text-start">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <span className="font-mono text-[10px] tracking-[0.28em] uppercase text-[#f3a5a1] font-bold">
+                  {isArabic ? "الأكثر مبيعاً واعتماداً" : "BEST SELLER"}
+                </span>
+
+                {/* Switch between Sulaf's 4 clinical formulas */}
+                <div className="flex items-center gap-1.5">
+                  {allProducts.map((p, idx) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setSelectedBestSellerIdx(idx)}
+                      className={`font-mono text-[10px] px-2 py-0.5 rounded-full transition-colors cursor-pointer ${
+                        selectedBestSellerIdx === idx
+                          ? "bg-[#f3a5a1] text-[#18271b] font-bold"
+                          : "text-[#f6f9e6]/60 hover:text-[#f6f9e6] border border-[#f6f9e6]/20"
+                      }`}
+                    >
+                      0{idx + 1}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <h3
                 className={`${
                   isArabic
                     ? "font-amiri text-3xl sm:text-4xl leading-snug"
                     : "font-cormorant text-3xl sm:text-4xl leading-tight"
                 } font-normal text-[#f6f9e6]`}
               >
-                {isArabic ? (
-                  <>
-                    الجمال الحقيقي هو
-                    <br />
-                    قمة التوازن والرفق.
-                  </>
-                ) : (
-                  <>
-                    Beauty is a
-                    <br />
-                    Form of Balance.
-                  </>
-                )}
-              </h2>
-              <div className="w-24 h-px bg-[#f6f9e6]/25 pt-2" />
-            </div>
+                {featuredProduct
+                  ? isArabic
+                    ? featuredProduct.nameAr
+                    : featuredProduct.nameEn
+                  : "Sulaf Barrier Restoration Elixir"}
+              </h3>
 
-            {/* Col 2: Philosophy Paragraph with Left/Right Hairline Borders (5 Cols) */}
-            <div className="lg:col-span-5 lg:border-x border-[#f6f9e6]/20 lg:px-10 space-y-5 text-start">
-              <p className="text-xs sm:text-sm text-[#f6f9e6]/85 leading-relaxed">
+              <p className="text-xs text-[#f6f9e6]/70 tracking-wider">
                 {isArabic
-                  ? "في سُـلاف، نؤمن أن الجمال الدائم ينبع من التوازن الدقيق بين رفق التراث الأندلسي وصرامة العلم الصيدلاني الحديث. صُممت تركيباتنا بتركيز 30% يوريا نقية وسيراميدات حيوية لتداوي خشونة البشرة وجلد الوزة بهدوء تام، دون أي احتكاك أو خدوش مجهرية."
-                  : "At Sulaf, we believe true beauty comes from balance — between nature and science, tradition and innovation, care and results. Our formulas are inspired by the timeless wisdom of Andalusia and created with the precision of modern skincare."}
+                  ? "ترميم الحاجز  ·  تنعيم فائق  ·  توازن فسيولوجي"
+                  : "Repair  ·  Strengthen  ·  Balance"}
               </p>
 
-              <Link
-                href="/shop"
-                className="inline-flex items-center gap-2 text-xs font-bold text-[#f6f9e6] hover:text-[#f3a5a1] border-b border-[#f6f9e6]/40 pb-1 transition-colors"
-              >
-                <span>{isArabic ? "اكتشفي كافة المستحضرات" : "Discover All Products"}</span>
-                <ArrowIcon className="w-3.5 h-3.5" />
-              </Link>
+              {/* 3 Circular Ingredient Badges */}
+              <div className="pt-1 flex flex-wrap items-center gap-4">
+                {(featuredProduct?.activeIngredients?.slice(0, 3) || []).map((ing) => (
+                  <div key={ing.id} className="inline-flex items-center gap-2">
+                    <span className="w-7 h-7 rounded-full border border-[#f6f9e6]/30 flex items-center justify-center text-[#f3a5a1]">
+                      <Droplet className="w-3.5 h-3.5 stroke-[1.4]" />
+                    </span>
+                    <span className="text-xs text-[#f6f9e6]/90">
+                      {ing.concentration} {isArabic ? ing.nameAr : ing.nameEn}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Price + Add to Bag Pill Button */}
+              <div className="pt-5 border-t border-[#f6f9e6]/15 flex items-center gap-6">
+                <span className="font-mono text-xl font-bold text-[#f6f9e6]">
+                  {featuredProduct?.price || 490} {currency}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={handleBestSellerAdd}
+                  className="px-6 py-2.5 rounded-full border border-[#f6f9e6]/40 hover:bg-[#ca384a] hover:border-[#ca384a] text-[#f6f9e6] text-xs font-bold inline-flex items-center gap-2.5 transition-all cursor-pointer"
+                >
+                  {addedBestSeller ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-[#f3a5a1]" />
+                      <span>{t.product.addedToBag}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{isArabic ? "أضيفي إلى الحقيبة" : "Add to Bag"}</span>
+                      <ArrowIcon className="w-3.5 h-3.5" />
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
-            {/* Col 3: Centered White Sulaf Rosette + Stacked Heritage Text (3 Cols) */}
-            <div className="lg:col-span-3 flex flex-col items-center justify-center text-center space-y-4">
-              <div className="text-[#f6f9e6]">
-                <SulafRosette className="w-16 h-16" strokeWidth={1.6} />
-              </div>
-              <div className="font-mono text-[10px] tracking-[0.26em] uppercase text-[#f6f9e6]/85 space-y-1 leading-relaxed">
-                <span className="block">{isArabic ? "تـراث أنـدلـسـي أصـيـل" : "ANDALUSIAN"}</span>
-                <span className="block text-[#f3a5a1]">{isArabic ? "رفـق بـالـبـشـرة" : "HERITAGE"}</span>
-                <span className="block">{isArabic ? "عـلـم صـيـدلانـي حـديـث" : "MODERN SCIENCE"}</span>
+            {/* Col 3: Number 01 + Poetic Quote + Star Stem (3 Cols) */}
+            <div className="lg:col-span-3 space-y-4 text-start">
+              <span className="font-cormorant text-3xl text-[#f6f9e6]/90 block">
+                0{selectedBestSellerIdx + 1}
+              </span>
+
+              <p
+                className={`${
+                  isArabic
+                    ? "font-amiri text-lg leading-relaxed"
+                    : "font-cormorant text-lg leading-relaxed"
+                } text-[#f6f9e6]/85 max-w-[210px]`}
+              >
+                {isArabic
+                  ? "لأن البشرة السليمة المتوازنة هي الأساس الحقيقي لكل جمال لا ينهزم."
+                  : "Because healthy skin is the foundation of lasting beauty."}
+              </p>
+
+              <div className="flex items-center gap-2 text-[#c5b37a] pt-2">
+                <FourPointStar className="w-3 h-3" />
+                <div className="w-16 h-px bg-[#f6f9e6]/25" />
               </div>
             </div>
 
           </div>
-        </div>
-
-        {/* Graceful Curved Wave Divider at the Bottom of the Olive Band */}
-        <div className="absolute bottom-0 inset-x-0 w-full overflow-hidden leading-none pointer-events-none">
-          <svg
-            viewBox="0 0 1440 90"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-full h-12 sm:h-20 preserve-3d"
-            preserveAspectRatio="none"
-          >
-            <path
-              d="M0 45 C320 105, 680 -15, 1120 45 C1280 68, 1380 30, 1440 15 L1440 90 L0 90 Z"
-              fill="#f6f9e6"
-            />
-          </svg>
         </div>
       </section>
 
       {/* ===================================================================== */}
-      {/* SECTION 5: "THE SULAF DIFFERENCE — CARE YOU CAN TRUST" (4 COLUMNS)    */}
+      {/* SECTION 5: "THE SULAF DIFFERENCE — MORE THAN SKINCARE" (LEFT + 4)     */}
       {/* ===================================================================== */}
-      <section className="bg-[#f6f9e6] text-[#22301e] pt-12 pb-20 sm:pb-24">
-        <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-12">
-          
-          {/* Centered Heading */}
-          <div className="text-center space-y-2">
-            <span className="font-mono text-[10px] tracking-[0.28em] uppercase text-[#ca384a] font-bold block">
-              {isArabic ? "ميثاق الثقة في سُـلاف" : "THE SULAF DIFFERENCE"}
-            </span>
-            <h2
-              className={`${
-                isArabic ? "font-amiri text-3xl sm:text-4xl" : "font-cormorant text-3xl sm:text-4xl"
-              } font-normal text-[#1e2b18]`}
-            >
-              {isArabic ? "عناية سريرية يمكنكِ الوثوق بها" : "Care You Can Trust"}
-            </h2>
-          </div>
-
-          {/* 4 Columns with Subtle Vertical Hairline Dividers */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x rtl:sm:divide-x-reverse divide-[#485c36]/15">
+      <section className="bg-[#f4f1e6] text-[#18271b] py-16 sm:py-20 border-t border-[#485c36]/15">
+        <div className="max-w-6xl mx-auto px-6 sm:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             
-            <div className="py-6 sm:py-2 px-6 flex flex-col items-center text-center space-y-2.5">
-              <Leaf className="w-7 h-7 text-[#22301e] stroke-[1.4]" />
-              <h3
+            {/* Left/Start Heading Column (4 Cols) */}
+            <div className="lg:col-span-4 space-y-2 text-start">
+              <span className="font-mono text-[10px] tracking-[0.28em] uppercase text-[#610b0d] font-bold block">
+                {isArabic ? "ميثاق الثقة في سُـلاف" : "THE SULAF DIFFERENCE"}
+              </span>
+              <h2
                 className={`${
-                  isArabic ? "font-amiri text-xl" : "font-cormorant text-xl"
-                } font-bold text-[#1e2b18]`}
+                  isArabic
+                    ? "font-amiri text-3xl sm:text-4xl leading-snug"
+                    : "font-cormorant text-3xl sm:text-4xl leading-tight"
+                } font-normal text-[#18271b]`}
               >
-                {isArabic ? "مكونات علاجية نقية" : "Premium Ingredients"}
-              </h3>
-              <p className="text-xs text-[#485c36]/80 max-w-[200px] leading-relaxed">
-                {isArabic
-                  ? "30% يوريا نقية و10% أمونيوم لاكتات وسيراميدات مختارة بعناية."
-                  : "Naturally sourced, clinically selected active concentrations."}
-              </p>
+                {isArabic ? (
+                  <>
+                    أكثر من مجرد عناية.
+                    <br />
+                    طقس سريري يدوم أثره.
+                  </>
+                ) : (
+                  <>
+                    More Than Skincare.
+                    <br />A Lasting Ritual.
+                  </>
+                )}
+              </h2>
             </div>
 
-            <div className="py-6 sm:py-2 px-6 flex flex-col items-center text-center space-y-2.5">
-              <FlaskConical className="w-7 h-7 text-[#22301e] stroke-[1.4]" />
-              <h3
-                className={`${
-                  isArabic ? "font-amiri text-xl" : "font-cormorant text-xl"
-                } font-bold text-[#1e2b18]`}
-              >
-                {isArabic ? "مختبر سريرياً وآمِن" : "Dermatologically Tested"}
-              </h3>
-              <p className="text-xs text-[#485c36]/80 max-w-[200px] leading-relaxed">
-                {isArabic
-                  ? "توازن فسيولوجي pH 5.2 آمن وفعال للبشرة الحساسة والجافة."
-                  : "Safe, effective, and gentle on sensitive skin barriers."}
-              </p>
-            </div>
-
-            <div className="py-6 sm:py-2 px-6 flex flex-col items-center text-center space-y-2.5">
-              <div className="text-[#22301e]">
-                <SulafRosette className="w-7 h-7" strokeWidth={1.8} />
+            {/* Right/End 4 Icon Columns with Vertical Dividers (8 Cols) */}
+            <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x rtl:sm:divide-x-reverse divide-[#485c36]/20 border-s border-[#485c36]/20">
+              
+              <div className="py-4 px-4 flex flex-col items-center text-center space-y-2">
+                <Leaf className="w-6 h-6 text-[#18271b] stroke-[1.4]" />
+                <h3
+                  className={`${
+                    isArabic ? "font-amiri text-lg" : "font-cormorant text-base"
+                  } font-bold text-[#18271b]`}
+                >
+                  {isArabic ? "مكونات علاجية نقية" : "Premium Ingredients"}
+                </h3>
+                <p className="text-[11px] text-[#485c36]/80 leading-relaxed">
+                  {isArabic
+                    ? "30% يوريا نقية و10% لاكتات مختارة بعناية."
+                    : "Naturally sourced, carefully selected."}
+                </p>
               </div>
-              <h3
-                className={`${
-                  isArabic ? "font-amiri text-xl" : "font-cormorant text-xl"
-                } font-bold text-[#1e2b18]`}
-              >
-                {isArabic ? "إلهام أندلسي أصيل" : "Heritage Inspired"}
-              </h3>
-              <p className="text-xs text-[#485c36]/80 max-w-[200px] leading-relaxed">
-                {isArabic
-                  ? "قرون من حكمة العناية الأندلسية المصاغة بمعايير صيدلانية حديثة."
-                  : "Centuries of Andalusian wisdom, clinically modernized."}
-              </p>
-            </div>
 
-            <div className="py-6 sm:py-2 px-6 flex flex-col items-center text-center space-y-2.5">
-              <Heart className="w-7 h-7 text-[#22301e] stroke-[1.4]" />
-              <h3
-                className={`${
-                  isArabic ? "font-amiri text-xl" : "font-cormorant text-xl"
-                } font-bold text-[#1e2b18]`}
-              >
-                {isArabic ? "نتائج حقيقية ومعاينة" : "Real Results"}
-              </h3>
-              <p className="text-xs text-[#485c36]/80 max-w-[200px] leading-relaxed">
-                {isArabic
-                  ? "ملمس حريري موثق وحق معاينة العبوة عند الاستلام قبل الدفع."
-                  : "Healthier skin, lasting confidence, and doorstep inspection."}
-              </p>
+              <div className="py-4 px-4 flex flex-col items-center text-center space-y-2">
+                <FlaskConical className="w-6 h-6 text-[#18271b] stroke-[1.4]" />
+                <h3
+                  className={`${
+                    isArabic ? "font-amiri text-lg" : "font-cormorant text-base"
+                  } font-bold text-[#18271b]`}
+                >
+                  {isArabic ? "مختبر سريرياً وآمِن" : "Dermatologically Tested"}
+                </h3>
+                <p className="text-[11px] text-[#485c36]/80 leading-relaxed">
+                  {isArabic
+                    ? "توازن فسيولوجي pH 5.2 لطيف على البشرة."
+                    : "Safe, effective, and skin-friendly."}
+                </p>
+              </div>
+
+              <div className="py-4 px-4 flex flex-col items-center text-center space-y-2">
+                <div className="text-[#18271b]">
+                  <SulafRosette className="w-6 h-6" strokeWidth={1.8} />
+                </div>
+                <h3
+                  className={`${
+                    isArabic ? "font-amiri text-lg" : "font-cormorant text-base"
+                  } font-bold text-[#18271b]`}
+                >
+                  {isArabic ? "إلهام أندلسي أصيل" : "Heritage Inspired"}
+                </h3>
+                <p className="text-[11px] text-[#485c36]/80 leading-relaxed">
+                  {isArabic
+                    ? "قرون من الحكمة الأندلسية بصياغة حديثة."
+                    : "Centuries of wisdom, modernized."}
+                </p>
+              </div>
+
+              <div className="py-4 px-4 flex flex-col items-center text-center space-y-2">
+                <Heart className="w-6 h-6 text-[#18271b] stroke-[1.4]" />
+                <h3
+                  className={`${
+                    isArabic ? "font-amiri text-lg" : "font-cormorant text-base"
+                  } font-bold text-[#18271b]`}
+                >
+                  {isArabic ? "نتائج حقيقية ومعاينة" : "Real Results"}
+                </h3>
+                <p className="text-[11px] text-[#485c36]/80 leading-relaxed">
+                  {isArabic
+                    ? "ملمس حريري موثق ومعاينة قبل الاستلام."
+                    : "Healthier skin, lasting confidence."}
+                </p>
+              </div>
+
             </div>
 
           </div>

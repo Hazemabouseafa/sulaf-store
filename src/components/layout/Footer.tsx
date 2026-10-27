@@ -32,9 +32,37 @@ export function Footer() {
 
   return (
     <footer
-      className="relative bg-[#22301e] text-[#f6f9e6] pt-16 pb-10 overflow-hidden select-none font-cairo"
+      className="relative bg-[#18271b] text-[#f6f9e6] pt-16 pb-10 overflow-hidden select-none font-cairo"
       dir={dir}
     >
+      {/* Subtle Botanical Line-Art in Bottom Right Corner matching Reference Image */}
+      <svg
+        viewBox="0 0 240 200"
+        fill="none"
+        className="absolute bottom-0 right-0 w-60 h-48 text-[#c5b37a]/20 pointer-events-none"
+      >
+        <path
+          d="M220 200 C180 150, 140 110, 110 50"
+          stroke="currentColor"
+          strokeWidth="1"
+        />
+        <path
+          d="M175 145 C140 140, 125 120, 155 110 C175 118, 178 135, 175 145 Z"
+          stroke="currentColor"
+          strokeWidth="1"
+        />
+        <path
+          d="M195 115 C215 95, 228 80, 205 70 C190 80, 190 100, 195 115 Z"
+          stroke="currentColor"
+          strokeWidth="1"
+        />
+        <path
+          d="M145 95 C115 88, 105 70, 130 62 C145 70, 148 85, 145 95 Z"
+          stroke="currentColor"
+          strokeWidth="1"
+        />
+      </svg>
+
       <div className="relative z-10 max-w-6xl mx-auto px-6 sm:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 pb-12 border-b border-[#f6f9e6]/15">
           
