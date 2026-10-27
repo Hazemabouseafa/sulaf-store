@@ -63,8 +63,8 @@ export async function GET() {
       const dayAmount = dayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
       return {
         day,
-        amount: dayAmount || (idx + 1) * 350 + 200, // sample baseline
-        ordersCount: dayOrders.length || (idx % 3) + 1,
+        amount: dayAmount,
+        ordersCount: dayOrders.length,
       };
     });
 

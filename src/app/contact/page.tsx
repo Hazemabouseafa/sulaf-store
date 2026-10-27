@@ -13,6 +13,9 @@ export default function ContactPage() {
   const { page } = usePageContent("contact");
 
   const [formSent, setFormSent] = useState(false);
+  const [senderName, setSenderName] = useState("");
+  const [senderPhone, setSenderPhone] = useState("");
+  const [senderMessage, setSenderMessage] = useState("");
   const elements = (settings?.elementsVisibility || {}) as any;
   const custom = ((isArabic ? settings?.customContent : settings?.customContentEn) || settings?.customContent || {}) as any;
 
@@ -123,22 +126,41 @@ export default function ContactPage() {
                 <p className="text-xs text-emerald-700">{isArabic ? "سيتواصل معكِ أحد صيادلتنا خلال ساعات قليلة." : "We will reply shortly."}</p>
               </div>
             ) : (
-              <form onSubmit={(e) => { e.preventDefault(); setFormSent(true); }} className="space-y-3">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setFormSent(true);
+                  try {
+                    const wa = (settings?.contacts?.whatsapp || "201099887766").replace(/[^0-9]/g, "");
+                    const msg = encodeURIComponent(
+                      `استشارة جديدة عبر متجر سُلاف:\nالاسم: ${senderName}\nالهاتف: ${senderPhone}\nالاستفسار: ${senderMessage}`
+                    );
+                    window.open(`https://wa.me/${wa}?text=${msg}`, "_blank");
+                  } catch {}
+                }}
+                className="space-y-3"
+              >
                 <input
                   type="text"
                   required
+                  value={senderName}
+                  onChange={(e) => setSenderName(e.target.value)}
                   placeholder={isArabic ? "الاسم الكريم" : "Your Name"}
                   className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-xs focus:border-[#485c36] focus:outline-none"
                 />
                 <input
                   type="tel"
                   required
+                  value={senderPhone}
+                  onChange={(e) => setSenderPhone(e.target.value)}
                   placeholder={isArabic ? "رقم الهاتف / واتساب" : "Phone / WhatsApp"}
                   className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-xs focus:border-[#485c36] focus:outline-none"
                 />
                 <textarea
                   rows={3}
                   required
+                  value={senderMessage}
+                  onChange={(e) => setSenderMessage(e.target.value)}
                   placeholder={isArabic ? "اكتبي استفساركِ أو تفاصيل حالتكِ هنا..." : "Your question or consultation details..."}
                   className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-xs focus:border-[#485c36] focus:outline-none"
                 />

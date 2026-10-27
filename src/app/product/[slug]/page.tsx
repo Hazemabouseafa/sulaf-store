@@ -276,9 +276,11 @@ export default function ProductStoryPage() {
                     {product.compareAtPrice} {currency}
                   </span>
                 )}
-                <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full">
-                  {isArabic ? "وفري" : "Save"} {product.compareAtPrice - unitPrice} {currency}
-                </span>
+                {product.compareAtPrice > unitPrice && (
+                  <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full">
+                    {isArabic ? "وفري" : "Save"} {product.compareAtPrice - unitPrice} {currency}
+                  </span>
+                )}
               </div>
 
               {/* Dual Payment Options: Full vs Deposit 100 EGP */}

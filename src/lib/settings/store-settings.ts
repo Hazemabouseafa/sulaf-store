@@ -641,6 +641,15 @@ export function generateThemeCss(colors: ThemeColorsSettings = DEFAULT_THEME_COL
   ].join('\n');
 }
 
+export interface LiveTextOverride {
+  text?: string;
+  href?: string;
+  target?: string;
+  color?: string;
+  fontSize?: string;
+  fontWeight?: string;
+}
+
 export interface StoreSettings {
   brandName: string;
   brandTagline: string;
@@ -712,6 +721,8 @@ export interface StoreSettings {
   multiProductPromo?: MultiProductPromotionSettings;
   checkoutFields?: CheckoutFieldsSettings;
   themeColors?: ThemeColorsSettings;
+  customLinks?: Record<string, string>;
+  liveTextOverrides?: Record<string, LiveTextOverride>;
 
   contacts: {
     whatsapp: string;
@@ -940,6 +951,8 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   },
 
   themeColors: DEFAULT_THEME_COLORS,
+  customLinks: {},
+  liveTextOverrides: {},
 
   contacts: {
     whatsapp: "+201099887766",

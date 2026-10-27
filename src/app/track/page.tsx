@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { getOrderById, getOrderByTracking, OrderRecord } from "@/lib/orders/order-store";
 import { StoxTrackingResult } from "@/lib/shipping/stox";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { useStoreSettings } from "@/lib/settings/store-settings-context";
 import {
   Search,
   Truck,
@@ -95,6 +96,7 @@ function TrackOrderContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("id") || "";
   const { isArabic, dir } = useLanguage();
+  const { settings } = useStoreSettings();
 
   const [query, setQuery] = useState(initialQuery);
   const [order, setOrder] = useState<OrderRecord | null>(null);
@@ -279,7 +281,7 @@ function TrackOrderContent() {
                   </span>
 
                   <a
-                    href="https://wa.me/201099887766"
+                    href={`https://wa.me/${(settings?.contacts?.whatsapp || "201099887766").replace(/[^0-9]/g, "")}`}
                     target="_blank"
                     rel="noreferrer"
                     className="px-4 py-2.5 rounded-xl bg-[#485c36] hover:bg-[#3a4a2b] text-[#f6f9e6] font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"

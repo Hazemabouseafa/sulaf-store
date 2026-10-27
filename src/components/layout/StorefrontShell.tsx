@@ -6,6 +6,7 @@ import { Preloader } from "@/components/motion/Preloader";
 import { Navbar } from "@/components/layout/Navbar";
 import { CartDrawer } from "@/components/shop/CartDrawer";
 import { Footer } from "@/components/layout/Footer";
+import { LiveVisualEditor } from "@/components/live-editor/LiveVisualEditor";
 
 export function StorefrontShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -31,6 +32,9 @@ export function StorefrontShell({ children }: { children: React.ReactNode }) {
 
       {/* Global Brand Footer */}
       <Footer />
+
+      {/* Live In-Context Visual Editor for Storefront Texts & Hyperlinks */}
+      <LiveVisualEditor />
     </>
   );
 }

@@ -5773,6 +5773,16 @@ export default function AdminPage() {
                   </button>
 
                   <Link
+                    href="/?live_edit=true"
+                    target="_blank"
+                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#485c36] via-[#3a4d2c] to-[#24301a] hover:from-[#610b0d] hover:to-[#610b0d] text-white font-bold text-xs transition-all shadow-md flex items-center gap-1.5 active:scale-95 border border-[#d4af37]/50"
+                    title="فتح المتجر بوضع التحرير المباشر لتعديل أي نص أو رابط بمجرد النقر عليه"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-[#d4af37]" />
+                    <span>{adminLang === "ar" ? "⚡ تشغيل المحرر المباشر على المتجر" : "⚡ Launch Live Editor"}</span>
+                  </Link>
+
+                  <Link
                     href="/"
                     target="_blank"
                     className="px-4 py-2.5 rounded-xl bg-[#e8ecd0] hover:bg-[#dbe2bd] text-[#233019] font-bold text-xs transition-colors flex items-center gap-1.5"

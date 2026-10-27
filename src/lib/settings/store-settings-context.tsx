@@ -43,6 +43,12 @@ export function StoreSettingsProvider({
         customContentEn: {
           ...(initialSettings.customContentEn || {}),
         },
+        customLinks: {
+          ...(initialSettings.customLinks || {}),
+        },
+        liveTextOverrides: {
+          ...(initialSettings.liveTextOverrides || {}),
+        },
       };
     }
     return DEFAULT_STORE_SETTINGS;

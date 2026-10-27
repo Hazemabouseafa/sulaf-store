@@ -57,6 +57,9 @@ export async function PATCH(
         const prodIndex = products.findIndex((p) => p.id === item.productId);
         if (prodIndex !== -1) {
           products[prodIndex].stock += item.quantity || 1;
+          if (products[prodIndex].variants?.[0]) {
+            products[prodIndex].variants[0].stock = products[prodIndex].stock;
+          }
         }
       }
       writeJsonFile("products.json", products);
