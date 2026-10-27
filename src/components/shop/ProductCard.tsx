@@ -23,6 +23,17 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const currency = isArabic ? "ج.م" : "EGP";
   const productName = isArabic ? product.nameAr : product.nameEn;
+  const productSubtitle = isArabic ? product.subtitleAr : product.subtitleEn;
+
+  const prescriptionLine =
+    product.activeIngredients && product.activeIngredients.length > 0
+      ? product.activeIngredients
+          .slice(0, 2)
+          .map((ing) => `${ing.concentration} ${isArabic ? ing.nameAr : ing.nameEn}`)
+          .join(" — ")
+      : isArabic
+      ? "تركيبة سريرية"
+      : "Clinical Formula";
 
   function handleCardClick() {
     router.push(`/product/${product.slug}`);
@@ -36,11 +47,11 @@ export function ProductCard({ product }: ProductCardProps) {
     setTimeout(() => setAdded(false), 1600);
   }
 
-  // Ultra-simple card for Act II: Image + Name + Price + Cart Button ONLY
+  // IDEA #1: Quiet Apothecary Specimen (No heavy card borders, pure parchment aesthetic)
   return (
     <article
       onClick={handleCardClick}
-      className="group h-full flex flex-col justify-between rounded-3xl bg-white border border-[#485c36]/15 hover:border-[#485c36] p-5 transition-all duration-300 font-cairo cursor-pointer"
+      className="group py-6 flex flex-col justify-between border-t border-[#485c36]/20 font-cairo cursor-pointer text-start"
       role="link"
       tabIndex={0}
       onKeyDown={(e) => {
@@ -50,37 +61,45 @@ export function ProductCard({ product }: ProductCardProps) {
         }
       }}
     >
-      {/* 1. Clean Image Frame */}
-      <div className="relative aspect-square w-full rounded-2xl bg-[#f6f9e6] flex items-center justify-center p-6 overflow-hidden">
+      {/* Floating Bottle without a Box */}
+      <div className="relative h-56 w-full flex items-center justify-center my-4">
         <Image
           src={product.images[0]?.url || "/brand/sulaf-flower-symbol.png"}
           alt={productName}
-          width={180}
-          height={180}
-          className="object-contain transition-transform duration-500 group-hover:scale-105"
+          width={175}
+          height={175}
+          className="object-contain drop-shadow-[0_18px_24px_rgba(72,92,54,0.14)] transition-transform duration-500 group-hover:scale-105"
         />
       </div>
 
-      {/* 2. Product Name Only (No long descriptions) */}
-      <div className="mt-4 text-start">
-        <h3 className="font-amiri text-xl font-bold text-[#485c36] group-hover:text-[#610b0d] transition-colors line-clamp-1">
+      {/* Minimalist Prescription Line & Name */}
+      <div className="space-y-1.5">
+        <span className="font-mono text-[10px] text-[#ca384a] font-bold tracking-wider uppercase block">
+          {prescriptionLine}
+        </span>
+
+        <h3 className="font-amiri text-2xl font-normal text-[#485c36] group-hover:text-[#610b0d] transition-colors">
           {productName}
         </h3>
+
+        <p className="text-xs text-[#485c36]/75 line-clamp-2 leading-relaxed">
+          {productSubtitle}
+        </p>
       </div>
 
-      {/* 3. Price + Single Add to Cart Button */}
-      <div className="mt-4 pt-3 border-t border-[#485c36]/10 flex items-center justify-between gap-2">
-        <span className="font-mono text-lg font-black text-[#610b0d]">
+      {/* Price & Thin Outlined Add Button */}
+      <div className="mt-6 pt-4 border-t border-[#485c36]/10 flex items-center justify-between gap-2">
+        <span className="font-mono text-lg font-bold text-[#610b0d]">
           {product.price} {currency}
         </span>
 
         <button
           type="button"
           onClick={handleAddToCart}
-          className={`px-4 py-2 rounded-full font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+          className={`px-5 py-2 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
             added
               ? "bg-[#610b0d] text-[#f3a5a1]"
-              : "bg-[#485c36] hover:bg-[#ca384a] text-[#f6f9e6] active:scale-95"
+              : "bg-transparent hover:bg-[#485c36] text-[#485c36] hover:text-[#f6f9e6] border border-[#485c36]"
           }`}
         >
           {added ? (

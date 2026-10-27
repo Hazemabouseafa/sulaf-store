@@ -21,37 +21,41 @@ export function ConsultationBanner() {
     ? "مرحباً فريق سلاف، أود استشارة صيدلانية بخصوص علاج جلد الوزة والخشونة مع كريم Absolutes Smoothing Body Cream."
     : "Hello Sulaf Team, I would like a clinical consultation regarding Keratosis Pilaris and Absolutes Smoothing Body Cream.";
 
-  // ACT III (Part 2): SEAMLESS ROYAL BURGUNDY (#610b0d) CONSULTATION BAR
+  // IDEA #1: Quiet Apothecary Scroll — Minimalist Footnote Consultation on Warm Parchment (#f6f9e6)
   return (
-    <section className="pb-20 pt-6 bg-[#610b0d] text-[#f6f9e6] relative overflow-hidden font-cairo">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="p-8 sm:p-10 rounded-3xl bg-[#f6f9e6]/10 border border-[#f3a5a1]/30 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-start">
-          <div className="space-y-2 max-w-xl">
-            {vis.consultationHeading !== false && (
-              <h2 className="font-amiri text-2xl sm:text-3xl font-bold text-[#f6f9e6]">
-                {custom.consultationHeadingText || t.consultationBanner.heading}
-              </h2>
-            )}
+    <section className="py-20 bg-[#f6f9e6] text-[#485c36] border-t border-[#485c36]/15 font-cairo">
+      <div className="max-w-3xl mx-auto px-6 sm:px-8 text-center space-y-5">
+        {vis.consultationBadge !== false && (
+          <span className="font-mono text-[11px] tracking-[0.25em] uppercase text-[#610b0d] block">
+            {custom.consultationBadgeText || t.consultationBanner.badge}
+          </span>
+        )}
 
-            {vis.consultationDesc !== false && (
-              <p className="text-xs sm:text-sm text-[#f6f9e6]/80 leading-relaxed">
-                {custom.consultationDescText || t.consultationBanner.desc}
-              </p>
-            )}
-          </div>
+        {vis.consultationHeading !== false && (
+          <h2 className="font-amiri text-3xl sm:text-4xl font-normal text-[#485c36]">
+            {custom.consultationHeadingText || t.consultationBanner.heading}
+          </h2>
+        )}
 
-          {vis.consultationButton !== false && (
+        {vis.consultationDesc !== false && (
+          <p className="text-xs sm:text-sm text-[#485c36]/75 max-w-lg mx-auto leading-relaxed">
+            {custom.consultationDescText || t.consultationBanner.desc}
+          </p>
+        )}
+
+        {vis.consultationButton !== false && (
+          <div className="pt-3">
             <a
               href={`https://wa.me/${SULAF_SETTINGS.whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`}
               target="_blank"
               rel="noreferrer"
-              className="shrink-0 px-8 py-4 rounded-full bg-[#ca384a] hover:bg-[#485c36] text-[#f6f9e6] font-bold text-xs sm:text-sm flex items-center gap-2.5 shadow-lg transition-colors"
+              className="inline-flex items-center gap-2.5 px-9 py-4 rounded-full bg-[#610b0d] hover:bg-[#485c36] text-[#f6f9e6] font-bold text-xs tracking-wide transition-colors"
             >
-              <MessageCircle className="w-4 h-4 text-[#f6f9e6]" />
+              <MessageCircle className="w-4 h-4 text-[#f3a5a1]" />
               <span>{custom.consultationButtonText || t.consultationBanner.whatsappBtn}</span>
             </a>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </section>
   );

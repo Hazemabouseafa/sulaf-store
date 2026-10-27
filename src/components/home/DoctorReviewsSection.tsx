@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Star, CheckCircle2, MessageSquarePlus, Send, X } from "lucide-react";
+import { Star, CheckCircle2, Send, X } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { useStoreSettings } from "@/lib/settings/store-settings-context";
 import { ReviewItem } from "@/lib/reviews/review-store";
@@ -82,25 +82,23 @@ export function DoctorReviewsSection() {
     }
   }
 
-  // ACT III (Part 1): ROYAL BURGUNDY (#610b0d) VERIFIED TRUST BAND
+  // IDEA #1: Quiet Apothecary Scroll — Continuous Warm Parchment (#f6f9e6) with thin ledger lines
   return (
-    <section className="pt-20 pb-10 bg-[#610b0d] text-[#f6f9e6] relative overflow-hidden font-cairo">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+    <section className="py-16 sm:py-24 bg-[#f6f9e6] text-[#485c36] font-cairo">
+      <div className="max-w-5xl mx-auto px-6 sm:px-8 space-y-10">
         
-        {/* Simple Header Row */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#f6f9e6]/15 pb-5">
-          <div className="text-start space-y-1">
+        <div className="pb-8 border-b border-[#485c36]/20 flex flex-col sm:flex-row sm:items-end justify-between gap-4 text-start">
+          <div className="space-y-1.5">
             {vis.reviewsBadge !== false && (
-              <span className="text-xs font-bold text-[#f3a5a1] block">
+              <span className="font-mono text-[11px] tracking-[0.25em] uppercase text-[#610b0d] block">
                 {custom.reviewsBadgeText ||
-                  (isArabic ? "المشهد الثالث • الثقة والتجارب الموثقة" : "Verified Reviews")}
+                  (isArabic ? "دفتر التجارب الموثقة" : "CLINICAL TESTIMONIALS")}
               </span>
             )}
-
             {vis.reviewsHeading !== false && (
-              <h2 className="font-amiri text-3xl sm:text-4xl font-bold text-[#f6f9e6]">
+              <h2 className="font-amiri text-3xl sm:text-4xl font-normal text-[#485c36]">
                 {custom.reviewsHeadingText ||
-                  (isArabic ? "آراء عميلات سُـلاف" : "Client Experiences")}
+                  (isArabic ? "شهادات وتجارب عميلات سُـلاف" : "Verified Client Notes")}
               </h2>
             )}
           </div>
@@ -111,41 +109,39 @@ export function DoctorReviewsSection() {
               setShowForm(!showForm);
               setSubmitSuccess(false);
             }}
-            className="self-start sm:self-auto inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#f6f9e6] hover:bg-[#f3a5a1] text-[#610b0d] text-xs font-bold transition-colors cursor-pointer"
+            className="self-start sm:self-auto px-6 py-2.5 rounded-full border border-[#485c36] text-[#485c36] hover:bg-[#485c36] hover:text-[#f6f9e6] text-xs font-bold transition-colors cursor-pointer"
           >
-            <MessageSquarePlus className="w-4 h-4 text-[#ca384a]" />
-            <span>{isArabic ? "أضيفي تقييمكِ" : "Add Review"}</span>
+            {isArabic ? "تدوين تجربتكِ +" : "Write a Note +"}
           </button>
         </div>
 
-        {/* Simple Collapsible Form */}
         {showForm && (
-          <div className="max-w-lg mx-auto p-6 rounded-3xl bg-[#f6f9e6] text-[#485c36] relative text-start">
+          <div className="py-8 border-b border-[#485c36]/20 max-w-lg text-start relative">
             <button
               type="button"
               onClick={() => setShowForm(false)}
-              className="absolute top-4 end-4 p-1.5 rounded-full text-[#610b0d] cursor-pointer"
+              className="absolute top-8 end-0 p-1 text-[#610b0d] cursor-pointer"
               aria-label="Close"
             >
               <X className="w-4 h-4" />
             </button>
 
             {submitSuccess ? (
-              <div className="text-center py-4 space-y-2">
-                <CheckCircle2 className="w-8 h-8 text-[#485c36] mx-auto" />
-                <p className="text-xs font-bold text-[#610b0d]">
+              <div className="py-4 flex items-center gap-2 text-xs font-bold text-[#485c36]">
+                <CheckCircle2 className="w-4 h-4 text-[#485c36]" />
+                <span>
                   {isArabic
-                    ? "تم إرسال تقييمكِ بنجاح وسيظهر بعد مراجعة الإدارة ✓"
-                    : "Review submitted for approval ✓"}
-                </p>
+                    ? "تم استلام تقييمكِ وسيُدرج في السجل بعد مراجعة الإدارة."
+                    : "Your note has been received for verification."}
+                </span>
               </div>
             ) : (
-              <form onSubmit={handleSubmitReview} className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-amiri text-xl font-bold text-[#610b0d]">
-                    {isArabic ? "شاركينا رأيكِ" : "Your Feedback"}
+              <form onSubmit={handleSubmitReview} className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-[#610b0d]">
+                    {isArabic ? "التقييم:" : "Rating:"}
                   </span>
-                  <div className="flex items-center gap-1 pe-6">
+                  <div className="flex items-center gap-1">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         key={star}
@@ -171,7 +167,7 @@ export function DoctorReviewsSection() {
                   value={authorName}
                   onChange={(e) => setAuthorName(e.target.value)}
                   placeholder={isArabic ? "الاسم الكريم *" : "Your Name *"}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#485c36]/20 text-xs text-[#485c36] focus:outline-none"
+                  className="w-full py-2.5 bg-transparent border-b border-[#485c36]/30 text-xs text-[#485c36] placeholder:text-[#485c36]/50 focus:outline-none focus:border-[#485c36]"
                 />
 
                 <textarea
@@ -179,8 +175,8 @@ export function DoctorReviewsSection() {
                   required
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  placeholder={isArabic ? "اكتبي تجربتكِ باختصار... *" : "Your review... *"}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#485c36]/20 text-xs text-[#485c36] focus:outline-none"
+                  placeholder={isArabic ? "دوني تجربتكِ مع المستحضر... *" : "Your experience... *"}
+                  className="w-full py-2.5 bg-transparent border-b border-[#485c36]/30 text-xs text-[#485c36] placeholder:text-[#485c36]/50 focus:outline-none focus:border-[#485c36]"
                 />
 
                 {submitError && (
@@ -190,44 +186,34 @@ export function DoctorReviewsSection() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-2.5 rounded-full bg-[#ca384a] text-[#f6f9e6] font-bold text-xs flex items-center justify-center gap-2 cursor-pointer"
+                  className="px-7 py-2.5 rounded-full bg-[#485c36] text-[#f6f9e6] font-bold text-xs inline-flex items-center gap-2 cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>{isArabic ? "إرسال التقييم" : "Submit"}</span>
+                  <span>{isArabic ? "إرسال للتوثيق" : "Submit"}</span>
                 </button>
               </form>
             )}
           </div>
         )}
 
-        {/* Reviews Row or Minimalist Note */}
         {!loading && reviews.length === 0 ? (
-          <p className="text-xs sm:text-sm text-[#f6f9e6]/80 text-center py-4">
+          <p className="text-xs text-[#485c36]/70 text-start py-2">
             {isArabic
-              ? "تُعرض هنا فقط التقييمات الحقيقية الموثقة لعميلات سُـلاف بعد التجربة."
-              : "Only verified client reviews are displayed here."}
+              ? "يُعرض في هذا السجل فقط التجارب الحقيقية الموثقة لعميلات سُـلاف بعد الاستعمال."
+              : "Only verified client notes are recorded here."}
           </p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="divide-y divide-[#485c36]/15">
             {reviews.map((rev) => (
               <article
                 key={rev.id}
-                className="p-5 rounded-2xl bg-[#f6f9e6]/10 border border-[#f3a5a1]/25 flex flex-col justify-between text-start space-y-3"
+                className="py-6 flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 text-start"
               >
-                <div className="space-y-2">
-                  <div className="flex items-center gap-1">
-                    {[...Array(rev.rating || 5)].map((_, i) => (
-                      <Star key={i} className="w-3.5 h-3.5 fill-[#f3a5a1] text-[#f3a5a1]" />
-                    ))}
-                  </div>
-                  <p className="text-xs sm:text-sm text-[#f6f9e6] leading-relaxed">
-                    «{rev.comment}»
-                  </p>
-                </div>
-
-                <div className="pt-2 border-t border-[#f6f9e6]/10 flex items-center justify-between text-xs text-[#f3a5a1]">
-                  <strong>{rev.authorName}</strong>
-                  <span>{isArabic ? "تجربة موثقة ✓" : "Verified ✓"}</span>
+                <p className="font-amiri text-xl text-[#485c36] max-w-2xl leading-relaxed">
+                  «{rev.comment}»
+                </p>
+                <div className="shrink-0 font-mono text-xs text-[#610b0d]">
+                  — {rev.authorName} ({rev.rating}/5)
                 </div>
               </article>
             ))}

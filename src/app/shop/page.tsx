@@ -6,11 +6,7 @@ import { useProducts } from "@/lib/products/product-store";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { QuickViewModal } from "@/components/shop/QuickViewModal";
 import { useLanguage } from "@/lib/i18n/language-context";
-import {
-  Search,
-  FlaskConical,
-  RotateCcw,
-} from "lucide-react";
+import { Search, RotateCcw } from "lucide-react";
 
 export default function ShopPage() {
   const { isArabic } = useLanguage();
@@ -34,61 +30,47 @@ export default function ShopPage() {
     });
   }, [allProducts, searchQuery]);
 
+  // IDEA #1: Quiet Apothecary Formulary Index
   return (
-    <div className="py-14 bg-[#f6f9e6] min-h-screen font-cairo">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+    <div className="py-16 sm:py-24 bg-[#f6f9e6] text-[#485c36] min-h-screen font-cairo">
+      <div className="max-w-5xl mx-auto px-6 sm:px-8 space-y-14">
         
-        {/* SERENE CENTERED HEADER */}
-        <div className="text-center max-w-2xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-[#485c36]/10 text-[#485c36] text-xs font-bold border border-[#485c36]/20">
-            <FlaskConical className="w-3.5 h-3.5 text-[#ca384a]" />
-            <span>
-              {isArabic
-                ? "معرض مستحضرات سُـلاف السريرية"
-                : "Sulaf Clinical Cosmeceuticals"}
+        {/* Minimalist Manuscript Header */}
+        <div className="pb-10 border-b border-[#485c36]/20 flex flex-col md:flex-row md:items-end justify-between gap-6 text-start">
+          <div className="space-y-2 max-w-xl">
+            <span className="font-mono text-[11px] tracking-[0.25em] uppercase text-[#610b0d] block">
+              {isArabic ? "فهرس المستحضرات السريرية" : "APOTHECARY INDEX"}
             </span>
+            <h1 className="font-amiri text-3xl sm:text-5xl font-normal text-[#485c36]">
+              {isArabic
+                ? "مخطوطة سُـلاف للتركيبات العلاجية"
+                : "Sulaf Clinical Formulary"}
+            </h1>
           </div>
 
-          <h1 className="font-amiri text-3xl sm:text-5xl font-bold text-[#485c36]">
-            {isArabic
-              ? "صيدلية سُـلاف للترميم والجمال الأندلسي"
-              : "Sulaf Apothecary for Barrier Repair"}
-          </h1>
-
-          <p className="text-xs sm:text-sm text-[#485c36]/80 leading-relaxed">
-            {isArabic
-              ? "استكشفي تركيباتنا الصيدلانية المصممة لعلاج مشاكل البشرة المستعصية برفق وفعالية."
-              : "Discover clinical-grade formulas engineered to treat stubborn skin concerns gently."}
-          </p>
-
-          {/* Simple Search Pill */}
-          <div className="pt-3 max-w-md mx-auto relative">
+          {/* Minimalist Underline Search */}
+          <div className="w-full md:w-64 relative">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={
-                isArabic
-                  ? "ابحثي باسم المستحضر أو التركيبة..."
-                  : "Search formulations by name..."
+                isArabic ? "ابحثي باسم المستحضر..." : "Search formulary..."
               }
-              className={`w-full py-3 px-5 ${
-                isArabic ? "pr-11 pl-10" : "pl-11 pr-10"
-              } text-xs rounded-full bg-white text-[#485c36] border border-[#485c36]/25 shadow-xs focus:outline-none focus:border-[#485c36]`}
+              className="w-full py-2 px-7 bg-transparent border-b border-[#485c36]/35 text-xs text-[#485c36] placeholder:text-[#485c36]/55 focus:outline-none focus:border-[#485c36]"
             />
             <Search
-              className={`w-4 h-4 absolute ${
-                isArabic ? "right-4" : "left-4"
-              } top-1/2 -translate-y-1/2 mt-1.5 text-[#485c36]`}
+              className={`w-3.5 h-3.5 absolute ${
+                isArabic ? "right-0" : "left-0"
+              } top-1/2 -translate-y-1/2 text-[#485c36]/70`}
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
                 className={`absolute ${
-                  isArabic ? "left-4" : "right-4"
-                } top-1/2 -translate-y-1/2 mt-1.5 p-1 text-[#610b0d] cursor-pointer`}
-                title={isArabic ? "مسح البحث" : "Clear search"}
+                  isArabic ? "left-0" : "right-0"
+                } top-1/2 -translate-y-1/2 text-[#610b0d] cursor-pointer`}
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
@@ -96,36 +78,19 @@ export default function ShopPage() {
           </div>
         </div>
 
-        {/* ARCHED PRODUCT CARDS GRID */}
-        {filteredProducts.length === 0 ? (
-          <div className="max-w-md mx-auto rounded-t-[9rem] rounded-b-3xl bg-white border border-[#485c36]/20 pt-12 pb-8 px-6 text-center space-y-3">
-            <FlaskConical className="w-10 h-10 text-[#485c36]/50 mx-auto" />
-            <h3 className="font-amiri text-2xl font-bold text-[#610b0d]">
-              {isArabic ? "لم نعثر على مستحضرات تطابق بحثك" : "No formulations found"}
-            </h3>
-            <button
-              type="button"
-              onClick={() => setSearchQuery("")}
-              className="px-6 py-2.5 rounded-full bg-[#485c36] text-[#f6f9e6] text-xs font-bold hover:bg-[#610b0d] cursor-pointer"
-            >
-              {isArabic ? "عرض كافة المستحضرات" : "View All Formulations"}
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                displayMode="podium"
-                onQuickView={setQuickViewProduct}
-              />
-            ))}
-          </div>
-        )}
+        {/* Quiet 2-Column Specimen Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+          {filteredProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onQuickView={setQuickViewProduct}
+            />
+          ))}
+        </div>
+
       </div>
 
-      {/* Quick View Modal */}
       <QuickViewModal
         product={quickViewProduct}
         onClose={() => setQuickViewProduct(null)}
