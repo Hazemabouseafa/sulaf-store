@@ -1,11 +1,58 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   SULAF LUXURY TYPOGRAPHY SYSTEM
+   - Arabic Headings & Poetry (للعنوان والشعر): Gulzar
+   - Arabic Normal / Body (للعادي): Aqeeq Rounded Pro
+   - English Headings / Titles (عناوين): Cinzel Decorative
+   - English Subtitles & Modern Body: Glacial Indifference
+   - English Luxury Editorial & Quotes: Cormorant Garamond
+   ========================================================================== */
+
+@font-face {
+  font-family: 'Aqeeq Rounded Pro';
+  src: url('/fonts/aqeeq.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Aqeeq';
+  src: url('/fonts/aqeeq.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Glacial Indifference';
+  src: url('/fonts/GlacialIndifference-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Glacial Indifference';
+  src: url('/fonts/GlacialIndifference-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
-  --font-amiri: 'Amiri', 'Traditional Arabic', serif;
+  --font-gulzar: 'Gulzar', 'Amiri', 'Traditional Arabic', serif;
+  --font-aqeeq: 'Aqeeq Rounded Pro', 'Aqeeq', 'Almarai', 'Cairo', sans-serif;
+  --font-cinzel: 'Cinzel Decorative', serif;
+  --font-glacial: 'Glacial Indifference', 'Inter', sans-serif;
   --font-cormorant: 'Cormorant Garamond', serif;
-  --font-cairo: 'Cairo', 'Almarai', 'Segoe UI', Tahoma, Arial, sans-serif;
-  --font-plex: 'Cairo', 'Almarai', 'Segoe UI', Tahoma, Arial, sans-serif;
-  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Universal backwards compatibility aliases */
+  --font-amiri: 'Gulzar', 'Amiri', 'Traditional Arabic', serif;
+  --font-cairo: 'Aqeeq Rounded Pro', 'Aqeeq', 'Almarai', 'Cairo', sans-serif;
+  --font-plex: 'Aqeeq Rounded Pro', 'Aqeeq', 'Almarai', 'Cairo', sans-serif;
+  --font-inter: 'Glacial Indifference', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 @layer base {
@@ -48,7 +95,7 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
-    font-family: 'Cairo', 'Almarai', 'Segoe UI', Tahoma, Arial, sans-serif !important;
+    font-family: 'Aqeeq Rounded Pro', 'Aqeeq', 'Glacial Indifference', 'Almarai', 'Cairo', sans-serif !important;
     font-weight: 500;
     letter-spacing: normal !important;
     -webkit-font-smoothing: antialiased;
@@ -73,23 +120,39 @@
     padding-top: env(safe-area-inset-top, 0px);
   }
 
-  /* High-clarity explicit Arabic typography */
-  .font-cairo {
-    font-family: 'Cairo', 'Almarai', 'Segoe UI', Tahoma, Arial, sans-serif !important;
-    letter-spacing: normal !important;
-  }
+  /* =========================================================================
+     High-Clarity Brand Typography Utility Classes
+     ========================================================================= */
 
+  /* Arabic: Gulzar for Headings & Poetry */
+  .font-gulzar,
   .font-amiri {
-    font-family: 'Amiri', 'Traditional Arabic', serif !important;
+    font-family: 'Gulzar', 'Amiri', 'Traditional Arabic', serif !important;
     letter-spacing: normal !important;
   }
 
-  .font-cormorant {
-    font-family: 'Cormorant Garamond', serif !important;
+  /* Arabic: Aqeeq Rounded Pro for Normal / Body Text */
+  .font-aqeeq,
+  .font-cairo,
+  .font-plex {
+    font-family: 'Aqeeq Rounded Pro', 'Aqeeq', 'Almarai', 'Cairo', sans-serif !important;
+    letter-spacing: normal !important;
   }
 
+  /* English: Cinzel Decorative for Headings / Titles */
+  .font-cinzel {
+    font-family: 'Cinzel Decorative', 'Times New Roman', serif !important;
+  }
+
+  /* English: Glacial Indifference for Subtitles & Modern Body */
+  .font-glacial,
   .font-inter {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    font-family: 'Glacial Indifference', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  }
+
+  /* English: Cormorant Garamond for Luxury Editorial & Accents */
+  .font-cormorant {
+    font-family: 'Cormorant Garamond', 'Georgia', serif !important;
   }
 }
 

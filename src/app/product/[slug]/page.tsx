@@ -212,7 +212,7 @@ export default function ProductStoryPage() {
 
               {vis.productSignaturePoemVis !== false && (
                 <div className="mt-4 p-3.5 rounded-2xl bg-[#485c36]/10 text-center max-w-sm border border-[#485c36]/20">
-                  <p className="font-amiri text-base text-[#485c36] font-bold">
+                  <p className={`${isArabic ? "font-gulzar" : "font-cormorant"} text-base text-[#485c36] font-bold`}>
                     {custom.productSignaturePoem || (isArabic
                       ? "«ما كان في رِفقٍ يُداوينا سُلافُ بهِ.. إلّا تحوّل حُسنًا لا ينهزمُ.»"
                       : "Never was Sulaf's gentleness poured into our healing, but that grace triumphed, undefeated.")}
@@ -256,7 +256,7 @@ export default function ProductStoryPage() {
               </div>
 
               <div>
-                <h1 className="font-amiri text-3xl sm:text-4xl font-bold text-[#485c36]">
+                <h1 className={`${isArabic ? "font-gulzar" : "font-cinzel"} text-3xl sm:text-4xl font-bold text-[#485c36]`}>
                   {productName}
                 </h1>
                 <p className="font-cairo text-xs sm:text-sm text-gray-800 font-semibold mt-1.5 leading-relaxed">

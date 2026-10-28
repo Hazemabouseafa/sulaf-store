@@ -80,10 +80,10 @@ export default function StoryPage() {
               <span>{isArabic ? "الهوية والفلسفة" : "Identity & Philosophy"}</span>
             </span>
 
-            <h1 className="font-amiri text-3xl sm:text-4xl md:text-5xl font-black text-[#1c2616] tracking-wide">
+            <h1 className={`${isArabic ? "font-gulzar" : "font-cinzel"} text-3xl sm:text-4xl md:text-5xl font-black text-[#1c2616] tracking-wide`}>
               {title}
             </h1>
-            <p className="font-amiri text-lg sm:text-xl text-[#610b0d] font-bold tracking-wider">
+            <p className={`${isArabic ? "font-gulzar" : "font-cormorant"} text-lg sm:text-xl text-[#610b0d] font-bold tracking-wider`}>
               {subtitle}
             </p>
           </motion.div>
@@ -102,7 +102,7 @@ export default function StoryPage() {
             <div
               className="space-y-6 text-gray-800 text-sm sm:text-base
                 [&_p]:leading-[2.2]
-                [&_blockquote]:border-s-4 [&_blockquote]:border-[#d4af37] [&_blockquote]:ps-6 [&_blockquote]:pe-4 [&_blockquote]:py-4 [&_blockquote]:my-6 [&_blockquote]:italic [&_blockquote]:bg-[#fbf9f0] [&_blockquote]:rounded-2xl [&_blockquote]:font-amiri [&_blockquote]:text-lg sm:[&_blockquote]:text-xl [&_blockquote]:text-gray-900 [&_blockquote]:shadow-2xs
+                [&_blockquote]:border-s-4 [&_blockquote]:border-[#d4af37] [&_blockquote]:ps-6 [&_blockquote]:pe-4 [&_blockquote]:py-4 [&_blockquote]:my-6 [&_blockquote]:italic [&_blockquote]:bg-[#fbf9f0] [&_blockquote]:rounded-2xl [&_blockquote]:font-gulzar [&_blockquote]:text-lg sm:[&_blockquote]:text-xl [&_blockquote]:text-gray-900 [&_blockquote]:shadow-2xs
                 [&_strong]:text-gray-900 [&_strong]:font-bold"
               dangerouslySetInnerHTML={{ __html: rawContent }}
             />
@@ -120,13 +120,13 @@ export default function StoryPage() {
                   : "We blend pharmaceutical science with the philosophy of beauty, delivering care that begins with understanding the skin, formulated with knowledge, and presented with gentle grace."}
               </p>
 
-              <blockquote className="my-6 border-s-4 border-[#d4af37] ps-6 pe-4 py-4 italic bg-[#fbf9f0] rounded-2xl font-amiri text-lg sm:text-xl text-gray-900 text-start shadow-2xs">
+              <blockquote className="my-6 border-s-4 border-[#d4af37] ps-6 pe-4 py-4 italic bg-[#fbf9f0] rounded-2xl font-gulzar text-lg sm:text-xl text-gray-900 text-start shadow-2xs leading-relaxed">
                 {isArabic
                   ? "«لسنا مجرد عنايةٍ تُضاف إلى روتينك؛ بل فلسفة ترى في كل تفصيلة علمًا، وفي كل خطوة عناية، وفي الجمال حكايةً تستحق أن تُروى.»"
                   : "“We are not merely care added to your routine; we are a philosophy that sees science in every detail, devotion in every step, and a story worthy of telling in beauty.”"}
               </blockquote>
 
-              <p className="text-base sm:text-lg font-bold text-[#610b0d] text-center pt-2">
+              <p className="text-base sm:text-lg font-bold font-gulzar text-[#610b0d] text-center pt-2">
                 {isArabic
                   ? "سُلاف | علمٌ يُلهم العناية، وجمالٌ تحكيه الهوية."
                   : "SULAF | Science Inspiring Care, Beauty Telling Identity."}

@@ -42,7 +42,7 @@ export default function ShopPage() {
             </span>
             <h1
               className={`${
-                isArabic ? "font-amiri text-3xl sm:text-5xl" : "font-cormorant text-4xl sm:text-5xl"
+                isArabic ? "font-gulzar text-3xl sm:text-5xl" : "font-cinzel text-3xl sm:text-4xl"
               } font-normal text-[#1e2b18]`}
             >
               {isArabic

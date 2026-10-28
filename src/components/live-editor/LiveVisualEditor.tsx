@@ -36,6 +36,7 @@ interface ElementTargetData {
   currentFontSize?: string;
   currentFontWeight?: string;
   currentTextAlign?: string;
+  currentFontFamily?: string;
 }
 
 const STORE_PAGES_PRESETS = [
@@ -76,6 +77,14 @@ const FONT_SIZES = [
   { label: "عنوان ضخم (38px)", value: "38px" },
   { label: "هيرو وبنر (48px)", value: "48px" },
   { label: "عرض ملكي (60px)", value: "60px" },
+];
+
+const FONT_FAMILIES = [
+  { label: "عقيق راوندد برو (عربي عادي)", value: "'Aqeeq Rounded Pro', 'Aqeeq', sans-serif" },
+  { label: "جلزار (عربي عنوان وشعر)", value: "'Gulzar', 'Amiri', serif" },
+  { label: "Cinzel Decorative (إنجليزي عناوين)", value: "'Cinzel Decorative', serif" },
+  { label: "Glacial Indifference (إنجليزي حديث)", value: "'Glacial Indifference', sans-serif" },
+  { label: "Cormorant Garamond (إنجليزي فاخر)", value: "'Cormorant Garamond', serif" },
 ];
 
 /**
@@ -121,6 +130,7 @@ export function LiveVisualEditor() {
   const [editFontSize, setEditFontSize] = useState("");
   const [editFontWeight, setEditFontWeight] = useState("");
   const [editTextAlign, setEditTextAlign] = useState("");
+  const [editFontFamily, setEditFontFamily] = useState("");
 
   // Pending Changes Map
   const [pendingOverrides, setPendingOverrides] = useState<Record<string, LiveTextOverride>>({});
@@ -233,6 +243,9 @@ export function LiveVisualEditor() {
         if (override.fontWeight) {
           el.style.fontWeight = override.fontWeight;
         }
+        if (override.fontFamily) {
+          el.style.fontFamily = override.fontFamily;
+        }
       });
     });
   }, [pathname, settings.liveTextOverrides, pendingOverrides]);
@@ -341,6 +354,7 @@ export function LiveVisualEditor() {
       setEditFontSize("");
       setEditFontWeight("");
       setEditTextAlign("");
+      setEditFontFamily("");
     };
 
     document.addEventListener("mouseover", handleMouseOver, true);
@@ -384,6 +398,7 @@ export function LiveVisualEditor() {
     if (editFontSize) element.style.fontSize = editFontSize;
     if (editFontWeight) element.style.fontWeight = editFontWeight;
     if (editTextAlign) element.style.textAlign = editTextAlign;
+    if (editFontFamily) element.style.fontFamily = editFontFamily;
 
     // Record in pending overrides
     const newOverride: LiveTextOverride = {
@@ -393,6 +408,7 @@ export function LiveVisualEditor() {
       ...(editColor ? { color: editColor } : {}),
       ...(editFontSize ? { fontSize: editFontSize } : {}),
       ...(editFontWeight ? { fontWeight: editFontWeight } : {}),
+      ...(editFontFamily ? { fontFamily: editFontFamily } : {}),
     };
 
     setPendingOverrides((prev) => ({
@@ -665,7 +681,24 @@ export function LiveVisualEditor() {
 
           {/* Typography Styling Controls */}
           <div className="space-y-2.5 pt-1">
-            <span className="text-[11px] font-bold text-gray-700 block">خيارات التنسيق البصري:</span>
+            <span className="text-[11px] font-bold text-gray-700 block">خيارات التنسيق البصري والخطوط:</span>
+
+            {/* Font Family Selector */}
+            <div className="space-y-1">
+              <label className="text-[10px] text-gray-500 font-bold">نوع الخط (Font Family):</label>
+              <select
+                value={editFontFamily}
+                onChange={(e) => setEditFontFamily(e.target.value)}
+                className="w-full px-2 py-1 text-xs rounded-lg border border-gray-300 bg-white focus:outline-none focus:border-[#485c36]"
+              >
+                <option value="">الافتراضي الحالي للعنصر</option>
+                {FONT_FAMILIES.map((f) => (
+                  <option key={f.value} value={f.value}>
+                    {f.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div className="grid grid-cols-2 gap-2">
               {/* Font Size Selector */}

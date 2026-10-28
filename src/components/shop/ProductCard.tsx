@@ -117,8 +117,8 @@ export function ProductCard({
         <h3
           className={`${
             isArabic
-              ? "font-amiri text-xl leading-snug"
-              : "font-cormorant text-xl leading-snug"
+              ? "font-gulzar text-xl leading-snug"
+              : "font-cinzel text-xl leading-snug"
           } font-bold text-[#1e2b18] group-hover:text-[#610b0d] transition-colors line-clamp-2 min-h-[2.75rem]`}
         >
           {productName}

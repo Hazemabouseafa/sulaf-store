@@ -42,9 +42,13 @@ interface AdvancedRichEditorProps {
 }
 
 const FONT_FAMILIES = [
-  { label: "كايرو (الافتراضي)", value: "Cairo" },
-  { label: "أميري (كلاسيكي)", value: "Amiri" },
-  { label: "Cormorant Garamond", value: "Cormorant Garamond" },
+  { label: "عقيق راوندد برو (عربي عادي)", value: "Aqeeq Rounded Pro" },
+  { label: "جلزار (عربي عنوان وشعر)", value: "Gulzar" },
+  { label: "Cinzel Decorative (إنجليزي عناوين)", value: "Cinzel Decorative" },
+  { label: "Glacial Indifference (إنجليزي حديث)", value: "Glacial Indifference" },
+  { label: "Cormorant Garamond (إنجليزي فاخر)", value: "Cormorant Garamond" },
+  { label: "أميري (Amiri)", value: "Amiri" },
+  { label: "كايرو (Cairo)", value: "Cairo" },
   { label: "Inter", value: "Inter" },
   { label: "Tahoma", value: "Tahoma" },
   { label: "Georgia", value: "Georgia" },

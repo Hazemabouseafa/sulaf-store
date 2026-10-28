@@ -648,6 +648,7 @@ export interface LiveTextOverride {
   color?: string;
   fontSize?: string;
   fontWeight?: string;
+  fontFamily?: string;
 }
 
 export interface StoreSettings {

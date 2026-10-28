@@ -200,8 +200,8 @@ export function HeroSection() {
                 <h1
                   className={`${
                     isArabic
-                      ? "font-amiri text-[clamp(2rem,4vw,3.35rem)] leading-[1.6]"
-                      : "font-cormorant text-[clamp(2.2rem,4.4vw,3.7rem)] leading-[1.15]"
+                      ? "font-gulzar text-[clamp(2rem,4vw,3.35rem)] leading-[1.6]"
+                      : "font-cinzel text-[clamp(2.2rem,4.4vw,3.7rem)] leading-[1.15]"
                   } font-normal text-[#18271b]`}
                 >
                   <span className="block">
@@ -481,8 +481,8 @@ export function HeroSection() {
               <h2
                 className={`${
                   isArabic
-                    ? "font-amiri text-3xl sm:text-4xl leading-snug"
-                    : "font-cormorant text-3xl sm:text-5xl leading-[1.1]"
+                    ? "font-gulzar text-3xl sm:text-4xl leading-snug"
+                    : "font-cinzel text-3xl sm:text-5xl leading-[1.1]"
                 } font-normal text-[#f6f9e6]`}
               >
                 {custom.ritualHeadingText || (isArabic ? settings.hero.heading || t.hero.heading : t.hero.heading)}
