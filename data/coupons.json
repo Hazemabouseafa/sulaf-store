@@ -1,1 +1,35 @@
-[]
+[
+  {
+    "id": "coup-sulaf10",
+    "code": "SULAF10",
+    "discountType": "PERCENTAGE",
+    "discountValue": 10,
+    "minOrderAmount": 500,
+    "usedCount": 0,
+    "isActive": true,
+    "expiryDate": "2027-12-31T23:59:59.000Z",
+    "notes": "خصم أندلسي 10% للطلبات فوق 500 ج.م"
+  },
+  {
+    "id": "coup-welcome15",
+    "code": "WELCOME15",
+    "discountType": "PERCENTAGE",
+    "discountValue": 15,
+    "minOrderAmount": 600,
+    "usedCount": 0,
+    "isActive": true,
+    "expiryDate": "2027-12-31T23:59:59.000Z",
+    "notes": "خصم ترحيبي 15% للعميلات الجدد"
+  },
+  {
+    "id": "coup-royal50",
+    "code": "ROYAL50",
+    "discountType": "FIXED",
+    "discountValue": 50,
+    "minOrderAmount": 400,
+    "usedCount": 0,
+    "isActive": true,
+    "expiryDate": "2027-12-31T23:59:59.000Z",
+    "notes": "خصم ملكي 50 ج.م فوري"
+  }
+]

@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { SulafLogo } from "../brand/SulafLogo";
 import { useCart } from "@/lib/cart/cart-context";
 import { useCustomerAuth } from "@/lib/auth/customer-auth";
 import { useStoreSettings } from "@/lib/settings/store-settings-context";
@@ -12,18 +12,11 @@ import { useProducts } from "@/lib/products/product-store";
 import {
   User,
   ShoppingBag,
-  Menu,
-  X,
   Truck,
   Sparkles,
   Globe,
-  ChevronDown,
-  FlaskConical,
-  BookOpen,
   ArrowRight,
   ArrowLeft,
-  Flame,
-  CheckCircle2,
 } from "lucide-react";
 
 export function Navbar() {
@@ -36,11 +29,8 @@ export function Navbar() {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
-  // Dropdown States
-  const [shopDropdownOpen, setShopDropdownOpen] = useState(false);
-
-  const shopDropdownRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
   const [headerHeight, setHeaderHeight] = useState(90);
 
@@ -58,14 +48,17 @@ export function Navbar() {
   useEffect(() => {
     function handleScroll() {
       setScrolled(window.scrollY > 20);
+      const total = document.documentElement.scrollHeight - window.innerHeight;
+      if (total > 0) {
+        setScrollProgress(Math.min(100, Math.max(0, (window.scrollY / total) * 100)));
+      }
     }
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close dropdowns on path change
+  // Close mobile drawer on path change
   useEffect(() => {
-    setShopDropdownOpen(false);
     setMobileMenuOpen(false);
   }, [pathname]);
 
@@ -81,17 +74,6 @@ export function Navbar() {
     };
   }, [mobileMenuOpen]);
 
-  // Handle outside click
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (shopDropdownRef.current && !shopDropdownRef.current.contains(e.target as Node)) {
-        setShopDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   const ArrowIcon = isArabic ? ArrowLeft : ArrowRight;
   const custom = isArabic ? (settings.customContent || {}) : (settings.customContentEn || {});
 
@@ -99,7 +81,7 @@ export function Navbar() {
     <header ref={headerRef} className="sticky top-0 z-50 w-full select-none font-cairo">
       {/* 1. Top Luxury Announcement Ribbon (Clean, no Stox / Paymob / Deposit) */}
       {(settings.sectionsVisibility?.announcementBar !== false && settings.announcement.enabled !== false) && (
-        <div className="bg-gradient-to-r from-[#2c3821] via-[#485c36] to-[#2c3821] text-[#f6f9e6] px-4 py-2 text-xs font-semibold shadow-inner border-b border-[#f3a5a1]/30">
+        <div data-live-section="announcementBar" data-section-name="شريط الإعلانات العلوي" className="bg-gradient-to-r from-[#2c3821] via-[#485c36] to-[#2c3821] text-[#f6f9e6] px-4 py-2 text-xs font-semibold shadow-inner border-b border-[#f3a5a1]/30">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div className="flex-1 flex items-center justify-center gap-2.5 overflow-hidden text-center">
               <span className="inline-flex items-center gap-1.5">
@@ -141,14 +123,20 @@ export function Navbar() {
         }`}
       >
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 sm:gap-4">
-          {/* Brand Logo */}
+          {/* Brand Logo (Guaranteed Single Direct Responsive Element) */}
           <Link
             href="/"
-            className="flex items-center gap-2 sm:gap-3 shrink-0 group focus:outline-none"
+            className="relative inline-flex items-center justify-center shrink-0 focus:outline-none group select-none py-0.5"
             aria-label="سُـلاف | Sulaf"
           >
-            <SulafLogo size="sm" color="green" className="sm:hidden" href="" />
-            <SulafLogo size="md" color="green" className="hidden sm:inline-flex" href="" />
+            <Image
+              src="/brand/sulaf-brand-logo.png"
+              alt="سُلاف | Sulaf"
+              width={200}
+              height={56}
+              className="h-10 sm:h-12 md:h-14 w-auto object-contain transition-transform duration-500 group-hover:scale-105"
+              priority
+            />
           </Link>
 
           {/* Desktop Navigation with Dropdowns */}
@@ -165,76 +153,17 @@ export function Navbar() {
               {t.nav.home}
             </Link>
 
-            {/* 2. Shop & Formulations Dropdown */}
-            <div
-              ref={shopDropdownRef}
-              className="relative"
-              onMouseEnter={() => setShopDropdownOpen(true)}
-              onMouseLeave={() => setShopDropdownOpen(false)}
+            {/* 2. Direct Shop Link (No Dropdown) */}
+            <Link
+              href="/shop"
+              className={`px-3.5 py-2 rounded-xl text-xs xl:text-sm font-semibold transition-all duration-200 ${
+                pathname === "/shop" || pathname.startsWith("/product")
+                  ? "bg-[#485c36] text-[#f6f9e6] font-bold shadow-xs"
+                  : "text-[#24301a] hover:text-[#485c36] hover:bg-[#485c36]/10"
+              }`}
             >
-              <button
-                type="button"
-                onClick={() => setShopDropdownOpen(!shopDropdownOpen)}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs xl:text-sm font-semibold transition-all duration-200 cursor-pointer ${
-                  pathname.startsWith("/shop") || pathname.startsWith("/product")
-                    ? "bg-[#485c36] text-[#f6f9e6] font-bold shadow-xs"
-                    : "text-[#24301a] hover:text-[#485c36] hover:bg-[#485c36]/10"
-                }`}
-              >
-                <span>{t.nav.shopMenu}</span>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                    shopDropdownOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-
-              {/* Shop Dropdown Menu */}
-              {shopDropdownOpen && (
-                <div className="absolute top-full start-0 mt-1 w-80 rounded-2xl bg-white border border-[#e2e8c0] shadow-xl p-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                  <div className="space-y-1">
-                    {products.slice(0, 4).map((prod, idx) => (
-                      <Link
-                        key={prod.id}
-                        href={`/product/${prod.slug}`}
-                        className={`p-2.5 rounded-xl hover:bg-[#f6f9e6] transition-colors block ${
-                          idx === 0 ? "border border-[#485c36]/20 bg-[#485c36]/5" : ""
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-2 mb-0.5">
-                          <span
-                            className={`text-xs flex items-center gap-1.5 line-clamp-1 ${
-                              idx === 0 ? "font-bold text-[#485c36]" : "font-semibold text-[#1c2616]"
-                            }`}
-                          >
-                            {idx === 0 && <Flame className="w-3.5 h-3.5 text-[#ca384a] shrink-0" />}
-                            <span className="truncate">{isArabic ? prod.nameAr : prod.nameEn}</span>
-                          </span>
-                          {idx === 0 && (
-                            <span className="text-[10px] bg-[#ca384a] text-white px-2 py-0.5 rounded-full font-bold shrink-0">
-                              {isArabic ? "الأكثر طلباً" : "Best Seller"}
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-[11px] text-gray-500 block line-clamp-1">
-                          {isArabic ? prod.subtitleAr : prod.subtitleEn}
-                        </span>
-                      </Link>
-                    ))}
-
-                    <div className="pt-2 border-t border-[#e2e8c0] mt-2">
-                      <Link
-                        href="/shop"
-                        className="px-2.5 py-1.5 rounded-lg text-xs font-bold text-[#485c36] hover:bg-[#485c36]/10 transition-colors flex items-center justify-between"
-                      >
-                        <span>{t.nav.allProducts}</span>
-                        <ArrowIcon className="w-3.5 h-3.5" />
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+              {t.nav.shop}
+            </Link>
 
             {/* 3. About Sulaf (Single direct page, no dropdown) */}
             <Link
@@ -323,127 +252,160 @@ export function Navbar() {
               )}
             </button>
 
-            {/* 4. Mobile Menu Button */}
+            {/* 4. Chic Bespoke Luxury Mobile Menu Button */}
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl text-[#2c3821] bg-white border border-[#e2e8c0] hover:bg-[#f6f9e6] transition-colors cursor-pointer"
-              aria-label={mobileMenuOpen ? t.nav.close : t.nav.menu}
+              className={`lg:hidden relative w-11 h-11 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 cursor-pointer border ${
+                mobileMenuOpen
+                  ? "bg-[#485c36] border-[#485c36] text-[#f6f9e6] shadow-md shadow-[#485c36]/20"
+                  : "bg-white/95 hover:bg-white border-[#e2e8c0] hover:border-[#485c36]/40 text-[#2c3821] shadow-xs active:scale-95"
+              }`}
+              aria-label={mobileMenuOpen ? (isArabic ? "إغلاق القائمة" : "Close menu") : (isArabic ? "القائمة الرئيسية" : "Open menu")}
               aria-expanded={mobileMenuOpen}
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              <div className="w-5 h-4 flex flex-col justify-between items-center relative">
+                <span
+                  className={`h-[2px] w-5 rounded-full transition-all duration-300 ease-out origin-center ${
+                    mobileMenuOpen
+                      ? "translate-y-[7px] rotate-45 bg-[#f6f9e6]"
+                      : "bg-[#2c3821]"
+                  }`}
+                />
+                <span
+                  className={`h-[2px] rounded-full transition-all duration-200 ease-out ${
+                    mobileMenuOpen
+                      ? "w-0 opacity-0 bg-[#f6f9e6]"
+                      : "w-3.5 bg-[#485c36] self-start"
+                  }`}
+                />
+                <span
+                  className={`h-[2px] w-5 rounded-full transition-all duration-300 ease-out origin-center ${
+                    mobileMenuOpen
+                      ? "-translate-y-[7px] -rotate-45 bg-[#f6f9e6]"
+                      : "bg-[#2c3821]"
+                  }`}
+                />
+              </div>
             </button>
           </div>
         </div>
       </nav>
 
-      {/* 3. Mobile Navigation Drawer (Clean, Grouped, High-Contrast) */}
+      {/* 2.5 Subtle Luxury Reading Progress Hairline Indicator */}
+      <div className="h-[2px] w-full bg-transparent overflow-hidden pointer-events-none">
+        <div
+          className="h-full bg-gradient-to-r from-[#485c36] via-[#ca384a] to-[#d4af37] transition-[width] duration-150 ease-out"
+          style={{ width: `${scrollProgress}%` }}
+        />
+      </div>
+
+      {/* 3. Mobile Navigation Drawer (Editorial Luxury, Strictly 4 Core Links, Bilingual) */}
       {mobileMenuOpen && (
         <div
           style={{ top: `${headerHeight}px` }}
-          className="lg:hidden fixed inset-x-0 bottom-0 z-50 bg-[#fafcf3]/98 backdrop-blur-2xl border-t border-[#d8dfbe] p-5 pb-safe overflow-y-auto animate-in slide-in-from-top-4 duration-200"
+          className="lg:hidden fixed inset-x-0 bottom-0 z-50 bg-[#fafcf3]/98 backdrop-blur-2xl border-t border-[#d8dfbe] p-5 pb-safe overflow-y-auto animate-in slide-in-from-top-4 duration-300 shadow-2xl"
         >
           <div className="flex flex-col space-y-4 max-w-md mx-auto">
-            {/* Language Switcher Bar in Mobile Drawer */}
-            <div className="p-3 rounded-2xl bg-white border border-[#e2e8c0] shadow-sm flex items-center justify-between">
-              <span className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
-                <Globe className="w-4 h-4 text-[#485c36]" />
-                <span>{t.nav.language}:</span>
-              </span>
-              <div className="flex items-center gap-1.5 bg-[#f6f9e6] p-1 rounded-xl border border-[#e2e8c0]">
-                <button
-                  type="button"
-                  onClick={() => toggleLanguage()}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                    isArabic ? "bg-[#485c36] text-white shadow-xs" : "text-gray-600 hover:text-black"
+            {/* Strictly 4 Direct Navigation Links — Zero Submenus */}
+            <div className="space-y-2.5">
+              {[
+                {
+                  num: "01",
+                  label: isArabic ? "الرئيسية" : "Home",
+                  href: "/",
+                  active: pathname === "/",
+                },
+                {
+                  num: "02",
+                  label: isArabic ? "المتجر" : "Shop",
+                  href: "/shop",
+                  active: pathname === "/shop" || pathname.startsWith("/product"),
+                },
+                {
+                  num: "03",
+                  label: isArabic ? "عن سُـلاف" : "About Sulaf",
+                  href: "/story",
+                  active: pathname === "/story",
+                },
+                {
+                  num: "04",
+                  label: isArabic ? "تتبع شحنتك" : "Track Order",
+                  href: "/track",
+                  active: pathname === "/track",
+                },
+              ].map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`group flex items-center justify-between p-4 rounded-2xl transition-all duration-300 border ${
+                    link.active
+                      ? "bg-[#485c36] text-[#f6f9e6] border-[#485c36] shadow-md shadow-[#485c36]/20"
+                      : "bg-white/90 hover:bg-white border-[#e2e8c0] text-[#1f2915] hover:border-[#485c36]/40 shadow-xs"
                   }`}
                 >
-                  العربية
-                </button>
-                <button
-                  type="button"
-                  onClick={() => toggleLanguage()}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                    !isArabic ? "bg-[#485c36] text-white shadow-xs" : "text-gray-600 hover:text-black"
-                  }`}
-                >
-                  English
-                </button>
-              </div>
-            </div>
-
-            {/* Customer Account Button in Mobile Drawer */}
-            <Link
-              href="/account"
-              onClick={() => setMobileMenuOpen(false)}
-              className="p-3.5 rounded-2xl bg-white border border-[#e2e8c0] shadow-sm flex items-center justify-between font-bold text-xs text-[#2c3821] hover:border-[#485c36] transition-all"
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-[#485c36]/10 text-[#485c36] flex items-center justify-center shrink-0">
-                  <User className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="block text-sm font-amiri font-bold text-[#485c36]">
-                    {isLoggedIn ? (isArabic ? `مرحباً، ${user?.name}` : `Welcome, ${user?.name}`) : (isArabic ? "لوحة تحكم ودخول العميل" : "Customer Portal & Login")}
-                  </span>
-                  <span className="text-[11px] text-gray-500 font-normal">
-                    {isLoggedIn ? (isArabic ? "إدارة طلباتك، شحناتك، وعناوينك" : "Manage orders, shipments & addresses") : (isArabic ? "تسجيل الدخول أو إنشاء حساب جديد" : "Sign in or create account")}
-                  </span>
-                </div>
-              </div>
-              <ArrowIcon className="w-4 h-4 text-gray-400" />
-            </Link>
-
-            {/* Mobile Nav Links */}
-            <div className="space-y-2">
-              <Link
-                href="/"
-                className="block p-3 rounded-xl bg-white border border-[#e2e8c0] text-sm font-bold text-[#24301a]"
-              >
-                {t.nav.home}
-              </Link>
-
-              {/* Group 1: Shop */}
-              <div className="p-3 rounded-xl bg-white border border-[#e2e8c0] space-y-2">
-                <span className="block text-xs font-bold text-[#485c36]">{t.nav.shopMenu}</span>
-                <div className="space-y-1.5 ps-2 border-s-2 border-[#485c36]/20">
-                  <Link href="/shop" className="block text-xs font-semibold text-gray-800">
-                    {t.nav.allProducts}
-                  </Link>
-                  {products.slice(0, 4).map((prod, idx) => (
-                    <Link
-                      key={prod.id}
-                      href={`/product/${prod.slug}`}
-                      className={`block text-xs truncate ${
-                        idx === 0 ? "font-bold text-[#ca384a]" : "text-gray-700"
+                  <div className="flex items-center gap-3.5">
+                    <span
+                      className={`font-mono text-xs tracking-widest font-bold ${
+                        link.active ? "text-[#f3e5ab]" : "text-[#485c36]/60 group-hover:text-[#485c36]"
                       }`}
                     >
-                      {isArabic ? prod.nameAr : prod.nameEn} {idx === 0 ? "★" : ""}
-                    </Link>
-                  ))}
+                      {link.num}
+                    </span>
+                    <span
+                      className={`text-base font-bold tracking-wide ${
+                        isArabic ? "font-cairo" : "font-cinzel text-[15px]"
+                      }`}
+                    >
+                      {link.label}
+                    </span>
+                  </div>
+                  <div
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center transition-transform duration-300 ${
+                      link.active
+                        ? "bg-white/15 text-[#f3e5ab]"
+                        : "bg-[#f4f1e6] text-[#485c36] group-hover:bg-[#485c36]/10"
+                    }`}
+                  >
+                    <ArrowIcon className="w-4 h-4" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Bilingual Quick Toggle Pill at Bottom */}
+            <div className="pt-2">
+              <div className="p-3 rounded-2xl bg-white border border-[#e2e8c0] shadow-xs flex items-center justify-between">
+                <span className="text-xs font-bold text-gray-700 flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-[#485c36]" />
+                  <span>{isArabic ? "اللغة:" : "Language:"}</span>
+                </span>
+                <div className="flex items-center gap-1.5 bg-[#f4f1e6] p-1 rounded-xl border border-[#e2e8c0]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!isArabic) toggleLanguage();
+                    }}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      isArabic ? "bg-[#485c36] text-white shadow-xs" : "text-gray-600 hover:text-black"
+                    }`}
+                  >
+                    العربية
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isArabic) toggleLanguage();
+                    }}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      !isArabic ? "bg-[#485c36] text-white shadow-xs" : "text-gray-600 hover:text-black"
+                    }`}
+                  >
+                    English
+                  </button>
                 </div>
               </div>
-
-              {/* Group 2: About Sulaf (Single direct page, no dropdown) */}
-              <Link
-                href="/story"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`block p-3 rounded-xl border text-sm font-semibold transition-colors ${
-                  pathname === "/story"
-                    ? "bg-[#485c36] text-[#f6f9e6] font-bold border-[#485c36]"
-                    : "bg-white border-[#e2e8c0] text-[#24301a] hover:bg-[#f6f9e6]"
-                }`}
-              >
-                {isArabic ? "عن سُـلاف" : "About Sulaf"}
-              </Link>
-
-              <Link
-                href="/track"
-                className="block p-3 rounded-xl bg-white border border-[#e2e8c0] text-sm font-semibold text-gray-800"
-              >
-                {t.nav.track}
-              </Link>
-
             </div>
           </div>
         </div>

@@ -93,6 +93,45 @@ export async function POST(req: NextRequest) {
     orders.unshift(newOrder);
     writeJsonFile("orders.json", orders);
 
+    // Auto-register/sync customer in registered-customers.json
+    try {
+      const customers = readJsonFile<any[]>("registered-customers.json", []);
+      const custEmail = (body.customerEmail || "").trim().toLowerCase();
+      const custPhone = (body.customerPhone || "").trim().replace(/\s+/g, "");
+      const custName = (body.customerName || "").trim();
+
+      const existingIdx = customers.findIndex(
+        (c: any) =>
+          (custEmail && c.email && c.email.toLowerCase() === custEmail) ||
+          (custPhone && c.phone && c.phone.replace(/\s+/g, "") === custPhone)
+      );
+
+      if (existingIdx !== -1) {
+        customers[existingIdx] = {
+          ...customers[existingIdx],
+          name: custName || customers[existingIdx].name,
+          phone: custPhone || customers[existingIdx].phone,
+          governorate: body.governorate || customers[existingIdx].governorate,
+          city: body.city || customers[existingIdx].city,
+        };
+      } else if (custName) {
+        customers.unshift({
+          id: `cust_${Date.now().toString(36)}`,
+          name: custName,
+          email: custEmail || `${custPhone || Date.now()}@customer.sulaf`,
+          phone: custPhone,
+          governorate: body.governorate || "",
+          city: body.city || "",
+          registeredAt: new Date().toISOString().split("T")[0],
+          customCoupons: [],
+          customNotifications: [],
+        });
+      }
+      writeJsonFile("registered-customers.json", customers);
+    } catch (e) {
+      console.error("Customer auto-sync error:", e);
+    }
+
     return NextResponse.json({
       success: true,
       message: "تم حفظ الطلب بنجاح في قاعدة البيانات وتحديث المخزون.",

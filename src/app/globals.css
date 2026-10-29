@@ -57,16 +57,16 @@
 
 @layer base {
   :root {
-    --background: #f6f9e6;
+    --background: #f4f1e6;
     --foreground: #1c2616;
 
     --primary: #485c36;
-    --primary-foreground: #f6f9e6;
+    --primary-foreground: #f4f1e6;
     --primary-dark: #38492a;
     --primary-light: #587042;
 
-    --cream: #f6f9e6;
-    --cream-dark: #e8ecd0;
+    --cream: #f4f1e6;
+    --cream-dark: #e8e3d0;
 
     --burgundy: #610b0d;
     --burgundy-dark: #400708;
@@ -163,7 +163,7 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #f6f9e6;
+  background: #f4f1e6;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -194,4 +194,212 @@ html.lenis, html.lenis body {
 
 .lenis.lenis-scrolling iframe {
   pointer-events: none;
+}
+
+/* =========================================================================
+   SULAF LUXURY MOTION & SMOOTH SENSORY STYLING
+   - Ultra-smooth cubic-bezier easings
+   - Gentle floating and atmospheric glowing auras
+   - Soft hover lift for arch cards and clinical dossiers
+   - Elegant image zoom transitions
+   ========================================================================= */
+
+:root {
+  --ease-silk: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-gentle: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@keyframes sulafFloatSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(0.35deg);
+  }
+}
+
+@keyframes sulafGlowAura {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes sulafShimmerSoft {
+  0% {
+    transform: translateX(-150%);
+  }
+  50%, 100% {
+    transform: translateX(150%);
+  }
+}
+
+@keyframes sulafRotateSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes sulafPulseSlow {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.08);
+  }
+}
+
+/* Gentle Atmospheric Animations */
+.animate-sulaf-float {
+  animation: sulafFloatSlow 7s var(--ease-gentle) infinite;
+  will-change: transform;
+}
+
+.animate-sulaf-aura {
+  animation: sulafGlowAura 6s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.animate-spin-slow {
+  animation: sulafRotateSlow 75s linear infinite;
+  will-change: transform;
+}
+
+.animate-breathe-slow {
+  animation: sulafPulseSlow 5s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* Luxury Card Elevation with Silk Shadow */
+.silk-card {
+  transition: transform 0.4s var(--ease-silk), box-shadow 0.4s var(--ease-silk), border-color 0.35s ease;
+  will-change: transform;
+}
+.silk-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px -12px rgba(24, 39, 27, 0.12);
+}
+
+/* Delicate Container Zoom */
+.silk-zoom-container {
+  overflow: hidden;
+}
+.silk-zoom-container img {
+  transition: transform 0.7s var(--ease-silk);
+  will-change: transform;
+}
+.silk-zoom-container:hover img {
+  transform: scale(1.045);
+}
+
+/* Tactile Spring Buttons */
+.silk-button {
+  transition: transform 0.2s var(--ease-silk), background-color 0.25s ease, box-shadow 0.25s ease;
+}
+.silk-button:hover {
+  transform: translateY(-1.5px);
+}
+.silk-button:active {
+  transform: scale(0.97);
+}
+
+/* Soft Backdrop Transitions */
+.silk-blur {
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: backdrop-filter 0.35s ease, background-color 0.35s ease;
+}
+
+/* Respect Accessibility Preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+
+/* Enhanced Silk & Luminescence Keyframes */
+@keyframes sulafSweepShimmer {
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  40%, 100% {
+    transform: translateX(200%) skewX(-20deg);
+  }
+}
+
+@keyframes sulafSilkFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-9px) rotate(0.6deg);
+  }
+}
+
+@keyframes sulafGlowRing {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(202, 56, 74, 0.4), 0 0 25px rgba(229, 200, 118, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(202, 56, 74, 0), 0 0 35px rgba(229, 200, 118, 0.45);
+  }
+}
+
+@keyframes sulafAmbientDrift {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.25;
+  }
+  33% {
+    transform: translate(30px, -20px) scale(1.12);
+    opacity: 0.45;
+  }
+  66% {
+    transform: translate(-20px, 15px) scale(0.95);
+    opacity: 0.3;
+  }
+}
+
+.animate-sulaf-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.animate-sulaf-shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  animation: sulafSweepShimmer 6s infinite ease-in-out;
+  pointer-events: none;
+}
+
+.animate-silk-levitate {
+  animation: sulafSilkFloat 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform;
+}
+
+.animate-glow-ring {
+  animation: sulafGlowRing 3.5s ease-in-out infinite;
+}
+
+.animate-ambient-drift {
+  animation: sulafAmbientDrift 14s ease-in-out infinite;
+  will-change: transform, opacity;
 }

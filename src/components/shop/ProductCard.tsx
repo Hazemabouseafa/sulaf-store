@@ -57,7 +57,7 @@ export function ProductCard({
   return (
     <article
       onClick={handleCardClick}
-      className="group rounded-xl bg-[#f9fbf0] border border-[#485c36]/15 hover:border-[#610b0d]/50 p-6 flex flex-col justify-between shadow-[0_6px_22px_rgba(34,48,30,0.05)] hover:shadow-[0_12px_30px_rgba(34,48,30,0.1)] transition-all cursor-pointer font-cairo text-start"
+      className="group silk-card rounded-xl bg-[#f9fbf0] border border-[#485c36]/15 hover:border-[#610b0d]/50 p-6 flex flex-col justify-between shadow-[0_6px_22px_rgba(34,48,30,0.05)] cursor-pointer font-cairo text-start"
       role="link"
       tabIndex={0}
       onKeyDown={(e) => {
@@ -99,12 +99,14 @@ export function ProductCard({
 
       {/* Center Bottle Preview */}
       <div className="relative h-36 w-full flex items-center justify-center my-2">
+        {/* Soft luminous breathing aura on hover */}
+        <div className="absolute w-24 h-24 rounded-full bg-gradient-to-tr from-[#f3a5a1]/25 via-[#e5c876]/20 to-transparent blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
         <Image
           src={product.images[0]?.url || "/brand/sulaf-flower-symbol.png"}
           alt={productName}
           width={125}
           height={125}
-          className="object-contain transition-transform duration-500 group-hover:scale-105"
+          className="object-contain transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-translate-y-2.5 drop-shadow-[0_8px_16px_rgba(24,39,27,0.06)] group-hover:drop-shadow-[0_18px_30px_rgba(24,39,27,0.18)]"
         />
       </div>
 

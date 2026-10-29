@@ -21,8 +21,8 @@ export default function ContactPage() {
 
   if (page && !page.published && typeof window !== "undefined" && !localStorage.getItem("sulaf_admin_auth")) {
     return (
-      <div className="py-24 bg-[#f6f9e6] min-h-screen text-[#1c2616] font-cairo flex items-center justify-center px-4" dir={dir}>
-        <div className="max-w-md w-full bg-white p-8 rounded-3xl border border-[#dbe2bd] text-center space-y-4 shadow-sm">
+      <div className="py-24 bg-[#f4f1e6] min-h-screen text-[#1c2616] font-cairo flex items-center justify-center px-4" dir={dir}>
+        <div className="max-w-md w-full bg-[#fdfef8] p-8 rounded-3xl border border-[#dbe2bd] text-center space-y-4 shadow-sm">
           <div className="w-14 h-14 rounded-2xl bg-[#fbf9f0] border border-[#d4af37]/40 flex items-center justify-center mx-auto text-[#d4af37]">
             <FileText className="w-7 h-7" />
           </div>
@@ -44,7 +44,7 @@ export default function ContactPage() {
   const rawContent = isArabic ? page?.contentAr : (page?.contentEn || page?.contentAr);
 
   return (
-    <div className="py-16 bg-[#f6f9e6] min-h-screen text-[#222b1a] font-cairo" dir={dir}>
+    <div className="py-16 bg-[#f4f1e6] min-h-screen text-[#222b1a] font-cairo" dir={dir}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         <div className="text-center space-y-3">
           {elements.contactBadgeVis !== false && (
@@ -69,7 +69,7 @@ export default function ContactPage() {
 
         {rawContent && (
           <div
-            className="p-8 sm:p-10 rounded-3xl bg-white border border-[#e2e8c0] shadow-sm text-gray-800 leading-[2.2] space-y-4
+            className="p-8 sm:p-10 rounded-3xl bg-[#fdfef8] border border-[#e2e8c0] shadow-sm text-gray-800 leading-[2.2] space-y-4
               [&_h2]:font-amiri [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-[#485c36] [&_h2]:border-b [&_h2]:border-gray-100 [&_h2]:pb-2
               [&_h3]:font-amiri [&_h3]:text-lg [&_h3]:font-bold [&_h3]:text-[#610b0d]
               [&_p]:text-xs [&_p]:sm:text-sm [&_p]:text-gray-700
@@ -82,8 +82,8 @@ export default function ContactPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Direct channels */}
           <div className="space-y-4">
-            <div className="p-6 rounded-3xl bg-white border border-[#e2e8c0] shadow-sm flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+            <div className="p-6 rounded-3xl bg-[#fdfef8] border border-[#e2e8c0] shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#485c36]/10 text-[#485c36] flex items-center justify-center shrink-0">
                 <MessageCircle className="w-6 h-6" />
               </div>
               <div className="space-y-0.5">
@@ -92,8 +92,8 @@ export default function ContactPage() {
               </div>
             </div>
 
-            <div className="p-6 rounded-3xl bg-white border border-[#e2e8c0] shadow-sm flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+            <div className="p-6 rounded-3xl bg-[#fdfef8] border border-[#e2e8c0] shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#610b0d]/10 text-[#610b0d] flex items-center justify-center shrink-0">
                 <Mail className="w-6 h-6" />
               </div>
               <div className="space-y-0.5">
@@ -102,8 +102,8 @@ export default function ContactPage() {
               </div>
             </div>
 
-            <div className="p-6 rounded-3xl bg-white border border-[#e2e8c0] shadow-sm flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-800 flex items-center justify-center shrink-0">
+            <div className="p-6 rounded-3xl bg-[#fdfef8] border border-[#e2e8c0] shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#d4af37]/15 text-[#91751d] flex items-center justify-center shrink-0">
                 <MapPin className="w-6 h-6" />
               </div>
               <div className="space-y-0.5">
@@ -114,7 +114,7 @@ export default function ContactPage() {
           </div>
 
           {/* Contact form */}
-          <div className="p-8 rounded-3xl bg-white border border-[#e2e8c0] shadow-sm space-y-4">
+          <div className="p-8 rounded-3xl bg-[#fdfef8] border border-[#e2e8c0] shadow-sm space-y-4">
             <h3 className="font-amiri text-xl font-bold text-gray-900">
               {isArabic ? "أرسلي استفساركِ مباشرة" : "Send an Inquiry"}
             </h3>

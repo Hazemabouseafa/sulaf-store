@@ -68,7 +68,7 @@ export function CustomSectionRenderer({ section }: CustomSectionRendererProps) {
       case "glass":
         return "bg-white/80 backdrop-blur-md text-[#1c2616] border-y border-[#dbe2bd]/70";
       default:
-        return "bg-[#f6f9e6] text-[#1c2616]";
+        return "bg-[#f4f1e6] text-[#1c2616]";
     }
   };
 
@@ -160,7 +160,7 @@ export function CustomSectionRenderer({ section }: CustomSectionRendererProps) {
           <div className="text-center max-w-2xl mx-auto space-y-3">
             {badge && (
               <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
-                isDark ? "bg-white/10 border-[#d4af37]/40 text-[#f3e5ab]" : "bg-[#f6f9e6] border-[#dbe2bd] text-[#485c36]"
+                isDark ? "bg-white/10 border-[#d4af37]/40 text-[#f3e5ab]" : "bg-[#f4f1e6] border-[#dbe2bd] text-[#485c36]"
               }`}>
                 <Sparkles className="w-3.5 h-3.5 text-[#d4af37]" />
                 <span>{badge}</span>

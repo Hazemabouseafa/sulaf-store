@@ -53,7 +53,7 @@ export default function CustomPageClient({ slug, initialPage }: CustomPageClient
 
   if (loading) {
     return (
-      <div className="py-24 bg-[#f6f9e6] min-h-screen flex items-center justify-center font-cairo">
+      <div className="py-24 bg-[#f4f1e6] min-h-screen flex items-center justify-center font-cairo">
         <div className="text-center space-y-3">
           <div className="w-10 h-10 border-3 border-[#485c36] border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-xs text-gray-600 font-bold">
@@ -66,7 +66,7 @@ export default function CustomPageClient({ slug, initialPage }: CustomPageClient
 
   if (!page || (!page.published && typeof window !== "undefined" && !localStorage.getItem("sulaf_admin_auth"))) {
     return (
-      <div className="py-24 bg-[#f6f9e6] min-h-screen text-[#1c2616] font-cairo flex items-center justify-center px-4" dir={dir}>
+      <div className="py-24 bg-[#f4f1e6] min-h-screen text-[#1c2616] font-cairo flex items-center justify-center px-4" dir={dir}>
         <div className="max-w-md w-full bg-white p-8 sm:p-10 rounded-3xl border border-[#dbe2bd] text-center space-y-5 shadow-sm">
           <div className="w-16 h-16 rounded-3xl bg-[#fbf9f0] border border-[#d4af37]/40 flex items-center justify-center mx-auto text-[#d4af37]">
             <FileText className="w-8 h-8" />
@@ -100,7 +100,7 @@ export default function CustomPageClient({ slug, initialPage }: CustomPageClient
   const rawContent = isArabic ? (page.contentAr || page.contentEn) : (page.contentEn || page.contentAr);
 
   return (
-    <div className="py-16 sm:py-20 bg-[#f6f9e6] min-h-screen text-[#1c2616] font-cairo" dir={dir}>
+    <div className="py-16 sm:py-20 bg-[#f4f1e6] min-h-screen text-[#1c2616] font-cairo" dir={dir}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         
         {/* Breadcrumb Navigation */}

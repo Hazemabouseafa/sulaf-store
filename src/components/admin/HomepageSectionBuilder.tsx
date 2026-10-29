@@ -1295,7 +1295,7 @@ function renderBuiltinSectionFields(
               label={isEn ? "Ritual Badge" : "شارة قسم الطقوس"}
               value={current.ritualBadgeText || ""}
               onChange={(v) => updateField("ritualBadgeText", v)}
-              placeholder={isEn ? "OUR RITUAL" : "طقوس سُـلاف السريرية"}
+              placeholder={isEn ? "OUR RITUAL" : "شارة مخصصة (اختياري)..."}
               isEn={isEn}
             />
             <FieldInput
@@ -1463,10 +1463,10 @@ function renderBuiltinSectionFields(
               isEn={isEn}
             />
             <FieldInput
-              label={isEn ? "Trust Strip Badge" : "شارة ميثاق الثقة"}
+              label={isEn ? "Trust Strip Badge" : "شارة شريط التميز"}
               value={current.diffBadgeText || ""}
               onChange={(v) => updateField("diffBadgeText", v)}
-              placeholder={isEn ? "THE SULAF DIFFERENCE" : "ميثاق الثقة في سُـلاف"}
+              placeholder={isEn ? "THE SULAF DIFFERENCE" : "شارة مخصصة (اختياري)..."}
               isEn={isEn}
             />
             <FieldInput

@@ -226,8 +226,8 @@ export default function CustomerAccountPage() {
   // ==========================================
   if (!isLoggedIn || !user) {
     return (
-      <div className="py-16 md:py-24 bg-[#f6f9e6] min-h-[85vh] flex items-center justify-center px-4 font-cairo" dir={dir}>
-        <div className="max-w-lg w-full bg-white rounded-3xl border border-[#dbe2bd] shadow-xl p-6 sm:p-10 space-y-7">
+      <div className="py-16 md:py-24 bg-[#f4f1e6] min-h-[85vh] flex items-center justify-center px-4 font-cairo" dir={dir}>
+        <div className="max-w-lg w-full bg-[#fdfef8] rounded-3xl border border-[#dbe2bd] shadow-xl p-6 sm:p-10 space-y-7">
           
           {/* Header */}
           <div className="text-center space-y-3">
@@ -254,7 +254,7 @@ export default function CustomerAccountPage() {
           </div>
 
           {/* Mode Switcher Tabs */}
-          <div className="flex rounded-2xl bg-[#f6f9e6] p-1 border border-[#e2e8c0]">
+          <div className="flex rounded-2xl bg-[#f4f1e6] p-1 border border-[#e2e8c0]">
             <button
               type="button"
               onClick={() => {
@@ -465,7 +465,7 @@ export default function CustomerAccountPage() {
   // VIEW 2: LOGGED-IN CUSTOMER DASHBOARD
   // ==========================================
   return (
-    <div className="py-10 sm:py-16 bg-[#f6f9e6] min-h-screen text-[#222b1a] font-cairo" dir={dir}>
+    <div className="py-10 sm:py-16 bg-[#f4f1e6] min-h-screen text-[#222b1a] font-cairo" dir={dir}>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         
         {/* VIP Personalized Notifications */}
@@ -530,7 +530,7 @@ export default function CustomerAccountPage() {
         )}
 
         {/* 1. Header Profile Banner */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#e2e8c0] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="p-6 sm:p-8 rounded-3xl bg-[#fdfef8] border border-[#e2e8c0] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-4 sm:gap-5">
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-[#485c36] to-[#2c3821] text-white flex items-center justify-center font-amiri text-2xl sm:text-3xl font-bold shadow-md border-2 border-[#d4af37]/40 shrink-0">
               {user.name.charAt(0)}
@@ -577,7 +577,7 @@ export default function CustomerAccountPage() {
 
         {/* 2. Key Metrics Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          <div className="p-4 rounded-2xl bg-white border border-[#e2e8c0] shadow-xs">
+          <div className="p-4 rounded-2xl bg-[#fdfef8] border border-[#e2e8c0] shadow-xs">
             <div className="flex items-center gap-2 text-gray-500 text-xs font-bold mb-1">
               <ShoppingBag className="w-4 h-4 text-[#485c36]" />
               <span>{isArabic ? "إجمالي الطلبات" : "Total Orders"}</span>
@@ -585,7 +585,7 @@ export default function CustomerAccountPage() {
             <span className="text-2xl font-bold text-[#1c2616] font-mono">{displayOrders.length}</span>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white border border-[#e2e8c0] shadow-xs">
+          <div className="p-4 rounded-2xl bg-[#fdfef8] border border-[#e2e8c0] shadow-xs">
             <div className="flex items-center gap-2 text-gray-500 text-xs font-bold mb-1">
               <Truck className="w-4 h-4 text-[#ca384a]" />
               <span>{isArabic ? "الشحنات النشطة" : "Active Delivery"}</span>
@@ -597,7 +597,7 @@ export default function CustomerAccountPage() {
             </span>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white border border-[#e2e8c0] shadow-xs">
+          <div className="p-4 rounded-2xl bg-[#fdfef8] border border-[#e2e8c0] shadow-xs">
             <div className="flex items-center gap-2 text-gray-500 text-xs font-bold mb-1">
               <MapPin className="w-4 h-4 text-[#ca384a]" />
               <span>{isArabic ? "العناوين المسجلة" : "Saved Addresses"}</span>
@@ -605,7 +605,7 @@ export default function CustomerAccountPage() {
             <span className="text-2xl font-bold text-[#1c2616] font-mono">{user.savedAddresses.length}</span>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white border border-[#e2e8c0] shadow-xs">
+          <div className="p-4 rounded-2xl bg-[#fdfef8] border border-[#e2e8c0] shadow-xs">
             <div className="flex items-center gap-2 text-gray-500 text-xs font-bold mb-1">
               <Tag className="w-4 h-4 text-[#610b0d]" />
               <span>{isArabic ? "كوبونات VIP" : "VIP Coupons"}</span>
@@ -676,7 +676,7 @@ export default function CustomerAccountPage() {
               displayOrders.map((o) => (
                 <div
                   key={o.id}
-                  className="p-6 rounded-3xl bg-white border border-[#e2e8c0] shadow-sm space-y-5"
+                  className="p-6 rounded-3xl bg-[#fdfef8] border border-[#e2e8c0] shadow-sm space-y-5"
                 >
                   {/* Order Top Bar */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-4">
@@ -817,7 +817,7 @@ export default function CustomerAccountPage() {
               {user.savedAddresses.map((addr) => (
                 <div
                   key={addr.id}
-                  className={`p-5 rounded-3xl bg-white border transition-all ${
+                  className={`p-5 rounded-3xl bg-[#fdfef8] border transition-all ${
                     addr.isDefault
                       ? "border-[#485c36] shadow-sm ring-1 ring-[#485c36]/20"
                       : "border-[#e2e8c0] shadow-xs"
@@ -870,7 +870,7 @@ export default function CustomerAccountPage() {
             {/* Add Address Modal */}
             {showAddressModal && (
               <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-white rounded-3xl p-6 shadow-2xl border border-[#dbe2bd] space-y-4">
+                <div className="max-w-md w-full bg-[#fdfef8] rounded-3xl p-6 shadow-2xl border border-[#dbe2bd] space-y-4">
                   <div className="flex items-center justify-between border-b pb-3">
                     <h4 className="font-amiri text-lg font-bold text-[#1c2616]">
                       {isArabic ? "إضافة عنوان توصيل جديد" : "Add New Delivery Address"}
@@ -1092,7 +1092,7 @@ export default function CustomerAccountPage() {
               </div>
             ) : (
               (!user?.customCoupons || user.customCoupons.length === 0) && (
-                <div className="p-10 rounded-3xl bg-white border border-[#e2e8c0] text-center space-y-2">
+                <div className="p-10 rounded-3xl bg-[#fdfef8] border border-[#e2e8c0] text-center space-y-2">
                   <Tag className="w-10 h-10 text-[#485c36]/50 mx-auto" />
                   <h4 className="font-amiri text-xl font-bold text-[#1c2616]">
                     {isArabic ? "لا توجد كوبونات خصم نشطة حالياً" : "No active coupons right now"}
@@ -1112,7 +1112,7 @@ export default function CustomerAccountPage() {
         {activeTab === "security" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Edit Personal Info */}
-            <div className="p-6 rounded-3xl bg-white border border-[#e2e8c0] shadow-sm space-y-4">
+            <div className="p-6 rounded-3xl bg-[#fdfef8] border border-[#e2e8c0] shadow-sm space-y-4">
               <h4 className="font-amiri text-lg font-bold text-[#1c2616] flex items-center gap-2 border-b pb-3">
                 <User className="w-4 h-4 text-[#485c36]" />
                 <span>{isArabic ? "البيانات الشخصية" : "Personal Information"}</span>
@@ -1172,7 +1172,7 @@ export default function CustomerAccountPage() {
             </div>
 
             {/* Change Password */}
-            <div className="p-6 rounded-3xl bg-white border border-[#e2e8c0] shadow-sm space-y-4">
+            <div className="p-6 rounded-3xl bg-[#fdfef8] border border-[#e2e8c0] shadow-sm space-y-4">
               <h4 className="font-amiri text-lg font-bold text-[#1c2616] flex items-center gap-2 border-b pb-3">
                 <Key className="w-4 h-4 text-[#d4af37]" />
                 <span>{isArabic ? "أمان الحساب وكلمة المرور" : "Account Security"}</span>

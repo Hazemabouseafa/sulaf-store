@@ -33,6 +33,8 @@ export function Footer() {
 
   return (
     <footer
+      data-live-section="footerSection"
+      data-section-name="تذييل الموقع (Footer)"
       className="relative bg-[#18271b] text-[#f6f9e6] pt-16 pb-10 overflow-hidden select-none font-cairo"
       dir={dir}
     >
@@ -218,7 +220,7 @@ export function Footer() {
               />
               <button
                 type="submit"
-                className="absolute top-1/2 -translate-y-1/2 end-1.5 mt-0.5 w-7 h-7 rounded-full bg-[#f6f9e6] text-[#22301e] flex items-center justify-center hover:bg-[#f3a5a1] transition-colors cursor-pointer"
+                className="absolute top-1/2 -translate-y-1/2 end-1.5 mt-0.5 w-7 h-7 rounded-full bg-[#f4f1e6] text-[#22301e] flex items-center justify-center hover:bg-[#f3a5a1] transition-colors cursor-pointer"
                 aria-label="Subscribe"
               >
                 {subscribed ? <Check className="w-3.5 h-3.5" /> : <ArrowIcon className="w-3.5 h-3.5" />}

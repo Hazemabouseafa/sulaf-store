@@ -19,8 +19,8 @@ export default function StoryPage() {
 
   if (page && !page.published && typeof window !== "undefined" && !localStorage.getItem("sulaf_admin_auth")) {
     return (
-      <div className="py-24 bg-[#f6f9e6] min-h-screen text-[#1c2616] font-cairo flex items-center justify-center px-4" dir={dir}>
-        <div className="max-w-md w-full bg-white p-8 rounded-3xl border border-[#dbe2bd] text-center space-y-4 shadow-sm">
+      <div className="py-24 bg-[#f4f1e6] min-h-screen text-[#1c2616] font-cairo flex items-center justify-center px-4" dir={dir}>
+        <div className="max-w-md w-full bg-[#fdfef8] p-8 rounded-3xl border border-[#dbe2bd] text-center space-y-4 shadow-sm">
           <div className="w-14 h-14 rounded-2xl bg-[#fbf9f0] border border-[#d4af37]/40 flex items-center justify-center mx-auto text-[#d4af37]">
             <FileText className="w-7 h-7" />
           </div>
@@ -43,7 +43,7 @@ export default function StoryPage() {
   const rawContent = isArabic ? page?.contentAr : (page?.contentEn || page?.contentAr);
 
   return (
-    <div className="py-16 sm:py-24 bg-[#f6f9e6] min-h-screen text-[#1c2616] font-cairo selection:bg-[#485c36] selection:text-[#f6f9e6] relative overflow-hidden" dir={dir}>
+    <div className="py-16 sm:py-24 bg-[#f4f1e6] min-h-screen text-[#1c2616] font-cairo selection:bg-[#485c36] selection:text-[#f6f9e6] relative overflow-hidden" dir={dir}>
       {/* Background Andalusian Motifs */}
       <div className="absolute inset-0 pointer-events-none opacity-20">
         <AndalusianPattern opacity={0.35} color="#485c36" scale={1.5} />
@@ -57,7 +57,7 @@ export default function StoryPage() {
             initial={{ opacity: 0, scale: 0.85, y: -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="w-24 h-24 mx-auto relative flex items-center justify-center bg-white rounded-3xl border-2 border-[#dbe2bd] shadow-md p-4 group hover:border-[#485c36] transition-colors"
+            className="w-24 h-24 mx-auto relative flex items-center justify-center bg-[#fdfef8] rounded-3xl border-2 border-[#dbe2bd] shadow-md p-4 group hover:border-[#485c36] transition-colors"
           >
             <Image
               src="/brand/sulaf-flower-symbol.png"
@@ -94,7 +94,7 @@ export default function StoryPage() {
           initial={{ opacity: 0, y: 25 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.25 }}
-          className="p-8 sm:p-14 rounded-3xl bg-white/95 backdrop-blur-xs border-2 border-[#e2e8c0] shadow-xl text-gray-800 leading-[2.3] space-y-6 relative overflow-hidden text-center sm:text-start"
+          className="p-8 sm:p-14 rounded-3xl bg-[#fdfef8] backdrop-blur-xs border-2 border-[#e2e8c0] shadow-xl text-gray-800 leading-[2.3] space-y-6 relative overflow-hidden text-center sm:text-start"
         >
           <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#485c36] via-[#d4af37] to-[#610b0d]" />
           
@@ -147,7 +147,7 @@ export default function StoryPage() {
 
             <Link
               href="/product/absolutes-smoothing-body-cream"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3 rounded-2xl bg-[#f6f9e6] hover:bg-[#e8ecd0] text-[#485c36] border border-[#dbe2bd] text-xs sm:text-sm font-bold transition-all active:scale-95 cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3 rounded-2xl bg-[#f4f1e6] hover:bg-[#e8ecd0] text-[#485c36] border border-[#dbe2bd] text-xs sm:text-sm font-bold transition-all active:scale-95 cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-[#d4af37]" />
               <span>{isArabic ? "كريم سُـلاف لتنعيم وترميم البشرة" : "Absolutes Smoothing Body Cream"}</span>

@@ -5,7 +5,7 @@ import { SulafFlowerIcon } from "@/components/brand/SulafLogo";
 
 export default function NotFound() {
   return (
-    <div className="py-24 bg-[#f6f9e6] min-h-[70vh] flex flex-col items-center justify-center text-center px-4 space-y-6">
+    <div className="py-24 bg-[#f4f1e6] min-h-[70vh] flex flex-col items-center justify-center text-center px-4 space-y-6">
       <SulafFlowerIcon size={72} animated />
       <div>
         <h1 className="font-amiri text-6xl font-bold text-[#485c36]">404</h1>

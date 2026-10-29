@@ -1,31 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEFAULT_STORE_SETTINGS, StoreSettings } from "@/lib/settings/store-settings";
-import fs from "fs";
-import path from "path";
+import { readJsonFile, writeJsonFile } from "@/lib/db/json-db";
 
 export const dynamic = "force-dynamic";
 
-const DATA_FILE = path.join(process.cwd(), "data", "store-settings.json");
-
 function readStoredSettings(): StoreSettings {
   try {
-    if (fs.existsSync(DATA_FILE)) {
-      const raw = fs.readFileSync(DATA_FILE, "utf8");
-      return { ...DEFAULT_STORE_SETTINGS, ...JSON.parse(raw) };
-    }
+    const raw = readJsonFile<StoreSettings>("store-settings.json", DEFAULT_STORE_SETTINGS);
+    return { ...DEFAULT_STORE_SETTINGS, ...raw };
   } catch (e) {
     console.error("Error reading stored settings:", e);
+    return DEFAULT_STORE_SETTINGS;
   }
-  return DEFAULT_STORE_SETTINGS;
 }
 
 function writeStoredSettings(settings: StoreSettings) {
   try {
-    const dir = path.dirname(DATA_FILE);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    fs.writeFileSync(DATA_FILE, JSON.stringify(settings, null, 2), "utf8");
+    writeJsonFile("store-settings.json", settings);
   } catch (e) {
     console.error("Error writing stored settings:", e);
   }

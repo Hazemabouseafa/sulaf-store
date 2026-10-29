@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useCart } from "@/lib/cart/cart-context";
@@ -82,6 +82,21 @@ export function HeroSection() {
   const products = useProducts();
   const roughAway = products[0] || MOCK_PRODUCTS[0];
   const [addedHero, setAddedHero] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && (window as any).__SULAF_LOADED__) {
+      setIsReady(true);
+      return;
+    }
+    const onReady = () => setIsReady(true);
+    window.addEventListener("sulaf:ready", onReady, { once: true });
+    const timer = setTimeout(onReady, 750);
+    return () => {
+      window.removeEventListener("sulaf:ready", onReady);
+      clearTimeout(timer);
+    };
+  }, []);
 
   const vis = settings.elementsVisibility || {
     heroBadge: true,
@@ -150,6 +165,10 @@ export function HeroSection() {
       {/* SECTION 1: SUNLIT ARCHITECTURAL ARCHWAY HERO WITH SULAF TEXTS         */}
       {/* ===================================================================== */}
       <section className="relative bg-[#f4f1e6] text-[#18271b] pt-8 sm:pt-12 pb-24 sm:pb-28 overflow-hidden">
+        {/* Ambient Floating Luminous Drift Orbs */}
+        <div className="absolute -top-16 -right-16 w-96 h-96 rounded-full bg-gradient-to-br from-[#d4af37]/20 via-[#f3a5a1]/15 to-transparent blur-3xl pointer-events-none animate-ambient-drift" />
+        <div className="absolute top-1/2 -left-20 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-[#485c36]/15 via-[#f3a5a1]/10 to-transparent blur-3xl pointer-events-none animate-ambient-drift" style={{ animationDelay: "-7s" }} />
+
         {/* Diagonal Sunlit Architectural Shadow Rays across the Limestone Wall */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -174,7 +193,7 @@ export function HeroSection() {
               {vis.heroBadge !== false && (
                 <motion.div
                   initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
                   transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                   className="space-y-1.5"
                 >
@@ -187,8 +206,8 @@ export function HeroSection() {
                     </span>
                     <motion.span
                       initial={{ width: 0 }}
-                      animate={{ width: 48 }}
-                      transition={{ duration: 0.9, delay: 0.3 }}
+                      animate={isReady ? { width: 48 } : { width: 0 }}
+                      transition={{ duration: 0.9, delay: isReady ? 0.3 : 0 }}
                       className="h-px bg-[#610b0d]/50 inline-block"
                     />
                   </div>
@@ -209,10 +228,10 @@ export function HeroSection() {
                       <motion.span
                         key={`l1-${i}`}
                         initial={{ opacity: 0, y: 18, filter: "blur(4px)" }}
-                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        animate={isReady ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 18, filter: "blur(4px)" }}
                         transition={{
                           duration: 0.65,
-                          delay: 0.1 + i * 0.07,
+                          delay: isReady ? (0.05 + i * 0.07) : 0,
                           ease: [0.16, 1, 0.3, 1],
                         }}
                         className="inline-block me-2"
@@ -227,10 +246,10 @@ export function HeroSection() {
                       <motion.span
                         key={`l2-${i}`}
                         initial={{ opacity: 0, y: 18, filter: "blur(4px)" }}
-                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        animate={isReady ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 18, filter: "blur(4px)" }}
                         transition={{
                           duration: 0.65,
-                          delay: 0.45 + i * 0.08,
+                          delay: isReady ? (0.35 + i * 0.08) : 0,
                           ease: [0.16, 1, 0.3, 1],
                         }}
                         className="inline-block me-2"
@@ -246,8 +265,8 @@ export function HeroSection() {
               {vis.heroSubheading !== false && (
                 <motion.p
                   initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.75, ease: [0.16, 1, 0.3, 1] }}
+                  animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+                  transition={{ duration: 0.8, delay: isReady ? 0.65 : 0, ease: [0.16, 1, 0.3, 1] }}
                   className={`${
                     isArabic
                       ? "font-amiri text-base sm:text-lg leading-relaxed"
@@ -263,8 +282,8 @@ export function HeroSection() {
               {(vis.heroPrimaryCta !== false || vis.heroSecondaryCta !== false) && (
                 <motion.div
                   initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.9, ease: [0.16, 1, 0.3, 1] }}
+                  animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+                  transition={{ duration: 0.8, delay: isReady ? 0.8 : 0, ease: [0.16, 1, 0.3, 1] }}
                   className="pt-2 flex flex-wrap items-center gap-3"
                 >
                   {vis.heroPrimaryCta !== false && (
@@ -273,7 +292,7 @@ export function HeroSection() {
                       whileHover={{ scale: 1.03, y: -2 }}
                       whileTap={{ scale: 0.97 }}
                       onClick={handleQuickOrder}
-                      className="inline-flex items-center gap-3 px-7 py-3.5 rounded-full bg-[#18271b] hover:bg-[#610b0d] text-[#f6f9e6] text-xs font-bold tracking-wide transition-colors shadow-[0_12px_28px_rgba(24,39,27,0.2)] cursor-pointer"
+                      className="inline-flex items-center gap-3 px-7 py-3.5 rounded-full bg-[#18271b] hover:bg-[#610b0d] text-[#f6f9e6] text-xs font-bold tracking-wide transition-all duration-300 shadow-[0_12px_28px_rgba(24,39,27,0.2)] hover:shadow-[0_16px_36px_rgba(97,11,13,0.35)] cursor-pointer animate-sulaf-shimmer"
                     >
                       {addedHero ? (
                         <>
@@ -314,7 +333,7 @@ export function HeroSection() {
             <div className="lg:col-span-5 relative flex items-center justify-center">
               <motion.div
                 initial={{ opacity: 0, y: 28, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
+                animate={isReady ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 28, scale: 0.95 }}
                 transition={{ duration: 1.05, ease: [0.16, 1, 0.3, 1] }}
                 className="relative w-full max-w-[380px] h-[420px] sm:h-[470px] rounded-t-full overflow-hidden shadow-[0_28px_65px_rgba(24,39,27,0.2)] border border-[#485c36]/20 bg-[#dfd8c5]"
               >
@@ -397,8 +416,8 @@ export function HeroSection() {
             <div className="hidden lg:flex lg:col-span-2 flex-col items-center justify-between h-[430px] py-4">
               <motion.div
                 initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, delay: 0.5 }}
+                animate={isReady ? { opacity: 1, x: 0 } : { opacity: 0, x: 10 }}
+                transition={{ duration: 0.8, delay: isReady ? 0.5 : 0 }}
                 className="flex flex-col items-start gap-2 border-s border-[#485c36]/30 ps-3 py-2"
               >
                 <div className="font-mono text-[9px] tracking-[0.26em] uppercase text-[#485c36] leading-relaxed">
@@ -474,9 +493,11 @@ export function HeroSection() {
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               className="lg:col-span-4 lg:border-e border-[#f6f9e6]/15 lg:pe-8 space-y-4 text-start"
             >
-              <span className="font-mono text-[10px] tracking-[0.28em] uppercase text-[#f3a5a1] block">
-                {custom.ritualBadgeText || (isArabic ? "طقوس سُـلاف السريرية" : "OUR RITUAL")}
-              </span>
+              {custom.ritualBadgeText && (
+                <span className="font-mono text-[10px] tracking-[0.28em] uppercase text-[#f3a5a1] block">
+                  {custom.ritualBadgeText}
+                </span>
+              )}
 
               <h2
                 className={`${

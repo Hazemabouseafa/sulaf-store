@@ -4,7 +4,7 @@ import Link from "next/link";
 
 interface SulafLogoProps {
   variant?: "full" | "flower" | "typography" | "horizontal";
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "responsive";
   color?: "burgundy" | "green" | "cream" | "gold";
   showPoem?: boolean;
   className?: string;
@@ -50,6 +50,38 @@ export function SulafLogo({
   className = "",
   href = "/",
 }: SulafLogoProps) {
+  if (size === "responsive") {
+    const responsiveContent = (
+      <div
+        className={`relative inline-flex items-center justify-center overflow-hidden select-none shrink-0 w-[115px] sm:w-[145px] h-[44px] sm:h-[54px] ${className}`}
+      >
+        <Image
+          src="/brand/sulaf-logo-official.png"
+          alt="سُلاف | Sulaf"
+          width={150}
+          height={150}
+          className={`w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 ${
+            color === "cream" ? "brightness-0 invert opacity-95" : ""
+          }`}
+          priority
+        />
+      </div>
+    );
+
+    if (href) {
+      return (
+        <Link
+          href={href}
+          className="inline-flex items-center focus:outline-none group"
+          aria-label="سُـلاف | Sulaf"
+        >
+          {responsiveContent}
+        </Link>
+      );
+    }
+    return responsiveContent;
+  }
+
   const dimensions = {
     sm: { boxW: 115, boxH: 44, imgSize: 120 },
     md: { boxW: 145, boxH: 54, imgSize: 150 },

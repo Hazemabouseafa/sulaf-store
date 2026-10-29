@@ -31,15 +31,12 @@ export default function ShopPage() {
   }, [allProducts, searchQuery]);
 
   return (
-    <div className="py-16 sm:py-20 bg-[#f6f9e6] text-[#22301e] min-h-screen font-cairo">
+    <div className="py-16 sm:py-20 bg-[#f4f1e6] text-[#22301e] min-h-screen font-cairo">
       <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-12">
         
         {/* Editorial Header matching the reference layout */}
         <div className="pb-10 border-b border-[#485c36]/15 flex flex-col md:flex-row md:items-end justify-between gap-6 text-start">
           <div className="space-y-2 max-w-xl">
-            <span className="font-mono text-[10px] tracking-[0.28em] uppercase text-[#610b0d] font-bold block">
-              {isArabic ? "طقوس سُـلاف السريرية" : "THE SULAF RITUAL"}
-            </span>
             <h1
               className={`${
                 isArabic ? "font-gulzar text-3xl sm:text-5xl" : "font-cinzel text-3xl sm:text-4xl"

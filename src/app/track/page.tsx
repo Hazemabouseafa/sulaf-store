@@ -151,7 +151,7 @@ function TrackOrderContent() {
   const currency = isArabic ? "ج.م" : "EGP";
 
   return (
-    <div className="py-16 bg-[#f6f9e6] min-h-screen font-cairo" dir={dir}>
+    <div className="py-16 bg-[#f4f1e6] min-h-screen font-cairo" dir={dir}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-10">
@@ -173,7 +173,7 @@ function TrackOrderContent() {
 
         {/* Search Bar */}
         <form onSubmit={handleSubmit} className="mb-10">
-          <div className="relative max-w-xl mx-auto flex items-center shadow-md rounded-2xl overflow-hidden bg-white border border-[#e2e8c0]">
+          <div className="relative max-w-xl mx-auto flex items-center shadow-md rounded-2xl overflow-hidden bg-[#fdfef8] border border-[#e2e8c0]">
             <input
               type="text"
               value={query}
@@ -196,7 +196,7 @@ function TrackOrderContent() {
         {searched && (
           <div className="space-y-6">
             {trackingData && order ? (
-              <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#e2e8c0] shadow-md space-y-6">
+              <div className="p-6 sm:p-8 rounded-3xl bg-[#fdfef8] border border-[#e2e8c0] shadow-md space-y-6">
                 {/* Header status badge */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#e2e8c0] pb-4">
                   <div>
@@ -215,7 +215,7 @@ function TrackOrderContent() {
                 </div>
 
                 {/* Hub & Last update */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-gray-700 bg-[#f6f9e6] p-4 rounded-2xl border border-[#e2e8c0]/60">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-gray-700 bg-[#f4f1e6] p-4 rounded-2xl border border-[#e2e8c0]/60">
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-[#485c36] shrink-0" />
                     <span>
@@ -233,7 +233,7 @@ function TrackOrderContent() {
                 </div>
 
                 {/* COD & Financial Balance details */}
-                <div className="p-4 rounded-2xl bg-[#f6f9e6] border border-[#485c36]/25 text-xs text-[#1c2616] space-y-1.5">
+                <div className="p-4 rounded-2xl bg-[#f4f1e6] border border-[#485c36]/25 text-xs text-[#1c2616] space-y-1.5">
                   <div className="flex justify-between font-bold">
                     <span>{isArabic ? "إجمالي قيمة الطلب:" : "Grand Total:"}</span>
                     <span>{order.total} {currency}</span>
@@ -280,19 +280,40 @@ function TrackOrderContent() {
                     {isArabic ? "توصيل سريع ومؤمن لكافة محافظات مصر" : "Express and secure delivery across all governorates"}
                   </span>
 
-                  <a
-                    href={`https://wa.me/${(settings?.contacts?.whatsapp || "201099887766").replace(/[^0-9]/g, "")}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-4 py-2.5 rounded-xl bg-[#485c36] hover:bg-[#3a4a2b] text-[#f6f9e6] font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    <span>{isArabic ? "مساعدة فورية من خدمة عملاء سلاف" : "Direct WhatsApp Support"}</span>
-                  </a>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {(() => {
+                      const activeCarrier = settings?.shipping?.providers?.[settings?.shipping?.activeProvider || "stox"];
+                      const carrierUrl = activeCarrier?.trackingUrlTemplate
+                        ? activeCarrier.trackingUrlTemplate.replace(/\{tracking\}/g, encodeURIComponent(trackingData.trackingNumber))
+                        : `https://merchants.stox-eg.com/track/${encodeURIComponent(trackingData.trackingNumber)}`;
+
+                      return (
+                        <a
+                          href={carrierUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-4 py-2.5 rounded-xl border border-[#485c36]/40 hover:bg-[#485c36]/10 text-[#485c36] font-bold text-xs flex items-center gap-1.5 transition-all"
+                        >
+                          <Truck className="w-4 h-4" />
+                          <span>{isArabic ? `تتبع عبر موقع ${activeCarrier?.nameAr || "شركة الشحن"}` : `Track on ${activeCarrier?.nameEn || "Carrier"} Portal`}</span>
+                        </a>
+                      );
+                    })()}
+
+                    <a
+                      href={`https://wa.me/${(settings?.contacts?.whatsapp || "201099887766").replace(/[^0-9]/g, "")}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-4 py-2.5 rounded-xl bg-[#485c36] hover:bg-[#3a4a2b] text-[#f6f9e6] font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span>{isArabic ? "مساعدة فورية من خدمة عملاء سلاف" : "Direct WhatsApp Support"}</span>
+                    </a>
+                  </div>
                 </div>
               </div>
             ) : (
-              <div className="p-8 rounded-3xl bg-white border border-[#e2e8c0] text-center space-y-3">
+              <div className="p-8 rounded-3xl bg-[#fdfef8] border border-[#e2e8c0] text-center space-y-3">
                 <AlertCircle className="w-10 h-10 text-[#ca384a] mx-auto" />
                 <h3 className="font-amiri text-2xl font-bold text-[#485c36]">
                   {isArabic ? "لم يتم العثور على شحنة بهذا الرقم" : "No Shipment Found"}

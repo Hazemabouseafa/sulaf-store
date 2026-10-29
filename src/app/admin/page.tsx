@@ -4,12 +4,19 @@ import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { OrderRecord } from "@/lib/orders/order-store";
-import { ProductData } from "@/lib/data/mock-data";
+import { ProductData, ProductPageBuilderData } from "@/lib/data/mock-data";
+import { ProductPageBuilderModal } from "@/components/admin/ProductPageBuilderModal";
 import { PageContentEditor } from "@/components/admin/PageContentEditor";
 import { HomepageSectionBuilder } from "@/components/admin/HomepageSectionBuilder";
+import { ShippingCarrierSettings } from "@/components/admin/ShippingCarrierSettings";
 import { CouponData } from "@/lib/coupons/coupon-store";
 import { ReviewItem } from "@/lib/reviews/review-store";
 import { useStoreSettings } from "@/lib/settings/store-settings-context";
+import {
+  DEFAULT_SHIPPING_PROVIDERS,
+  ShippingProviderConfig,
+  ShippingProviderType,
+} from "@/lib/settings/store-settings";
 import {
   SectionVisibilitySettings,
   ElementVisibilitySettings,
@@ -42,12 +49,14 @@ import {
   CheckCircle2,
   XCircle,
   Eye,
+  EyeOff,
   LogOut,
   ExternalLink,
   Search,
   Filter,
   RefreshCw,
   Phone,
+  Smartphone,
   MessageCircle,
   Clock,
   Truck,
@@ -421,9 +430,9 @@ export default function AdminPage() {
   // Admin Language State (Arabic / English)
   const [adminLang, setAdminLang] = useState<"ar" | "en">(() => {
     if (typeof window !== "undefined") {
-      return (localStorage.getItem("sulaf_admin_lang") as "ar" | "en") || "ar";
+      return (localStorage.getItem("sulaf_admin_lang") as "ar" | "en") || "en";
     }
-    return "ar";
+    return "en";
   });
 
   const toggleAdminLang = () => {
@@ -442,6 +451,11 @@ export default function AdminPage() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Navigation Tab
+  // Shipping Provider API States
+  const [selectedShippingCarrier, setSelectedShippingCarrier] = useState<ShippingProviderType>("stox");
+  const [shippingTestLoading, setShippingTestLoading] = useState(false);
+  const [shippingTestResult, setShippingTestResult] = useState<any>(null);
+
   const [activeTab, setActiveTab] = useState<
     "overview" | "orders" | "products" | "coupons" | "customers" | "pages" | "cms" | "settings" | "reviews"
   >("overview");
@@ -784,6 +798,8 @@ export default function AdminPage() {
 
   // Modals States
   const [productModalOpen, setProductModalOpen] = useState(false);
+  const [builderModalProduct, setBuilderModalProduct] = useState<ProductData | null>(null);
+  const [isBuilderModalOpen, setIsBuilderModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductData | null>(null);
   const [couponModalOpen, setCouponModalOpen] = useState(false);
   const [receiptModalUrl, setReceiptModalUrl] = useState<string | null>(null);
@@ -800,6 +816,10 @@ export default function AdminPage() {
   // Paymob Test Connection State
   const [paymobTestLoading, setPaymobTestLoading] = useState(false);
   const [paymobTestResult, setPaymobTestResult] = useState<any>(null);
+
+  // Sha7nawy Test Connection State
+  const [sha7nawyTestLoading, setSha7nawyTestLoading] = useState(false);
+  const [sha7nawyTestResult, setSha7nawyTestResult] = useState<any>(null);
 
   // Notification Toast
   const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
@@ -825,6 +845,7 @@ export default function AdminPage() {
     usageInstructionsAr: "",
     usageInstructionsEn: "",
     imageUrl: "/brand/sulaf-flower-symbol.png",
+    pageBuilder: undefined as ProductPageBuilderData | undefined,
   });
 
   // New Coupon Form State
@@ -848,6 +869,8 @@ export default function AdminPage() {
     shippingFeeCairo: 45,
     shippingFeeGov: 65,
     shippingUnifiedRate: 45,
+    shippingActiveProvider: "stox" as ShippingProviderType,
+    shippingProviders: DEFAULT_SHIPPING_PROVIDERS,
     customGovernorateRates: [] as CustomGovernorateShippingRate[],
     multiPromoEnabled: true,
     multiPromoMinQty: 2,
@@ -873,6 +896,14 @@ export default function AdminPage() {
     paymobCardId: "482019",
     paymobWalletId: "482020",
     paymobHmac: "",
+    // Payment Gateways Selection & Sha7nawy Config
+    gatewaysMode: "both" as "both" | "paymob_only" | "sha7nawy_only",
+    sha7nawyEnabled: true,
+    sha7nawySandbox: true,
+    sha7nawyBaseUrl: "https://gate.sha7nawy.com",
+    sha7nawyPublicKey: "",
+    sha7nawySecretKey: "",
+    sha7nawyAppName: "Sulaf-Store",
     // Our Story & Taglines
     taglineLine1: "SULAF | سُلاف",
     taglineLine2: "Where Pharmaceutical Science Meets Beauty.",
@@ -910,6 +941,11 @@ export default function AdminPage() {
         shippingFeeCairo: settings.shipping?.cairoGiza || 45,
         shippingFeeGov: settings.shipping?.alexDelta || 65,
         shippingUnifiedRate: settings.shipping?.defaultUnifiedRate ?? 45,
+        shippingActiveProvider: (settings.shipping?.activeProvider as any) || "stox",
+        shippingProviders: {
+          ...DEFAULT_SHIPPING_PROVIDERS,
+          ...(settings.shipping?.providers || {}),
+        },
         customGovernorateRates: settings.shipping?.customGovernorateRates || [],
         multiPromoEnabled: settings.multiProductPromo?.enabled ?? true,
         multiPromoMinQty: settings.multiProductPromo?.minQuantity ?? 2,
@@ -935,6 +971,13 @@ export default function AdminPage() {
         paymobCardId: settings.paymob?.cardIntegrationId || "482019",
         paymobWalletId: settings.paymob?.walletIntegrationId || "482020",
         paymobHmac: settings.paymob?.hmacSecret || "",
+        gatewaysMode: (settings.gatewaysMode as any) || "both",
+        sha7nawyEnabled: settings.sha7nawy?.enabled ?? true,
+        sha7nawySandbox: settings.sha7nawy?.isSandbox ?? true,
+        sha7nawyBaseUrl: settings.sha7nawy?.baseUrl || "https://gate.sha7nawy.com",
+        sha7nawyPublicKey: settings.sha7nawy?.publicKey || "",
+        sha7nawySecretKey: settings.sha7nawy?.secretKey || "",
+        sha7nawyAppName: settings.sha7nawy?.appName || "Sulaf-Store",
         taglineLine1: settings.ourStory?.taglineLine1 || "SULAF | سُلاف",
         taglineLine2: settings.ourStory?.taglineLine2 || "Where Pharmaceutical Science Meets Beauty.",
         storyP1: settings.ourStory?.paragraph1 || "من عبق الهوية العربية، وسحر الروح الأندلسية، وُلدت سُلاف؛ حيث يلتقي العلم الصيدلاني بفنّ العناية بالجمال.",
@@ -1391,6 +1434,7 @@ export default function AdminPage() {
             usageInstructionsAr: productForm.usageInstructionsAr,
             usageInstructionsEn: productForm.usageInstructionsEn,
             imageUrl: productForm.imageUrl,
+            pageBuilder: productForm.pageBuilder,
           }),
         });
         if (res.ok) {
@@ -1416,6 +1460,7 @@ export default function AdminPage() {
             sku: productForm.sku || `SLF-${Math.floor(100 + Math.random() * 900)}`,
             badgeAr: productForm.badgeAr || undefined,
             imageUrl: productForm.imageUrl || "/brand/sulaf-flower-symbol.png",
+            pageBuilder: productForm.pageBuilder,
           }),
         });
         if (res.ok) {
@@ -1605,6 +1650,8 @@ export default function AdminPage() {
           alexDelta: Number(settingsForm.shippingFeeGov),
           freeShippingThreshold: Number(settingsForm.freeThreshold),
           defaultUnifiedRate: Number(settingsForm.shippingUnifiedRate),
+          activeProvider: settingsForm.shippingActiveProvider,
+          providers: settingsForm.shippingProviders,
           customGovernorateRates: settingsForm.customGovernorateRates,
         },
         multiProductPromo: {
@@ -1632,10 +1679,70 @@ export default function AdminPage() {
           walletIntegrationId: settingsForm.paymobWalletId,
           hmacSecret: settingsForm.paymobHmac,
         },
+        gatewaysMode: settingsForm.gatewaysMode,
+        sha7nawy: {
+          enabled: settingsForm.sha7nawyEnabled,
+          isSandbox: settingsForm.sha7nawySandbox,
+          baseUrl: settingsForm.sha7nawyBaseUrl,
+          publicKey: settingsForm.sha7nawyPublicKey,
+          secretKey: settingsForm.sha7nawySecretKey,
+          appName: settingsForm.sha7nawyAppName,
+          webhookUrl: "/api/webhooks/sha7nawy",
+        },
       });
-      showToast("تم حفظ كافة إعدادات المتجر وبوابة الدفع بنجاح ✓");
+      showToast("تم حفظ كافة إعدادات المتجر وبوابات الدفع بنجاح ✓");
     } catch {
       showToast("فشل حفظ الإعدادات.", "error");
+    }
+  }
+
+  async function handleTestShippingConnection(provider: ShippingProviderConfig) {
+    setShippingTestLoading(true);
+    setShippingTestResult(null);
+    try {
+      const res = await fetch("/api/shipping/test-connection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider }),
+      });
+      const data = await res.json();
+      setShippingTestResult(data);
+      if (data.success) {
+        showToast(adminLang === "ar" ? data.messageAr : data.messageEn);
+      } else {
+        showToast(adminLang === "ar" ? data.messageAr : data.messageEn, "error");
+      }
+    } catch {
+      showToast(adminLang === "ar" ? "فشل الاتصال بخادم الشحن." : "Failed to connect to shipping carrier API.", "error");
+    } finally {
+      setShippingTestLoading(false);
+    }
+  }
+
+  async function handleTestSha7nawyConnection() {
+    setSha7nawyTestLoading(true);
+    setSha7nawyTestResult(null);
+    try {
+      const res = await fetch("/api/payments/sha7nawy/test-connection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          publicKey: settingsForm.sha7nawyPublicKey,
+          secretKey: settingsForm.sha7nawySecretKey,
+          baseUrl: settingsForm.sha7nawyBaseUrl,
+        }),
+      });
+      const data = await res.json();
+      setSha7nawyTestResult(data);
+      if (data.success) {
+        showToast("تم فحص والتحقق من اتصال بوابة شحناوي للمحافظ بنجاح! 🟢");
+      } else {
+        showToast(data.error || "فشل الاتصال ببوابة شحناوي.", "error");
+      }
+    } catch {
+      showToast("حدث خطأ في الاتصال بالخادم.", "error");
+    } finally {
+      setSha7nawyTestLoading(false);
     }
   }
 
@@ -3254,6 +3361,47 @@ export default function AdminPage() {
 
                 {/* Inline Product Form */}
                 <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#dbe2bd] shadow-sm">
+                  {/* Advanced Per-Product Page Sections & Cards Builder Banner */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-[#f4f1e6] border-2 border-[#485c36]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 shadow-xs">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-[#485c36] text-[#f6f9e6] flex items-center justify-center shrink-0 shadow-xs">
+                        <Layers className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-bold text-sm sm:text-base text-[#1e2b18]">
+                            {adminLang === "ar" ? "محرر أقسام وبلوكات صفحة المستحضر المتقدم" : "Advanced Product Page Sections & Cards Builder"}
+                          </h4>
+                          {productForm.pageBuilder && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                              {adminLang === "ar" ? "تم تخصيص الأقسام ✓" : "Customized ✓"}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-600 mt-0.5">
+                          {adminLang === "ar"
+                            ? "تحكم كامل في كل ما بعد القسم الأول: قصة المستحضر، كروت المكونات الفعالة، طقوس الاستخدام، وإضافة كروت مخصصة وأسئلة شائعة."
+                            : "Customize everything after Section 1: Clinical story, ingredient cards, ritual phases, custom cards & FAQs."}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const current = editingProduct
+                          ? { ...editingProduct, ...productForm }
+                          : ({ ...productForm, id: "temp-new", slug: "temp-new" } as any);
+                        setBuilderModalProduct(current);
+                        setIsBuilderModalOpen(true);
+                      }}
+                      className="px-5 py-2.5 rounded-xl bg-[#485c36] hover:bg-[#34482f] text-[#f6f9e6] text-xs font-bold transition-all shadow-sm flex items-center gap-2 cursor-pointer shrink-0"
+                    >
+                      <Sliders className="w-4 h-4" />
+                      <span>{adminLang === "ar" ? "فتح محرر أقسام الصفحة الآن ✨" : "Open Page Sections Builder ✨"}</span>
+                    </button>
+                  </div>
+
                   <form onSubmit={handleSaveProduct} className="space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
@@ -3470,6 +3618,7 @@ export default function AdminPage() {
                       usageInstructionsAr: "",
                       usageInstructionsEn: "",
                       imageUrl: "/brand/sulaf-flower-symbol.png",
+                      pageBuilder: undefined,
                     });
                     setProductModalOpen(true);
                   }}
@@ -3680,6 +3829,7 @@ export default function AdminPage() {
                                     usageInstructionsAr: product.usageInstructionsAr || "",
                                     usageInstructionsEn: product.usageInstructionsEn || "",
                                     imageUrl: product.images[0]?.url || "/brand/sulaf-flower-symbol.png",
+                                    pageBuilder: product.pageBuilder,
                                   });
                                   setProductModalOpen(true);
                                 }}
@@ -3707,6 +3857,487 @@ export default function AdminPage() {
             </div>
             )
           )}
+
+          {/* ========================================================= */}
+          {/* TAB 3.5: REVIEWS & CLINICAL TESTIMONIALS                 */}
+          {/* ========================================================= */}
+          {activeTab === "reviews" && (() => {
+            const totalReviews = reviewsList.length;
+            const pendingReviews = reviewsList.filter((r) => r.status === "PENDING");
+            const approvedReviews = reviewsList.filter((r) => r.status === "APPROVED");
+            const rejectedReviews = reviewsList.filter((r) => r.status === "REJECTED");
+            const avgRating = totalReviews > 0
+              ? (reviewsList.reduce((acc, r) => acc + (Number(r.rating) || 5), 0) / totalReviews).toFixed(1)
+              : "5.0";
+
+            const filteredReviews = reviewsList.filter((rev) => {
+              if (reviewFilter !== "ALL" && rev.status !== reviewFilter) return false;
+              if (reviewSearch.trim()) {
+                const q = reviewSearch.toLowerCase().trim();
+                const matchAuthor = rev.authorName?.toLowerCase().includes(q);
+                const matchRole = rev.authorRole?.toLowerCase().includes(q);
+                const matchComment = rev.comment?.toLowerCase().includes(q);
+                const matchTitle = rev.title?.toLowerCase().includes(q);
+                const matchProduct = rev.productName?.toLowerCase().includes(q);
+                return matchAuthor || matchRole || matchComment || matchTitle || matchProduct;
+              }
+              return true;
+            });
+
+            const isReviewsVisible = settings.sectionsVisibility?.reviewsSection !== false;
+
+            return (
+              <div className="space-y-6 animate-in fade-in duration-200">
+                {/* Header & Action Bar */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-[#dbe2bd] shadow-sm">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Star className="w-5 h-5 text-amber-500 fill-amber-400" />
+                      <h2 className="font-bold text-xl sm:text-2xl text-gray-900 font-amiri">
+                        {adminLang === "ar" ? "سجل التقييمات وتجارب العميلات" : "Reviews & Testimonials Ledger"}
+                      </h2>
+                    </div>
+                    <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                      {adminLang === "ar"
+                        ? "توثيق وتدقيق آراء العميلات والشهادات الإكلينيكية، والموافقة عليها لتظهر في الواجهة وصفحة المنتج."
+                        : "Verify, audit and approve customer testimonials before displaying on storefront & product pages."}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Storefront Visibility Toggle Button */}
+                    <button
+                      type="button"
+                      onClick={toggleReviewsSectionVisibility}
+                      className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-sm flex items-center gap-2 cursor-pointer active:scale-95 ${
+                        isReviewsVisible
+                          ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200"
+                          : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200"
+                      }`}
+                      title={adminLang === "ar" ? "التحكم في ظهور أو إخفاء قسم التقييمات في الصفحة الرئيسية" : "Toggle reviews visibility on homepage"}
+                    >
+                      {isReviewsVisible ? (
+                        <>
+                          <EyeOff className="w-4 h-4 text-rose-600" />
+                          <span>{adminLang === "ar" ? "إخفاء القسم من الواجهة" : "Hide from Storefront"}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-4 h-4 text-emerald-600" />
+                          <span>{adminLang === "ar" ? "إظهار القسم في الواجهة ✓" : "Show on Storefront ✓"}</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setAddReviewModalOpen(true)}
+                      className="px-4 py-2.5 rounded-2xl bg-[#485c36] hover:bg-[#3d502d] text-white text-xs font-bold shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>{adminLang === "ar" ? "إضافة رأي / شهادة +" : "Add Review +"}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Storefront Section Visibility Control Banner */}
+                <div className={`p-4 sm:p-5 rounded-3xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
+                  isReviewsVisible
+                    ? "bg-emerald-50/60 border-emerald-200/80 text-emerald-950"
+                    : "bg-amber-50/60 border-amber-200/80 text-amber-950"
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${
+                      isReviewsVisible ? "bg-emerald-600 text-white" : "bg-amber-500 text-white"
+                    }`}>
+                      {isReviewsVisible ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm">
+                          {adminLang === "ar" ? "حالة ظهور قسم الآراء في المتجر الرئيسي:" : "Storefront Reviews Visibility Status:"}
+                        </span>
+                        <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+                          isReviewsVisible
+                            ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                            : "bg-amber-100 text-amber-800 border border-amber-300"
+                        }`}>
+                          {isReviewsVisible
+                            ? (adminLang === "ar" ? "ظاهر في المتجر (Carousel دوار) 🟢" : "Visible (Rotating Carousel) 🟢")
+                            : (adminLang === "ar" ? "مخفي من المتجر حالياً 🔴" : "Currently Hidden from Store 🔴")}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600 mt-1">
+                        {adminLang === "ar"
+                          ? (isReviewsVisible
+                              ? "قسم آراء وتقييمات العميلات مفعل ويظهر كـ Carousel دوار متحرك وسلس للزوار في الواجهة."
+                              : "قسم الآراء والتقييمات مخفي بالكامل من الصفحة الرئيسية للزوار، يمكنك إظهاره بضغطة زر واحدة.")
+                          : (isReviewsVisible
+                              ? "Customer reviews section is live and displays as an auto-rotating carousel on the storefront."
+                              : "Reviews section is completely hidden from the storefront for visitors. You can show it with one click.")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={toggleReviewsSectionVisibility}
+                    className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all shadow-sm flex items-center gap-2 cursor-pointer shrink-0 active:scale-95 ${
+                      isReviewsVisible
+                        ? "bg-white hover:bg-rose-50 text-rose-700 border border-rose-200"
+                        : "bg-[#485c36] hover:bg-[#3d502d] text-white shadow"
+                    }`}
+                  >
+                    {isReviewsVisible ? (
+                      <>
+                        <EyeOff className="w-4 h-4 text-rose-600" />
+                        <span>{adminLang === "ar" ? "إخفاء القسم من الواجهة" : "Hide from Storefront"}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="w-4 h-4 text-white" />
+                        <span>{adminLang === "ar" ? "إظهار وتفعيل في الواجهة ✓" : "Show on Storefront ✓"}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* KPI Metrics Grid */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Total Reviews */}
+                  <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-2">
+                    <div className="flex items-center justify-between text-gray-500">
+                      <span className="text-xs font-bold">{adminLang === "ar" ? "إجمالي التقييمات" : "Total Reviews"}</span>
+                      <Award className="w-4 h-4 text-[#485c36]" />
+                    </div>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-2xl sm:text-3xl font-black text-gray-900 font-mono">{totalReviews}</span>
+                      <span className="text-xs font-bold text-amber-600 flex items-center gap-1">
+                        <span>⭐ {avgRating}</span>
+                        <span className="text-gray-400 text-[10px]">/ 5</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Pending Reviews */}
+                  <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-2">
+                    <div className="flex items-center justify-between text-gray-500">
+                      <span className="text-xs font-bold">{adminLang === "ar" ? "بانتظار الموافقة" : "Pending Approval"}</span>
+                      <Clock className="w-4 h-4 text-amber-500" />
+                    </div>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-2xl sm:text-3xl font-black text-amber-600 font-mono">{pendingReviews.length}</span>
+                      {pendingReviews.length > 0 && (
+                        <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-300 animate-pulse">
+                          {adminLang === "ar" ? "يتطلب إجراء" : "Action Needed"}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Approved Reviews */}
+                  <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-2">
+                    <div className="flex items-center justify-between text-gray-500">
+                      <span className="text-xs font-bold">{adminLang === "ar" ? "معتمدة ومنشورة" : "Approved & Live"}</span>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-2xl sm:text-3xl font-black text-emerald-700 font-mono">{approvedReviews.length}</span>
+                      <span className="text-[10px] text-gray-400">
+                        {adminLang === "ar" ? "نشط بالمتجر" : "Active on store"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Rejected Reviews */}
+                  <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-2">
+                    <div className="flex items-center justify-between text-gray-500">
+                      <span className="text-xs font-bold">{adminLang === "ar" ? "تقييمات مرفوضة" : "Rejected"}</span>
+                      <XCircle className="w-4 h-4 text-rose-500" />
+                    </div>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-2xl sm:text-3xl font-black text-gray-600 font-mono">{rejectedReviews.length}</span>
+                      <span className="text-[10px] text-gray-400">
+                        {adminLang === "ar" ? "مخفية" : "Hidden"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Filter Tabs & Search Bar */}
+                <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-4">
+                  <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                    {/* Status Tabs */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                      <button
+                        type="button"
+                        onClick={() => setReviewFilter("ALL")}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                          reviewFilter === "ALL"
+                            ? "bg-[#485c36] text-white shadow-xs"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        {adminLang === "ar" ? "الكل" : "All"} ({totalReviews})
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setReviewFilter("PENDING")}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                          reviewFilter === "PENDING"
+                            ? "bg-amber-500 text-black shadow-xs"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        <span>{adminLang === "ar" ? "قيد المراجعة" : "Pending"}</span>
+                        <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${reviewFilter === "PENDING" ? "bg-black/20 text-black font-black" : "bg-amber-100 text-amber-800"}`}>
+                          {pendingReviews.length}
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setReviewFilter("APPROVED")}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                          reviewFilter === "APPROVED"
+                            ? "bg-emerald-600 text-white shadow-xs"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        {adminLang === "ar" ? "المعتمدة" : "Approved"} ({approvedReviews.length})
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setReviewFilter("REJECTED")}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                          reviewFilter === "REJECTED"
+                            ? "bg-rose-600 text-white shadow-xs"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        {adminLang === "ar" ? "المرفوضة" : "Rejected"} ({rejectedReviews.length})
+                      </button>
+                    </div>
+
+                    {/* Search Input */}
+                    <div className="relative min-w-[240px] sm:w-80">
+                      <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        value={reviewSearch}
+                        onChange={(e) => setReviewSearch(e.target.value)}
+                        placeholder={adminLang === "ar" ? "ابحث بالاسم، نص التجربة، الصفة..." : "Search by name, comment, role..."}
+                        className="w-full ps-9 pe-4 py-2 text-xs rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-[#485c36]"
+                      />
+                      {reviewSearch && (
+                        <button
+                          type="button"
+                          onClick={() => setReviewSearch("")}
+                          className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Reviews List Cards */}
+                {filteredReviews.length === 0 ? (
+                  <div className="bg-white p-12 rounded-3xl border border-[#dbe2bd] text-center space-y-3">
+                    <div className="w-12 h-12 rounded-full bg-[#f6f9e6] text-[#485c36] flex items-center justify-center mx-auto">
+                      <Star className="w-6 h-6 text-amber-500 fill-amber-400/40" />
+                    </div>
+                    <h3 className="font-bold text-base text-gray-900">
+                      {adminLang === "ar" ? "لا توجد تقييمات مطابقة" : "No Matching Reviews"}
+                    </h3>
+                    <p className="text-xs text-gray-500 max-w-sm mx-auto">
+                      {adminLang === "ar"
+                        ? "لم يتم العثور على أي آراء أو تقييمات تطابق خيارات التصفية الحالية. يمكنك إضافة تقييم جديد يدوياً الآن."
+                        : "No reviews found for current filter. You can add a new review manually."}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setAddReviewModalOpen(true)}
+                      className="mt-2 px-5 py-2 rounded-xl bg-[#485c36] text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer shadow-sm"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>{adminLang === "ar" ? "إضافة تقييم جديد الآن" : "Add New Review"}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredReviews.map((rev) => {
+                      const isPending = rev.status === "PENDING";
+                      const isApproved = rev.status === "APPROVED";
+                      const isRejected = rev.status === "REJECTED";
+
+                      return (
+                        <div
+                          key={rev.id}
+                          className={`bg-white rounded-3xl border transition-all p-5 sm:p-6 space-y-4 shadow-sm ${
+                            isPending
+                              ? "border-amber-300 ring-1 ring-amber-300/40 bg-amber-50/10"
+                              : "border-[#dbe2bd] hover:border-[#485c36]/40"
+                          }`}
+                        >
+                          {/* Card Header: Author Info, Stars, Status */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#485c36] to-[#222e18] text-[#f6f9e6] font-bold flex items-center justify-center text-sm shadow-xs shrink-0">
+                                {rev.authorName ? rev.authorName.charAt(0) : "ع"}
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h4 className="font-bold text-sm text-gray-900">{rev.authorName}</h4>
+                                  {rev.authorRole && (
+                                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#f6f9e6] text-[#485c36] border border-[#dbe2bd]">
+                                      {rev.authorRole}
+                                    </span>
+                                  )}
+                                  {rev.isVerifiedPurchase && (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                                      <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                      <span>{adminLang === "ar" ? "شراء مؤكد" : "Verified"}</span>
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
+                                  <span>{rev.createdAt ? rev.createdAt.substring(0, 10) : "2026-10-24"}</span>
+                                  {rev.productName && (
+                                    <>
+                                      <span>•</span>
+                                      <span className="text-[#610b0d] font-semibold">{rev.productName}</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Stars and Status Badge */}
+                            <div className="flex items-center gap-3 self-end sm:self-auto">
+                              <div className="flex items-center gap-0.5" title={`${rev.rating} من 5 نجوم`}>
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <Star
+                                    key={star}
+                                    className={`w-4 h-4 ${
+                                      star <= (Number(rev.rating) || 5)
+                                        ? "text-amber-400 fill-amber-400"
+                                        : "text-gray-200"
+                                    }`}
+                                  />
+                                ))}
+                                <span className="font-mono text-xs font-bold text-gray-700 ms-1">
+                                  {rev.rating}/5
+                                </span>
+                              </div>
+
+                              <div>
+                                {isApproved && (
+                                  <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-300 flex items-center gap-1">
+                                    <Check className="w-3 h-3 text-emerald-600" />
+                                    <span>{adminLang === "ar" ? "معتمد ومنشور" : "Approved"}</span>
+                                  </span>
+                                )}
+                                {isPending && (
+                                  <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 flex items-center gap-1 animate-pulse">
+                                    <Clock className="w-3 h-3 text-amber-600" />
+                                    <span>{adminLang === "ar" ? "بانتظار الموافقة" : "Pending"}</span>
+                                  </span>
+                                )}
+                                {isRejected && (
+                                  <span className="px-3 py-1 rounded-full bg-rose-100 text-rose-800 text-xs font-bold border border-rose-300 flex items-center gap-1">
+                                    <X className="w-3 h-3 text-rose-600" />
+                                    <span>{adminLang === "ar" ? "مرفوض ومخفي" : "Rejected"}</span>
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Review Title & Content Body */}
+                          <div className="space-y-1.5 text-start">
+                            {rev.title && (
+                              <h5 className="font-bold text-xs sm:text-sm text-[#485c36]">
+                                «{rev.title}»
+                              </h5>
+                            )}
+                            <p className="text-xs sm:text-sm text-gray-700 leading-relaxed font-cairo whitespace-pre-line bg-[#fcfdfa] p-3.5 rounded-2xl border border-gray-100">
+                              {rev.comment}
+                            </p>
+                          </div>
+
+                          {/* Actions Toolbar */}
+                          <div className="flex items-center justify-between pt-2 border-t border-gray-100 flex-wrap gap-2">
+                            <div className="flex items-center gap-2">
+                              {/* Pending Review Actions */}
+                              {isPending && (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleApproveReview(rev.id)}
+                                    className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+                                  >
+                                    <Check className="w-3.5 h-3.5" />
+                                    <span>{adminLang === "ar" ? "اعتماد ونشر بالمتجر ✓" : "Approve & Publish"}</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRejectReview(rev.id)}
+                                    className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                    <span>{adminLang === "ar" ? "رفض" : "Reject"}</span>
+                                  </button>
+                                </>
+                              )}
+
+                              {/* Approved Review Actions */}
+                              {isApproved && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleUnapproveReview(rev.id)}
+                                  className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-amber-50 text-amber-700 border border-amber-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                                  title="إلغاء النشر وإعادة التقييم إلى قائمة المراجعة"
+                                >
+                                  <RotateCcw className="w-3.5 h-3.5" />
+                                  <span>{adminLang === "ar" ? "إلغاء الاعتماد (إرجاع للمراجعة)" : "Unpublish"}</span>
+                                </button>
+                              )}
+
+                              {/* Rejected Review Actions */}
+                              {isRejected && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleApproveReview(rev.id)}
+                                  className="px-3.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-700 border border-emerald-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                  <span>{adminLang === "ar" ? "إعادة الاعتماد والنشر" : "Re-approve"}</span>
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Delete Button */}
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteReview(rev.id)}
+                              className="p-2 rounded-xl bg-gray-50 hover:bg-rose-100 text-gray-500 hover:text-rose-700 transition-colors cursor-pointer"
+                              title="حذف هذا الرأي نهائياً"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* ========================================================= */}
           {/* TAB 4: COUPONS & DISCOUNT ENGINE                          */}
@@ -3926,6 +4557,10 @@ export default function AdminPage() {
             </div>
             )
           )}
+
+          {/* ========================================================= */}
+          {/* TAB 5.5: VIP CUSTOMER PERKS & PERSONALIZED NOTIFICATIONS  */}
+          {/* ========================================================= */}
 
           {/* ========================================================= */}
           {/* TAB 5.5: VIP CUSTOMER PERKS & PERSONALIZED NOTIFICATIONS  */}
@@ -6557,6 +7192,27 @@ export default function AdminPage() {
                   </div>
                 </div>
 
+                {/* 3.5 Universal Shipping Companies & Tracking API Manager */}
+                <ShippingCarrierSettings
+                  adminLang={adminLang}
+                  activeProvider={settingsForm.shippingActiveProvider}
+                  providers={settingsForm.shippingProviders}
+                  onChangeActiveProvider={(p) => setSettingsForm((prev) => ({ ...prev, shippingActiveProvider: p }))}
+                  onChangeProviderConfig={(pKey, partial) => {
+                    setSettingsForm((prev) => ({
+                      ...prev,
+                      shippingProviders: {
+                        ...prev.shippingProviders,
+                        [pKey]: {
+                          ...prev.shippingProviders[pKey],
+                          ...partial,
+                        },
+                      },
+                    }));
+                  }}
+                  showToast={showToast}
+                />
+
                 {/* 4. Checkout Fields Visibility Control */}
                 <div className="bg-white p-6 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-4">
                   <div className="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-gray-100">
@@ -6632,7 +7288,236 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* 3. Paymob Gateway Diagnostic & Integration */}
+                {/* 3. Gateways Selection Policy (اعتماد بوابات الدفع في المتجر) */}
+                <div className="bg-white p-6 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-2xl bg-[#485c36]/10 text-[#485c36] flex items-center justify-center">
+                      <CreditCard className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-base text-[#3d502d]">
+                        اعتماد بوابات الدفع الإلكتروني في المتجر (Payment Gateways Policy)
+                      </h3>
+                      <p className="text-xs text-gray-500 font-semibold">
+                        حددي البوابات المتاحة للعميلات عند الدفع: شحناوي (محافظ إلكترونية)، Paymob (بطاقات بنكية)، أو كلاهما معاً.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                    {/* Option: Both Gateways */}
+                    <div
+                      onClick={() => setSettingsForm({ ...settingsForm, gatewaysMode: "both" })}
+                      className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                        settingsForm.gatewaysMode === "both"
+                          ? "bg-emerald-50/70 border-emerald-500 shadow-xs ring-1 ring-emerald-500"
+                          : "bg-white border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-bold text-sm text-gray-900 flex items-center gap-1.5">
+                          <span>🌟 كلاهما معاً</span>
+                          <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">موصى به</span>
+                        </span>
+                        <input
+                          type="radio"
+                          name="gatewaysMode"
+                          checked={settingsForm.gatewaysMode === "both"}
+                          onChange={() => setSettingsForm({ ...settingsForm, gatewaysMode: "both" })}
+                          className="accent-[#3d502d]"
+                        />
+                      </div>
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        تفعيل <strong>شحناوي</strong> للمحافظ الذكية (فودافون كاش، أورنج، اتصالات) + <strong>Paymob</strong> لبطاقات الفيزا والماستركارد معاً.
+                      </p>
+                    </div>
+
+                    {/* Option: Sha7nawy Only */}
+                    <div
+                      onClick={() => setSettingsForm({ ...settingsForm, gatewaysMode: "sha7nawy_only" })}
+                      className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                        settingsForm.gatewaysMode === "sha7nawy_only"
+                          ? "bg-emerald-50/70 border-emerald-500 shadow-xs ring-1 ring-emerald-500"
+                          : "bg-white border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-bold text-sm text-gray-900">
+                          📱 بوابة شحناوي فقط
+                        </span>
+                        <input
+                          type="radio"
+                          name="gatewaysMode"
+                          checked={settingsForm.gatewaysMode === "sha7nawy_only"}
+                          onChange={() => setSettingsForm({ ...settingsForm, gatewaysMode: "sha7nawy_only" })}
+                          className="accent-[#3d502d]"
+                        />
+                      </div>
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        اعتماد المحافظ الإلكترونية المصرية حصرياً (فودافون كاش، أورنج كاش، اتصالات كاش) عبر شحناوي API v2.0.
+                      </p>
+                    </div>
+
+                    {/* Option: Paymob Only */}
+                    <div
+                      onClick={() => setSettingsForm({ ...settingsForm, gatewaysMode: "paymob_only" })}
+                      className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                        settingsForm.gatewaysMode === "paymob_only"
+                          ? "bg-emerald-50/70 border-emerald-500 shadow-xs ring-1 ring-emerald-500"
+                          : "bg-white border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-bold text-sm text-gray-900">
+                          💳 بوابة Paymob فقط
+                        </span>
+                        <input
+                          type="radio"
+                          name="gatewaysMode"
+                          checked={settingsForm.gatewaysMode === "paymob_only"}
+                          onChange={() => setSettingsForm({ ...settingsForm, gatewaysMode: "paymob_only" })}
+                          className="accent-[#3d502d]"
+                        />
+                      </div>
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        اعتماد البطاقات البنكية الائتمانية والخصم المباشر (Visa / Mastercard) حصرياً عبر Paymob Accept.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Sha7nawy Gate Integration & Diagnostics (API v2.0) */}
+                <div className="bg-white p-6 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-4">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-800 flex items-center justify-center">
+                        <Smartphone className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-base text-[#3d502d] flex items-center gap-2">
+                          <span>بوابة دفع المحافظ الإلكترونية - شحناوي (Sha7nawy Gate API v2.0)</span>
+                          <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">v2.0 معتمد</span>
+                        </h3>
+                        <p className="text-xs text-gray-500 font-semibold">
+                          سحب مباشر فوري من فودافون كاش (*9*1#)، أورنج كاش، واتصالات كاش (*777*11#) مع توقيع مشفر HMAC-SHA256.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-800">
+                        <input
+                          type="checkbox"
+                          checked={settingsForm.sha7nawySandbox}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, sha7nawySandbox: e.target.checked })}
+                          className="rounded text-[#3d502d] w-4 h-4"
+                        />
+                        <span>وضع الاختبار (Sandbox)</span>
+                      </label>
+
+                      <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-800">
+                        <input
+                          type="checkbox"
+                          checked={settingsForm.sha7nawyEnabled}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, sha7nawyEnabled: e.target.checked })}
+                          className="rounded text-[#3d502d] w-4 h-4"
+                        />
+                        <span>تفعيل البوابة</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-800 mb-2">رابط الخادم (Base URL)</label>
+                      <input
+                        type="text"
+                        value={settingsForm.sha7nawyBaseUrl}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, sha7nawyBaseUrl: e.target.value })}
+                        placeholder="https://gate.sha7nawy.com"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm font-mono text-gray-900 focus:border-[#3d502d] focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-800 mb-2">اسم التطبيق (X-App-Name)</label>
+                      <input
+                        type="text"
+                        value={settingsForm.sha7nawyAppName}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, sha7nawyAppName: e.target.value })}
+                        placeholder="Sulaf-Store"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm font-mono text-gray-900 focus:border-[#3d502d] focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-800 mb-2">المفتاح العام (Public Key - يُستخدم لإنشاء وتأكيد العمليات)</label>
+                      <input
+                        type="text"
+                        value={settingsForm.sha7nawyPublicKey}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, sha7nawyPublicKey: e.target.value })}
+                        placeholder="أدخلي Public Key من لوحة شحناوي..."
+                        className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm font-mono text-gray-900 focus:border-[#3d502d] focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-800 mb-2">المفتاح السري (Secret Key - للاستعلام ومطابقة توقيع الويب هوك)</label>
+                      <input
+                        type="password"
+                        value={settingsForm.sha7nawySecretKey}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, sha7nawySecretKey: e.target.value })}
+                        placeholder="أدخلي Secret Key من لوحة شحناوي..."
+                        className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm font-mono text-gray-900 focus:border-[#3d502d] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Webhook Endpoint Info Box */}
+                  <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-200 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="space-y-0.5">
+                      <span className="font-bold text-gray-800 block">رابط الويب هوك لإشعارات السداد (Webhook URL):</span>
+                      <code className="text-gray-600 font-mono text-[11px] select-all bg-white px-2 py-0.5 rounded border border-gray-200 inline-block">
+                        {typeof window !== "undefined" ? window.location.origin : "https://sulaf.store"}/api/webhooks/sha7nawy
+                      </code>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = `${window.location.origin}/api/webhooks/sha7nawy`;
+                        navigator.clipboard.writeText(url);
+                        showToast("تم نسخ رابط الويب هوك الخاص بـ شحناوي ✓");
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 font-bold text-[11px] shrink-0 cursor-pointer"
+                    >
+                      نسخ الرابط 📋
+                    </button>
+                  </div>
+
+                  {/* Sha7nawy Live Test Button & Diagnostics Result */}
+                  <div className="pt-3 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <button
+                      type="button"
+                      onClick={handleTestSha7nawyConnection}
+                      disabled={sha7nawyTestLoading}
+                      className="px-5 py-2.5 rounded-xl bg-[#485c36] hover:bg-[#38492a] text-white font-bold text-xs flex items-center gap-2 shadow cursor-pointer active:scale-95"
+                    >
+                      <Activity className={`w-4 h-4 ${sha7nawyTestLoading ? "animate-spin text-amber-300" : "text-emerald-300"}`} />
+                      <span>{sha7nawyTestLoading ? "جاري فحص الاتصال بالخادم..." : "اختبار الاتصال ببوابة شحناوي"}</span>
+                    </button>
+
+                    {sha7nawyTestResult && (
+                      <div className={`p-3 rounded-xl text-xs font-bold flex items-center gap-2 ${
+                        sha7nawyTestResult.success ? "bg-emerald-50 text-emerald-900 border border-emerald-300" : "bg-rose-50 text-rose-900 border border-rose-300"
+                      }`}>
+                        {sha7nawyTestResult.success ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <AlertTriangle className="w-4 h-4 text-rose-600" />}
+                        <span>{sha7nawyTestResult.message || sha7nawyTestResult.error}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 5. Paymob Gateway Diagnostic & Integration */}
                 <div className="bg-white p-6 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-4">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <h3 className="font-bold text-base text-[#3d502d] flex items-center gap-2">
@@ -6907,6 +7792,46 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* Advanced Product Page Sections & Cards Builder Modal */}
+        {isBuilderModalOpen && builderModalProduct && (
+          <ProductPageBuilderModal
+            product={builderModalProduct}
+            adminLang={adminLang}
+            isOpen={isBuilderModalOpen}
+            onClose={() => {
+              setIsBuilderModalOpen(false);
+              setBuilderModalProduct(null);
+            }}
+            onSave={async (updatedPageBuilder) => {
+              // Update form state if we are adding/editing
+              setProductForm((prev) => ({
+                ...prev,
+                pageBuilder: updatedPageBuilder,
+              }));
+
+              // If product exists in database, persist immediately
+              if (builderModalProduct.id && builderModalProduct.id !== "new-prod" && builderModalProduct.id !== "temp-new") {
+                try {
+                  const res = await fetch(`/api/products/${builderModalProduct.id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ pageBuilder: updatedPageBuilder }),
+                  });
+                  if (res.ok) {
+                    showToast(adminLang === "ar" ? "تم حفظ وتطبيق أقسام صفحة المستحضر بنجاح ✓" : "Product page sections saved ✓");
+                    loadLiveBackendData(true);
+                  }
+                } catch {
+                  showToast(adminLang === "ar" ? "فشل حفظ أقسام المستحضر." : "Failed to save sections.", "error");
+                }
+              } else {
+                showToast(adminLang === "ar" ? "تم حفظ أقسام الصفحة في النموذج، اضغط حفظ المستحضر لتأكيد الإضافة ✓" : "Sections saved in form, click Save Product to finalize ✓");
+              }
+              setIsBuilderModalOpen(false);
+              setBuilderModalProduct(null);
+            }}
+          />
+        )}
         </main>
       </div>
     </div>

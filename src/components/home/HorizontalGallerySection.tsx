@@ -123,9 +123,9 @@ export function HorizontalGallerySection() {
             className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end"
           >
             <div className="lg:col-span-6 space-y-2 text-start">
-              {vis.galleryBadge !== false && (
+              {vis.galleryBadge !== false && custom.galleryBadgeText && (
                 <span className="font-mono text-[10px] tracking-[0.28em] uppercase text-[#610b0d] font-bold block">
-                  {custom.galleryBadgeText || t.gallery.badge}
+                  {custom.galleryBadgeText}
                 </span>
               )}
 
@@ -203,7 +203,7 @@ export function HorizontalGallerySection() {
                   {/* Main Arch Card */}
                   <div
                     onClick={() => router.push(arch.href)}
-                    className={`relative z-10 rounded-t-full bg-[#f4f1e6] group-hover:bg-[#faf8f0] pt-9 pb-7 px-4 flex flex-col items-center text-center justify-between min-h-[255px] cursor-pointer transition-all duration-300 shadow-[0_8px_24px_rgba(24,39,27,0.04)] group-hover:shadow-[0_18px_38px_rgba(24,39,27,0.12)] ${
+                    className={`relative z-10 rounded-t-full bg-[#f4f1e6] group-hover:bg-[#faf8f0] pt-9 pb-7 px-4 flex flex-col items-center text-center justify-between min-h-[255px] cursor-pointer silk-card shadow-[0_8px_24px_rgba(24,39,27,0.04)] ${
                       arch.accentType === "roseBorder"
                         ? "border border-[#ca384a]/45 hover:border-[#ca384a]"
                         : "border border-[#485c36]/25 hover:border-[#18271b]"
@@ -272,6 +272,10 @@ export function HorizontalGallerySection() {
       {/* SECTION 4: DARK FOREST BEST-SELLER BAND WITH ANIMATED MANDALA         */}
       {/* ===================================================================== */}
       <section className="relative bg-[#18271b] text-[#f6f9e6] py-20 sm:py-24 overflow-hidden">
+        {/* Atmospheric Soothing Light Aura */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[#f3a5a1]/10 blur-[100px] animate-sulaf-aura pointer-events-none" />
+        <div className="absolute bottom-10 right-1/4 w-80 h-80 rounded-full bg-[#ca384a]/10 blur-[90px] animate-sulaf-aura pointer-events-none" />
+
         {/* Decorative Botanical Leaf Curves in Bottom Right Corner */}
         <svg
           viewBox="0 0 300 200"
@@ -448,7 +452,7 @@ export function HorizontalGallerySection() {
 
               <div className="flex items-center gap-2 text-[#c5b37a] pt-2">
                 <FourPointStar className="w-3 h-3" />
-                <div className="w-16 h-px bg-[#f6f9e6]/25" />
+                <div className="w-16 h-px bg-[#f4f1e6]/25" />
               </div>
             </div>
 
@@ -465,9 +469,11 @@ export function HorizontalGallerySection() {
             
             {/* Left/Start Heading Column (4 Cols) */}
             <div className="lg:col-span-4 space-y-2 text-start">
-              <span className="font-mono text-[10px] tracking-[0.28em] uppercase text-[#610b0d] font-bold block">
-                {custom.diffBadgeText || (isArabic ? "ميثاق الثقة في سُـلاف" : "THE SULAF DIFFERENCE")}
-              </span>
+              {custom.diffBadgeText && (
+                <span className="font-mono text-[10px] tracking-[0.28em] uppercase text-[#610b0d] font-bold block">
+                  {custom.diffBadgeText}
+                </span>
+              )}
               <h2
                 className={`${
                   isArabic

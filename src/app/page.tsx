@@ -67,15 +67,30 @@ export default function HomePage() {
 
           // Hero handles its own above-the-fold entrance animations
           if (sectionKey === "heroSection") {
-            return <Component key={sectionKey} />;
+            return (
+              <div key={sectionKey} data-live-section="heroSection" data-section-name="قسم الهيرو الرئيسي" className="w-full">
+                <Component />
+              </div>
+            );
           }
+
+          const sectionLabels: Record<string, string> = {
+            aboutSection: "قسم عن سُلاف والقصة",
+            artOfCosmeceuticals: "قسم فن الـ Cosmeceuticals",
+            gallerySection: "معرض المستحضرات والطقوس",
+            clinicalStorySection: "قسم الأدلة السريرية والنتائج",
+            reviewsSection: "آراء الأطباء وتجارب العملاء",
+            consultationSection: "بنر الاستشارة الفورية عبر واتساب",
+          };
 
           return (
             <motion.div
               key={sectionKey}
+              data-live-section={sectionKey}
+              data-section-name={sectionLabels[sectionKey] || sectionKey}
               initial={{ opacity: 0, y: 28 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
+              viewport={{ once: true, amount: 0.05 }}
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               className="w-full"
             >
@@ -91,9 +106,11 @@ export default function HomePage() {
           return (
             <motion.div
               key={customSection.id}
+              data-live-section={customSection.id}
+              data-section-name={customSection.titleAr || "قسم مخصص"}
               initial={{ opacity: 0, y: 28 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
+              viewport={{ once: true, amount: 0.05 }}
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               className="w-full"
             >

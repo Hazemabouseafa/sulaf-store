@@ -298,15 +298,23 @@ export function PearlOrbs({
                 onClick={() => setActiveOrb(orb)}
                 className="group relative cursor-pointer flex flex-col items-center text-center p-5 sm:p-7 rounded-2xl sm:rounded-3xl bg-white/85 backdrop-blur-md border-2 border-[#d4af37]/35 shadow-[0_12px_36px_-6px_rgba(72,92,54,0.15)] hover:shadow-[0_24px_50px_-8px_rgba(72,92,54,0.28)] transition-all duration-500"
               >
-                {/* Pearl Orb Sphere Visual */}
-                <div className="relative w-32 h-32 mb-5 rounded-full flex items-center justify-center bg-gradient-to-br from-[#ffffff] via-[#f6f9e6] to-[#e4eac4] p-2 shadow-[inset_0_4px_16px_rgba(255,255,255,0.95),0_14px_30px_rgba(72,92,54,0.18)] ring-2 ring-[#d4af37]/40 group-hover:ring-[#d4af37]/90 transition-all duration-500">
+                {/* Pearl Orb Sphere Visual with Continuous Hydro Float */}
+                <motion.div
+                  animate={{ y: [0, -7, 0] }}
+                  transition={{
+                    duration: 4.8 + index * 0.7,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                  className="relative w-28 sm:w-32 h-28 sm:h-32 mb-5 rounded-full flex items-center justify-center bg-gradient-to-br from-[#ffffff] via-[#f6f9e6] to-[#e4eac4] p-2 shadow-[inset_0_4px_16px_rgba(255,255,255,0.95),0_14px_30px_rgba(72,92,54,0.18)] ring-2 ring-[#d4af37]/40 group-hover:ring-[#d4af37]/90 transition-all duration-500"
+                >
                   <div className="absolute top-2 left-4 w-10 h-5 rounded-full bg-white/95 blur-[1px] transform -rotate-45 pointer-events-none" />
                   <div className="absolute bottom-3 right-5 w-5 h-2.5 rounded-full bg-[#f3a5a1]/50 blur-[1px] pointer-events-none" />
 
                   <div className="relative z-10 transition-transform duration-500 group-hover:scale-115">
                     <MoleculeSvg type={orb.svgType} />
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Concentration Badge */}
                 <span className="font-cormorant text-3xl font-bold tracking-tight text-[#485c36] group-hover:text-[#610b0d] transition-colors">
@@ -354,13 +362,21 @@ export function PearlOrbs({
                 onClick={() => setActiveOrb(orb)}
                 className="group relative cursor-pointer flex flex-col items-center text-center p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/80 backdrop-blur-md border border-[#e2e8c0] shadow-md hover:shadow-xl transition-all duration-400"
               >
-                {/* Secondary Orb Sphere */}
-                <div className="relative w-20 sm:w-24 h-20 sm:h-24 mb-4 rounded-full flex items-center justify-center bg-gradient-to-br from-[#ffffff] via-[#f7f9ee] to-[#dfe5be] p-2 shadow-[inset_0_3px_10px_rgba(255,255,255,0.9),0_10px_20px_rgba(72,92,54,0.12)] ring-1 ring-[#d4af37]/30 group-hover:ring-[#d4af37]/70 transition-all">
+                {/* Secondary Orb Sphere with Continuous Float */}
+                <motion.div
+                  animate={{ y: [0, -5, 0] }}
+                  transition={{
+                    duration: 4.2 + index * 0.6,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                  className="relative w-20 sm:w-24 h-20 sm:h-24 mb-4 rounded-full flex items-center justify-center bg-gradient-to-br from-[#ffffff] via-[#f7f9ee] to-[#dfe5be] p-2 shadow-[inset_0_3px_10px_rgba(255,255,255,0.9),0_10px_20px_rgba(72,92,54,0.12)] ring-1 ring-[#d4af37]/30 group-hover:ring-[#d4af37]/70 transition-all"
+                >
                   <div className="absolute top-1.5 left-3 w-7 h-3 rounded-full bg-white/90 blur-[0.5px] transform -rotate-45 pointer-events-none" />
                   <div className="relative z-10 transition-transform duration-400 group-hover:scale-110">
                     <MoleculeSvg type={orb.svgType} />
                   </div>
-                </div>
+                </motion.div>
 
                 <span className="font-cormorant text-2xl font-bold text-[#485c36]">
                   {orb.concentration}
@@ -387,7 +403,7 @@ export function PearlOrbs({
       {/* Modal Popup for Selected Orb Mechanism */}
       {activeOrb && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 font-cairo" dir={isArabic ? "rtl" : "ltr"}>
-          <div className="relative w-full max-w-lg p-5 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl bg-[#f6f9e6] border-2 border-[#d4af37]/50 shadow-2xl text-[#1c2616] max-h-[90dvh] overflow-y-auto">
+          <div className="relative w-full max-w-lg p-5 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl bg-[#f4f1e6] border-2 border-[#d4af37]/50 shadow-2xl text-[#1c2616] max-h-[90dvh] overflow-y-auto">
             {/* Close Button */}
             <button
               onClick={() => setActiveOrb(null)}

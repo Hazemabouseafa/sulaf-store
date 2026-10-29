@@ -19,7 +19,7 @@ export function CosmeceuticalsArtSection() {
   const custom = isArabic ? (settings.customContent || {}) : (settings.customContentEn || {});
 
   return (
-    <section className="relative py-20 bg-[#f6f9e6] text-[#222b1a] overflow-hidden font-cairo">
+    <section className="relative py-20 bg-[#f4f1e6] text-[#222b1a] overflow-hidden font-cairo">
       {/* Background Decorative Macro Lighting */}
       <div className="absolute top-0 left-1/3 w-96 h-96 bg-[#485c36]/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-10 w-80 h-80 bg-[#d4af37]/10 rounded-full blur-3xl pointer-events-none" />

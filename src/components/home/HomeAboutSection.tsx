@@ -24,7 +24,7 @@ export function HomeAboutSection() {
     : "Born from the essence of Arab identity and the poetic charm of Andalusia, Sulaf bridges pharmaceutical science with the highest art of beauty care.";
 
   return (
-    <section className="py-16 bg-[#f6f9e6] border-b border-[#e2e8c0] text-center font-cairo" dir={dir}>
+    <section className="py-16 bg-[#f4f1e6] border-b border-[#e2e8c0] text-center font-cairo" dir={dir}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
         {vis.aboutBadge !== false && (
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#485c36]/10 text-[#485c36] text-xs font-bold">

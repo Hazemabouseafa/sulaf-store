@@ -13,30 +13,38 @@ interface LanguageContextType {
 }
 
 const LanguageContext = createContext<LanguageContextType>({
-  language: "ar",
+  language: "en",
   setLanguage: () => {},
   toggleLanguage: () => {},
-  dir: "rtl",
-  isArabic: true,
-  t: translations.ar,
+  dir: "ltr",
+  isArabic: false,
+  t: translations.en,
 });
 
-const STORAGE_KEY = "sulaf_selected_language_v1";
+const STORAGE_KEY = "sulaf_lang_pref_v2";
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>("ar");
+  const [language, setLanguageState] = useState<Language>("en");
 
   useEffect(() => {
     try {
+      // Clear legacy storage keys from previous builds that locked sessions to Arabic
+      localStorage.removeItem("sulaf_selected_language_v1");
+
       const saved = localStorage.getItem(STORAGE_KEY) as Language | null;
-      if (saved === "en" || saved === "ar") {
-        setLanguageState(saved);
-        applyDocumentAttributes(saved);
-      } else {
+      if (saved === "ar") {
+        setLanguageState("ar");
         applyDocumentAttributes("ar");
+      } else {
+        // Enforce English as default
+        setLanguageState("en");
+        applyDocumentAttributes("en");
+        if (saved !== "en") {
+          localStorage.setItem(STORAGE_KEY, "en");
+        }
       }
     } catch {
-      applyDocumentAttributes("ar");
+      applyDocumentAttributes("en");
     }
   }, []);
 
@@ -66,7 +74,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   const dir = language === "ar" ? "rtl" : "ltr";
   const isArabic = language === "ar";
-  const t = translations[language] || translations.ar;
+  const t = translations[language] || translations.en;
 
   return (
     <LanguageContext.Provider

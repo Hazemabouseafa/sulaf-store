@@ -397,6 +397,95 @@ export interface CustomContentSettings {
   termsInspectionText?: string;
 }
 
+export type ShippingProviderType = "stox" | "bosta" | "aramex" | "mylerz" | "custom";
+
+export interface ShippingProviderConfig {
+  id: ShippingProviderType;
+  nameAr: string;
+  nameEn: string;
+  enabled: boolean;
+  apiKey: string;
+  apiSecret?: string;
+  accountNumber?: string;
+  baseUrl: string;
+  trackingEndpoint?: string;
+  trackingUrlTemplate: string;
+  authHeaderType?: "Bearer" | "Basic" | "ApiKey" | "Custom";
+  authHeaderName?: string;
+  webhookSecret?: string;
+  webhookUrl?: string;
+  isSandbox: boolean;
+  notes?: string;
+}
+
+export const DEFAULT_SHIPPING_PROVIDERS: Record<ShippingProviderType, ShippingProviderConfig> = {
+  stox: {
+    id: "stox",
+    nameAr: "STOX Express (مصر)",
+    nameEn: "STOX Express (Egypt)",
+    enabled: true,
+    apiKey: "",
+    baseUrl: "https://merchants.stox-eg.com/api/v1",
+    trackingEndpoint: "/shipments/track/{tracking}",
+    trackingUrlTemplate: "https://merchants.stox-eg.com/track/{tracking}",
+    isSandbox: true,
+    notes: "شركة الشحن الافتراضية الرسمية لتغطية كافة محافظات جمهورية مصر العربية.",
+  },
+  bosta: {
+    id: "bosta",
+    nameAr: "Bosta (بوسطة)",
+    nameEn: "Bosta Shipping",
+    enabled: false,
+    apiKey: "",
+    baseUrl: "https://api.bosta.co/api/v0",
+    trackingEndpoint: "/deliveries/{tracking}",
+    trackingUrlTemplate: "https://bosta.co/tracking/{tracking}",
+    isSandbox: true,
+    notes: "شحن سريع وتغطية مكثفة مع إشعارات تسليم للعملاء.",
+  },
+  aramex: {
+    id: "aramex",
+    nameAr: "Aramex (أرامكس)",
+    nameEn: "Aramex Express",
+    enabled: false,
+    apiKey: "",
+    apiSecret: "",
+    accountNumber: "",
+    baseUrl: "https://ws.aramex.net/ShippingAPI.V2",
+    trackingEndpoint: "/Tracking/Service_1_0.svc/json/TrackShipments",
+    trackingUrlTemplate: "https://www.aramex.com/track/results?shipmentNumber={tracking}",
+    isSandbox: true,
+    notes: "شحن محلي وإقليمي موثوق مع بوليصات رقمية متقدمة.",
+  },
+  mylerz: {
+    id: "mylerz",
+    nameAr: "Mylerz (مايلرز)",
+    nameEn: "Mylerz Express Egypt",
+    enabled: false,
+    apiKey: "",
+    baseUrl: "https://api.mylerz.net/api",
+    trackingEndpoint: "/Orders/GetTracking",
+    trackingUrlTemplate: "https://track.mylerz.com/{tracking}",
+    isSandbox: true,
+    notes: "توصيل خلال نفس اليوم واليوم التالي في القاهرة والإسكندرية.",
+  },
+  custom: {
+    id: "custom",
+    nameAr: "شركة شحن مخصصة (Custom API)",
+    nameEn: "Custom Shipping Provider API",
+    enabled: false,
+    apiKey: "",
+    apiSecret: "",
+    baseUrl: "https://api.yourshippingcarrier.com",
+    trackingEndpoint: "/track/{tracking}",
+    trackingUrlTemplate: "https://yourshippingcarrier.com/track/{tracking}",
+    authHeaderType: "Bearer",
+    authHeaderName: "Authorization",
+    isSandbox: true,
+    notes: "ربط مرن لأي شركة شحن أخرى عبر Webhook أو REST API وبوليصة تتبع مباشرة.",
+  },
+};
+
 export interface CustomGovernorateShippingRate {
   governorate: string;
   rate: number;
@@ -433,7 +522,7 @@ export const DEFAULT_THEME_COLORS: ThemeColorsSettings = {
   primaryHover: "#38492a",
   secondary: "#610b0d", // اللون الأول
   gold: "#ca384a", // اللون الرابع
-  background: "#f6f9e6", // اللون الثاني
+  background: "#f4f1e6", // لون خلفية المتجر الموحد (حجر الكلس الأندلسي في الهيرو)
   surface: "#ffffff",
   text: "#1c2616",
   rose: "#f3a5a1", // اللون الثالث
@@ -619,7 +708,7 @@ export function generateThemeCss(colors: ThemeColorsSettings = DEFAULT_THEME_COL
     `  background-color: ${gold} !important;`,
     '}',
     '/* Background / Canvas Overrides */',
-    '.bg-\\[\\#f6f9e6\\] {',
+    '.bg-\\[\\#f4f1e6\\], .bg-\\[\\#f6f9e6\\] {',
     `  background-color: ${background} !important;`,
     '}',
     '.bg-\\[\\#fafcf3\\], .bg-\\[\\#fbf9f0\\], .bg-\\[\\#fcfdfa\\] {',
@@ -649,9 +738,12 @@ export interface LiveTextOverride {
   fontSize?: string;
   fontWeight?: string;
   fontFamily?: string;
+  isHidden?: boolean;
+  isDeleted?: boolean;
 }
 
 export interface StoreSettings {
+  defaultLanguage?: "ar" | "en";
   brandName: string;
   brandTagline: string;
   brandTaglineEn?: string;
@@ -709,7 +801,20 @@ export interface StoreSettings {
     iframeId: string;
   };
 
+  gatewaysMode?: "both" | "paymob_only" | "sha7nawy_only";
+
+  sha7nawy?: {
+    enabled: boolean;
+    isSandbox: boolean;
+    baseUrl: string;
+    publicKey: string;
+    secretKey: string;
+    appName: string;
+    webhookUrl: string;
+  };
+
   shipping: {
+    activeProvider: ShippingProviderType;
     defaultUnifiedRate?: number;
     freeShippingThreshold: number;
     customGovernorateRates?: CustomGovernorateShippingRate[];
@@ -717,6 +822,7 @@ export interface StoreSettings {
     alexDelta?: number;
     canal?: number;
     upperEgypt?: number;
+    providers?: Record<ShippingProviderType, ShippingProviderConfig>;
   };
 
   multiProductPromo?: MultiProductPromotionSettings;
@@ -864,6 +970,7 @@ export const DEFAULT_ELEMENT_VISIBILITY: ElementVisibilitySettings = {
 };
 
 export const DEFAULT_STORE_SETTINGS: StoreSettings = {
+  defaultLanguage: "en",
   brandName: "سُـلاف | Sulaf",
   brandTagline: "حيث يلتقي العلم الصيدلاني بالجمال.",
   brandTaglineEn: "Where Pharmaceutical Science Meets Beauty.",
@@ -921,7 +1028,20 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
     iframeId: "847291",
   },
 
+  gatewaysMode: "both",
+
+  sha7nawy: {
+    enabled: true,
+    isSandbox: true,
+    baseUrl: "https://gate.sha7nawy.com",
+    publicKey: "",
+    secretKey: "",
+    appName: "Sulaf-Store",
+    webhookUrl: "/api/webhooks/sha7nawy",
+  },
+
   shipping: {
+    activeProvider: "stox",
     defaultUnifiedRate: 45,
     freeShippingThreshold: 800,
     customGovernorateRates: [
@@ -936,6 +1056,7 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
     alexDelta: 55,
     canal: 60,
     upperEgypt: 70,
+    providers: DEFAULT_SHIPPING_PROVIDERS,
   },
 
   multiProductPromo: {
@@ -999,6 +1120,11 @@ export function getClientSettings(): StoreSettings {
       shipping: {
         ...DEFAULT_STORE_SETTINGS.shipping,
         ...(parsed.shipping || {}),
+        activeProvider: parsed.shipping?.activeProvider || DEFAULT_STORE_SETTINGS.shipping.activeProvider,
+        providers: {
+          ...DEFAULT_SHIPPING_PROVIDERS,
+          ...(parsed.shipping?.providers || {}),
+        },
         customGovernorateRates: parsed.shipping?.customGovernorateRates || DEFAULT_STORE_SETTINGS.shipping.customGovernorateRates,
       },
       multiProductPromo: {

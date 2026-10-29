@@ -7,7 +7,7 @@ import { BookOpen, Clock, ArrowLeft } from "lucide-react";
 
 export default function BlogListPage() {
   return (
-    <div className="py-16 bg-[#f6f9e6] min-h-screen text-[#222b1a]">
+    <div className="py-16 bg-[#f4f1e6] min-h-screen text-[#222b1a]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#485c36]/10 text-[#485c36] text-xs font-cairo font-bold">

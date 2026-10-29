@@ -42,7 +42,7 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 font-cairo">
-      <div className="relative w-full max-w-2xl bg-[#f6f9e6] rounded-2xl sm:rounded-3xl border border-[#e2e8c0] shadow-2xl p-5 sm:p-6 md:p-8 overflow-hidden max-h-[90dvh] overflow-y-auto">
+      <div className="relative w-full max-w-2xl bg-[#f4f1e6] rounded-2xl sm:rounded-3xl border border-[#e2e8c0] shadow-2xl p-5 sm:p-6 md:p-8 overflow-hidden max-h-[90dvh] overflow-y-auto">
         <button
           onClick={onClose}
           className={`absolute top-4 ${isArabic ? "left-4" : "right-4"} p-2 rounded-full bg-white/80 hover:bg-white text-[#610b0d] transition-colors cursor-pointer`}

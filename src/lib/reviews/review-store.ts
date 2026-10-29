@@ -1,5 +1,4 @@
-import fs from "fs";
-import path from "path";
+import { readJsonFile, writeJsonFile } from "@/lib/db/json-db";
 
 export type ReviewStatus = "PENDING" | "APPROVED" | "REJECTED";
 
@@ -18,65 +17,41 @@ export interface ReviewItem {
   approvedAt?: string;
 }
 
-const REVIEWS_FILE = path.join(process.cwd(), "data", "reviews.json");
-
-function ensureFile() {
-  const dir = path.dirname(REVIEWS_FILE);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  if (!fs.existsSync(REVIEWS_FILE)) {
-    fs.writeFileSync(REVIEWS_FILE, "[]", "utf8");
-  }
-}
-
 export function getAllReviews(): ReviewItem[] {
-  try {
-    ensureFile();
-    const raw = fs.readFileSync(REVIEWS_FILE, "utf8");
-    return JSON.parse(raw) as ReviewItem[];
-  } catch (err) {
-    console.error("Error reading reviews.json:", err);
-    return [];
-  }
+  return readJsonFile<ReviewItem[]>("reviews.json", []);
 }
 
 export function saveAllReviews(reviews: ReviewItem[]): void {
   try {
-    ensureFile();
-    fs.writeFileSync(REVIEWS_FILE, JSON.stringify(reviews, null, 2), "utf8");
+    writeJsonFile("reviews.json", reviews);
 
     // Sync approved reviews count and average rating into products.json
-    const productsFile = path.join(process.cwd(), "data", "products.json");
-    if (fs.existsSync(productsFile)) {
-      const productsRaw = fs.readFileSync(productsFile, "utf8");
-      const products = JSON.parse(productsRaw);
-      if (Array.isArray(products)) {
-        const approved = reviews.filter((r) => r.status === "APPROVED");
-        let changed = false;
-        for (const prod of products) {
-          const prodReviews = approved.filter(
-            (r) => !r.productId || r.productId === prod.id || r.productId === prod.slug
-          );
-          const newCount = prodReviews.length;
-          const newRating =
-            newCount > 0
-              ? Number(
-                  (
-                    prodReviews.reduce((sum, r) => sum + (Number(r.rating) || 5), 0) /
-                    newCount
-                  ).toFixed(1)
-                )
-              : 5;
-          if (prod.reviewsCount !== newCount || prod.rating !== newRating) {
-            prod.reviewsCount = newCount;
-            prod.rating = newRating;
-            changed = true;
-          }
+    const products = readJsonFile<any[]>("products.json", []);
+    if (Array.isArray(products) && products.length > 0) {
+      const approved = reviews.filter((r) => r.status === "APPROVED");
+      let changed = false;
+      for (const prod of products) {
+        const prodReviews = approved.filter(
+          (r) => !r.productId || r.productId === prod.id || r.productId === prod.slug
+        );
+        const newCount = prodReviews.length;
+        const newRating =
+          newCount > 0
+            ? Number(
+                (
+                  prodReviews.reduce((sum, r) => sum + (Number(r.rating) || 5), 0) /
+                  newCount
+                ).toFixed(1)
+              )
+            : 5;
+        if (prod.reviewsCount !== newCount || prod.rating !== newRating) {
+          prod.reviewsCount = newCount;
+          prod.rating = newRating;
+          changed = true;
         }
-        if (changed) {
-          fs.writeFileSync(productsFile, JSON.stringify(products, null, 2), "utf8");
-        }
+      }
+      if (changed) {
+        writeJsonFile("products.json", products);
       }
     }
   } catch (err) {

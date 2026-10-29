@@ -27,11 +27,12 @@ export function ConsultationBanner() {
 
   // EXACT REFERENCE BOTTOM BANNER: "Your Best Skin Journey Starts Here"
   return (
-    <section className="relative bg-[#e8ead6] text-[#1e2b18] py-14 sm:py-16 overflow-hidden border-t border-[#485c36]/15 font-cairo">
-      {/* Subtle Curved Wireframe Arch Lines on Left & Right Edges */}
-      <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full border border-[#485c36]/15 pointer-events-none" />
+    <section className="relative bg-[#f4f1e6] text-[#1e2b18] py-14 sm:py-16 overflow-hidden border-t border-[#485c36]/15 font-cairo">
+      {/* Ambient Soft Glow and Subtle Curved Arch Lines with Gentle Breath */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] h-[240px] rounded-full bg-[#f3a5a1]/15 blur-[80px] animate-sulaf-aura pointer-events-none" />
+      <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full border border-[#485c36]/15 animate-sulaf-float pointer-events-none" />
       <div className="absolute -top-20 -left-8 w-56 h-56 rounded-full border border-[#485c36]/10 pointer-events-none" />
-      <div className="absolute -bottom-16 -right-16 w-64 h-64 rounded-full border border-[#485c36]/15 pointer-events-none" />
+      <div className="absolute -bottom-16 -right-16 w-64 h-64 rounded-full border border-[#485c36]/15 animate-sulaf-float pointer-events-none" />
       <div className="absolute -top-20 -right-8 w-56 h-56 rounded-full border border-[#485c36]/10 pointer-events-none" />
 
       <div className="max-w-6xl mx-auto px-6 sm:px-8 relative z-10">
@@ -86,7 +87,7 @@ export function ConsultationBanner() {
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Link
                 href="/shop"
-                className="px-8 py-3.5 rounded-full bg-[#22301e] hover:bg-[#610b0d] text-[#f6f9e6] text-xs font-bold tracking-wide inline-flex items-center gap-3 transition-colors shadow-sm"
+                className="silk-button px-8 py-3.5 rounded-full bg-[#22301e] hover:bg-[#610b0d] text-[#f6f9e6] text-xs font-bold tracking-wide inline-flex items-center gap-3 shadow-sm cursor-pointer"
               >
                 <span>{custom.consultationShopBtnText || (isArabic ? "تسوقي الآن" : "Shop Now")}</span>
                 <ArrowIcon className="w-3.5 h-3.5" />
@@ -96,7 +97,7 @@ export function ConsultationBanner() {
                 href={`https://wa.me/${whatsappNum}?text=${encodeURIComponent(whatsappMessage)}`}
                 target="_blank"
                 rel="noreferrer"
-                className="px-5 py-3.5 rounded-full border border-[#22301e]/30 hover:border-[#610b0d] text-[#1e2b18] hover:text-[#610b0d] text-xs font-bold inline-flex items-center gap-2 transition-colors"
+                className="silk-button px-5 py-3.5 rounded-full border border-[#485c36]/40 hover:border-[#610b0d] text-[#1e2b18] hover:text-[#610b0d] text-xs font-bold inline-flex items-center gap-2 cursor-pointer bg-white/70 backdrop-blur-sm transition-all duration-300 hover:scale-105 animate-glow-ring"
               >
                 <MessageCircle className="w-3.5 h-3.5 text-[#485c36]" />
                 <span>{custom.consultationButtonText || t.consultationBanner.whatsappBtn}</span>

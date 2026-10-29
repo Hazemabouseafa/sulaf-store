@@ -8,12 +8,13 @@ import { LanguageProvider } from "@/lib/i18n/language-context";
 import { StorefrontShell } from "@/components/layout/StorefrontShell";
 import { ThemeStyleInjector } from "@/components/theme/ThemeStyleInjector";
 import { generateThemeCss, DEFAULT_THEME_COLORS } from "@/lib/settings/store-settings";
+import { getDataFilePath } from "@/lib/db/json-db";
 import fs from "fs";
 import path from "path";
 
 function getServerSettings() {
   try {
-    const file = path.join(process.cwd(), "data", "store-settings.json");
+    const file = getDataFilePath("store-settings.json");
     if (fs.existsSync(file)) {
       return JSON.parse(fs.readFileSync(file, "utf8"));
     }
@@ -125,8 +126,8 @@ export default function RootLayout({
 
   return (
     <html
-      lang="ar"
-      dir="rtl"
+      lang="en"
+      dir="ltr"
       className="antialiased"
     >
       <head>
@@ -151,7 +152,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdData) }}
         />
       </head>
-      <body className="min-h-screen flex flex-col bg-[#f6f9e6] text-[#222b1a]">
+      <body className="min-h-screen flex flex-col bg-[#f4f1e6] text-[#222b1a]">
         <LanguageProvider>
           {/* Pass live server settings to provider for zero-delay SSR */}
           <StoreSettingsProvider initialSettings={serverSettings}>

@@ -166,7 +166,7 @@ export function CartDrawer() {
                 className="flex gap-3 p-3.5 rounded-2xl bg-white border border-[#e2e8c0] shadow-sm relative group"
               >
                 {/* Product Thumbnail */}
-                <div className="w-20 h-20 rounded-xl bg-[#f6f9e6] border border-[#e2e8c0] flex items-center justify-center shrink-0 p-2 relative">
+                <div className="w-20 h-20 rounded-xl bg-[#f4f1e6] border border-[#e2e8c0] flex items-center justify-center shrink-0 p-2 relative">
                   <Image
                     src={item.product.images[0]?.url || "/brand/sulaf-flower-symbol.png"}
                     alt={item.product.nameAr}
@@ -191,7 +191,7 @@ export function CartDrawer() {
 
                   <div className="flex items-center justify-between mt-2">
                     {/* Quantity Selector */}
-                    <div className="flex items-center border border-[#e2e8c0] rounded-lg overflow-hidden bg-[#f6f9e6]">
+                    <div className="flex items-center border border-[#e2e8c0] rounded-lg overflow-hidden bg-[#f4f1e6]">
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
                         className="p-1 hover:bg-black/5 text-[#485c36] cursor-pointer"

@@ -12,7 +12,7 @@ export default function BlogPostPage() {
   const post = MOCK_BLOG_POSTS.find((p) => p.slug === slug) || MOCK_BLOG_POSTS[0];
 
   return (
-    <div className="py-16 bg-[#f6f9e6] min-h-screen text-[#222b1a]">
+    <div className="py-16 bg-[#f4f1e6] min-h-screen text-[#222b1a]">
       <article className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         {/* Back Link */}
         <Link
@@ -71,7 +71,7 @@ export default function BlogPostPage() {
             في تركيبة <strong className="text-[#610b0d]">Absolutes Smoothing Body Cream</strong>، تم دعم اليوريا بحمض الساليسيليك الطبي 2% الذي يتغلغل بعمق داخل مسام الدهون المسببة للاحمرار، وبمركب السيراميدات المعملي الذي يغلق فجوات الرطوبة ويحمي الحاجز الطبيعي من التلف.
           </p>
 
-          <div className="pt-6 border-t border-[#e2e8c0] flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#f6f9e6] p-4 rounded-2xl">
+          <div className="pt-6 border-t border-[#e2e8c0] flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#f4f1e6] p-4 rounded-2xl">
             <div>
               <strong className="block text-xs font-bold text-[#485c36]">
                 جربي التركيبة السريرية الآن:

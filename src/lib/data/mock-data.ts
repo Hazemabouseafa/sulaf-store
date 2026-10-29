@@ -29,6 +29,80 @@ export interface ReviewData {
   isVerifiedPurchase: boolean;
 }
 
+export interface ProductCustomCard {
+  id: string;
+  titleAr: string;
+  titleEn?: string;
+  descAr?: string;
+  descEn?: string;
+  concentration?: string;
+  badge?: string;
+  icon?: string;
+  imageUrl?: string;
+}
+
+export type ProductSectionType = "cards" | "mediaText" | "faq" | "banner" | "quote" | "richText";
+
+export interface ProductCustomSection {
+  id: string;
+  type: ProductSectionType;
+  enabled: boolean;
+  order: number;
+  titleAr: string;
+  titleEn?: string;
+  subtitleAr?: string;
+  subtitleEn?: string;
+  badgeAr?: string;
+  badgeEn?: string;
+  contentAr?: string;
+  contentEn?: string;
+  imageUrl?: string;
+  imageAlt?: string;
+  buttonTextAr?: string;
+  buttonTextEn?: string;
+  buttonLink?: string;
+  cards?: ProductCustomCard[];
+}
+
+export interface ProductPageBuilderData {
+  storyEnabled?: boolean;
+  storyTitleAr?: string;
+  storyTitleEn?: string;
+  storyBadgeAr?: string;
+  storyBadgeEn?: string;
+  storyParagraphs?: string[];
+  storyParagraphsEn?: string[];
+  
+  activesEnabled?: boolean;
+  activesTitleAr?: string;
+  activesTitleEn?: string;
+  activesSubtitleAr?: string;
+  activesSubtitleEn?: string;
+  activesCards?: ProductCustomCard[];
+  
+  ritualEnabled?: boolean;
+  ritualTitleAr?: string;
+  ritualTitleEn?: string;
+  ritualSubtitleAr?: string;
+  ritualSubtitleEn?: string;
+  ritualSteps?: { stepNum: string; titleAr: string; titleEn?: string; descAr: string; descEn?: string }[];
+  
+  inciEnabled?: boolean;
+  inciTitleAr?: string;
+  inciTitleEn?: string;
+  inciContentAr?: string;
+  inciContentEn?: string;
+  
+  signatureEnabled?: boolean;
+  signatureArabic?: string;
+  signatureTranslation?: string;
+  signatureAuthor?: string;
+  
+  reviewsEnabled?: boolean;
+  
+  customSections?: ProductCustomSection[];
+}
+
 export interface ActiveIngredientDetail {
   id: string;
   name: string;
@@ -58,6 +132,7 @@ export interface ProductData {
   // Rich sections
   storyTitle?: string;
   storyParagraphs?: string[];
+  storyParagraphsEn?: string[];
   activesTitle?: string;
   activesTitleAr?: string;
   activesTitleEn?: string;
@@ -80,6 +155,10 @@ export interface ProductData {
   signatureArabic?: string;
   signatureTranslation?: string;
 
+  // Advanced Per-Product Custom Page Builder (All sections after section 1)
+  pageBuilder?: ProductPageBuilderData;
+  customSections?: ProductCustomSection[];
+  
   usageInstructionsAr: string;
   usageInstructionsEn?: string;
   clinicalResultsAr: string;

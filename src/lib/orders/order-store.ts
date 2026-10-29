@@ -30,7 +30,7 @@ export interface OrderRecord {
   isDepositMode: boolean;
   depositAmount: number;
   remainingCodAmount: number;
-  paymentMethod: "PAYMOB_CARD" | "PAYMOB_WALLET" | "MANUAL_INSTAPAY" | "MANUAL_VODAFONE_CASH" | "COD";
+  paymentMethod: "PAYMOB_CARD" | "PAYMOB_WALLET" | "SHA7NAWY_WALLET" | "MANUAL_INSTAPAY" | "MANUAL_VODAFONE_CASH" | "COD";
   paymentStatus: "PENDING" | "DEPOSIT_PAID" | "FULLY_PAID" | "FAILED" | "REFUNDED";
   orderStatus: "PENDING_CONFIRMATION" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
   receiptUrl?: string;
