@@ -295,12 +295,12 @@ const ADMIN_I18N = {
       title: "لوحة تحكم سلاف | Sulaf",
       subtitle: "البوابة الإدارية والتحكم السريري المباشر",
       userLabel: "اسم المستخدم",
-      userPlaceholder: "اسم المستخدم (admin)",
+      userPlaceholder: "أدخل اسم المستخدم",
       passLabel: "كلمة المرور",
-      passPlaceholder: "كلمة المرور (sulaf2026)",
+      passPlaceholder: "أدخل كلمة المرور",
       submit: "تسجيل الدخول إلى النظام",
       submitting: "جاري التحقق والاتصال...",
-      demoHint: "بيانات الدخول الافتراضية:",
+      demoHint: "",
     },
   },
   en: {
@@ -428,12 +428,12 @@ const ADMIN_I18N = {
       title: "Sulaf Admin Portal",
       subtitle: "Direct Clinical & Administrative Control",
       userLabel: "Username",
-      userPlaceholder: "Username (admin)",
+      userPlaceholder: "Enter username",
       passLabel: "Password",
-      passPlaceholder: "Password (sulaf2026)",
+      passPlaceholder: "Enter password",
       submit: "Sign in to Dashboard",
       submitting: "Authenticating with server...",
-      demoHint: "Default Demo Credentials:",
+      demoHint: "",
     },
   },
 };
@@ -2365,12 +2365,6 @@ export default function AdminPage() {
               <span>{isLoggingIn ? ADMIN_I18N[adminLang].login.submitting : ADMIN_I18N[adminLang].login.submit}</span>
             </button>
           </form>
-
-          <div className="mt-8 pt-6 border-t border-gray-100 text-center">
-            <p className="text-xs font-semibold text-gray-500">
-              بيانات الدخول التجريبية الافتراضية: <span className="font-bold text-[#3d502d]">admin</span> / <span className="font-bold text-[#3d502d]">sulaf2026</span>
-            </p>
-          </div>
         </div>
       </div>
     );

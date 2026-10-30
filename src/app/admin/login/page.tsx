@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { SulafLogo } from "@/components/brand/SulafLogo";
 import { adminLogin, isAdminAuthenticated } from "@/lib/auth/admin-auth";
-import { Lock, User, Eye, EyeOff, ShieldCheck, ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
+import { Lock, User, Eye, EyeOff, ShieldCheck, ArrowRight, CheckCircle2 } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -75,12 +75,6 @@ export default function AdminLoginPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleFillDemo = () => {
-    setUsername("admin");
-    setPassword("sulaf2026");
-    setError(null);
   };
 
   return (
@@ -197,23 +191,6 @@ export default function AdminLoginPage() {
               )}
             </button>
           </form>
-
-          {/* Quick Demo Helper */}
-          <div className="mt-6 pt-5 border-t border-[#485c36]/60">
-            <button
-              type="button"
-              onClick={handleFillDemo}
-              className="w-full py-2.5 px-3 rounded-lg bg-[#2c3821]/60 hover:bg-[#485c36]/50 border border-[#d4af37]/30 text-xs text-[#f3e5ab] flex items-center justify-between transition-colors group"
-            >
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-[#d4af37] group-hover:rotate-12 transition-transform" />
-                <span>تعبئة بيانات الأدمن الافتراضية (سريع)</span>
-              </div>
-              <span className="font-mono text-[11px] bg-black/40 px-2 py-0.5 rounded text-white/80">
-                admin / sulaf2026
-              </span>
-            </button>
-          </div>
         </div>
 
         {/* Return to store link */}
