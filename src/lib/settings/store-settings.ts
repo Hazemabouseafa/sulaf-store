@@ -1,6 +1,7 @@
 export interface SectionVisibilitySettings {
   announcementBar: boolean;        // شريط الإعلانات العلوي
   heroSection: boolean;            // قسم الهيرو الرئيسي
+  singleProductShowcase?: boolean; // قسم استعراض المنتج الواحد الأيقوني
   aboutSection: boolean;           // قسم عن سُلاف والقصة
   artOfCosmeceuticals: boolean;    // قسم فن الـ Cosmeceuticals ولآلئ المكونات
   gallerySection: boolean;         // معرض المستحضرات على المنصات الرخامية
@@ -11,6 +12,7 @@ export interface SectionVisibilitySettings {
 
 export type HomepageSectionKey =
   | "heroSection"
+  | "singleProductShowcase"
   | "aboutSection"
   | "artOfCosmeceuticals"
   | "gallerySection"
@@ -68,6 +70,7 @@ export interface CustomHomepageSection {
 
 export const DEFAULT_HOMEPAGE_SECTIONS_ORDER: string[] = [
   "heroSection",
+  "singleProductShowcase",
   "gallerySection",
   "reviewsSection",
   "consultationSection",
@@ -518,15 +521,15 @@ export interface ThemeColorsSettings {
 }
 
 export const DEFAULT_THEME_COLORS: ThemeColorsSettings = {
-  primary: "#485c36", // اللون الأساسي الأخير في الصورة
-  primaryHover: "#38492a",
-  secondary: "#610b0d", // اللون الأول
-  gold: "#ca384a", // اللون الرابع
-  background: "#f4f1e6", // لون خلفية المتجر الموحد (حجر الكلس الأندلسي في الهيرو)
+  primary: "#610b0d", // اللون الأول في الصورة: العنابي القرطبي الملكي (اللون السائد)
+  primaryHover: "#470708", // درجة تحويم داكنة فاخرة
+  secondary: "#610b0d", // تم تحويل كافة الظلال الخضراء بالكامل إلى اللون الأول #610b0d
+  gold: "#ca384a", // اللون الرابع في الصورة: القرمزي الحريري (لون جانبي للعروض والخصومات)
+  background: "#f6f9e6", // اللون الثاني في الصورة: العاجي الناعم الموحد
   surface: "#ffffff",
-  text: "#1c2616",
-  rose: "#f3a5a1", // اللون الثالث
-  crimson: "#ca384a", // اللون الرابع
+  text: "#220809", // نصوص بلون داكن فخم مائل للعنابي العميق
+  rose: "#f3a5a1", // اللون الثالث في الصورة: الورد الناعم (لون جانبي)
+  crimson: "#ca384a", // اللون الرابع في الصورة: القرمزي (لون جانبي)
 };
 
 export interface ThemePreset {
@@ -644,9 +647,12 @@ export function generateThemeCss(colors: ThemeColorsSettings = DEFAULT_THEME_COL
     `  --primary: ${primary};`,
     `  --primary-dark: ${primaryHover};`,
     `  --primary-light: ${adjustHexBrightness(primary, 15)};`,
-    `  --burgundy: ${secondary};`,
+    `  --burgundy: ${primary};`,
+    `  --olive: ${secondary};`,
     `  --gold: ${gold};`,
     `  --gold-light: ${goldLight};`,
+    `  --pink-soft: ${colors.rose || '#f3a5a1'};`,
+    `  --red-accent: ${gold};`,
     `  --background: ${background};`,
     `  --cream: ${background};`,
     `  --foreground: ${text};`,
@@ -659,55 +665,48 @@ export function generateThemeCss(colors: ThemeColorsSettings = DEFAULT_THEME_COL
     `  --sulaf-surface: ${surface};`,
     `  --sulaf-text: ${text};`,
     `  --sulaf-border: ${border};`,
+    `  --sulaf-rose: ${colors.rose || '#f3a5a1'};`,
+    `  --sulaf-crimson: ${gold};`,
+    `  --sulaf-olive: ${primary};`,
     '}',
     'body {',
     `  background-color: ${background} !important;`,
     `  color: ${text} !important;`,
     '}',
-    '/* Primary Brand Overrides */',
-    '.bg-\\[\\#485c36\\], .bg-\\[\\#3d502d\\], .bg-\\[\\#3a4d2c\\], .bg-\\[\\#3a4a2b\\] {',
+    '/* All Green shades converted to Primary Burgundy (#610b0d) */',
+    '.bg-\\[\\#485c36\\], .bg-\\[\\#38492a\\], .bg-\\[\\#3a4d2c\\], .bg-\\[\\#3a4a2b\\], .bg-\\[\\#3d502d\\], .bg-\\[\\#2d3b21\\], .bg-\\[\\#233019\\], .bg-\\[\\#2c3821\\], .bg-\\[\\#18271b\\], .bg-\\[\\#162519\\], .bg-\\[\\#1f3322\\], .bg-\\[\\#142217\\], .bg-\\[\\#1f3123\\], .bg-\\[\\#243928\\], .bg-\\[\\#222b1a\\], .bg-\\[\\#22301e\\], .bg-\\[\\#24301a\\], .bg-\\[\\#1f2915\\], .bg-\\[\\#1c2616\\], .bg-\\[\\#610b0d\\], .bg-emerald-600, .bg-emerald-700, .bg-emerald-800, .bg-green-600, .bg-green-700 {',
     `  background-color: ${primary} !important;`,
     '}',
-    '.text-\\[\\#485c36\\], .text-\\[\\#3d502d\\], .text-\\[\\#3a4d2c\\] {',
+    '.text-\\[\\#485c36\\], .text-\\[\\#38492a\\], .text-\\[\\#3a4d2c\\], .text-\\[\\#3a4a2b\\], .text-\\[\\#3d502d\\], .text-\\[\\#2c3821\\], .text-\\[\\#24301a\\], .text-\\[\\#1f2915\\], .text-\\[\\#22301e\\], .text-\\[\\#1c2616\\], .text-\\[\\#610b0d\\], .text-emerald-600, .text-emerald-700, .text-green-600, .text-green-700 {',
     `  color: ${primary} !important;`,
     '}',
-    '.border-\\[\\#485c36\\], .border-\\[\\#3d502d\\] {',
+    '.border-\\[\\#485c36\\], .border-\\[\\#38492a\\], .border-\\[\\#3d502d\\], .border-\\[\\#2c3821\\], .border-\\[\\#610b0d\\], .border-emerald-600, .border-green-600 {',
     `  border-color: ${primary} !important;`,
     '}',
-    '.hover\\:bg-\\[\\#3d502d\\]:hover, .hover\\:bg-\\[\\#2d3b21\\]:hover, .hover\\:bg-\\[\\#233019\\]:hover, .hover\\:bg-\\[\\#2c3821\\]:hover, .hover\\:bg-\\[\\#38482a\\]:hover {',
+    '.hover\\:bg-\\[\\#3d502d\\]:hover, .hover\\:bg-\\[\\#2d3b21\\]:hover, .hover\\:bg-\\[\\#233019\\]:hover, .hover\\:bg-\\[\\#2c3821\\]:hover, .hover\\:bg-\\[\\#38482a\\]:hover, .hover\\:bg-\\[\\#470708\\]:hover {',
     `  background-color: ${primaryHover} !important;`,
     '}',
-    '.hover\\:text-\\[\\#485c36\\]:hover, .hover\\:text-\\[\\#3d502d\\]:hover {',
+    '.hover\\:text-\\[\\#485c36\\]:hover, .hover\\:text-\\[\\#3d502d\\]:hover, .hover\\:text-\\[\\#610b0d\\]:hover {',
     `  color: ${primary} !important;`,
     '}',
-    '/* Gold / Luxury Accent Overrides */',
-    '.text-\\[\\#d4af37\\], .text-\\[\\#aa820a\\] {',
+    '/* Carmine & Gold Accent Overrides (#ca384a) */',
+    '.text-\\[\\#d4af37\\], .text-\\[\\#aa820a\\], .text-\\[\\#ca384a\\] {',
     `  color: ${gold} !important;`,
     '}',
-    '.bg-\\[\\#d4af37\\] {',
+    '.bg-\\[\\#d4af37\\], .bg-\\[\\#ca384a\\] {',
     `  background-color: ${gold} !important;`,
     '}',
-    '.border-\\[\\#d4af37\\], .border-\\[\\#aa820a\\] {',
+    '.border-\\[\\#d4af37\\], .border-\\[\\#aa820a\\], .border-\\[\\#ca384a\\] {',
     `  border-color: ${gold} !important;`,
     '}',
-    '/* Secondary / Burgundy Overrides */',
-    '.text-\\[\\#610b0d\\] {',
-    `  color: ${secondary} !important;`,
+    '/* Soft Rose Accents (#f3a5a1) */',
+    '.text-\\[\\#f3a5a1\\] {',
+    `  color: ${colors.rose || '#f3a5a1'} !important;`,
     '}',
-    '.bg-\\[\\#610b0d\\] {',
-    `  background-color: ${secondary} !important;`,
+    '.bg-\\[\\#f3a5a1\\] {',
+    `  background-color: ${colors.rose || '#f3a5a1'} !important;`,
     '}',
-    '.border-\\[\\#610b0d\\] {',
-    `  border-color: ${secondary} !important;`,
-    '}',
-    '/* Crimson & Rose Palette Overrides */',
-    '.text-\\[\\#ca384a\\] {',
-    `  color: ${gold} !important;`,
-    '}',
-    '.bg-\\[\\#ca384a\\] {',
-    `  background-color: ${gold} !important;`,
-    '}',
-    '/* Background / Canvas Overrides */',
+    '/* Background / Canvas Overrides (#f6f9e6) */',
     '.bg-\\[\\#f4f1e6\\], .bg-\\[\\#f6f9e6\\] {',
     `  background-color: ${background} !important;`,
     '}',

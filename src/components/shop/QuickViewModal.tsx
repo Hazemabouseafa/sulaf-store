@@ -42,7 +42,7 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 font-cairo">
-      <div className="relative w-full max-w-2xl bg-[#f4f1e6] rounded-2xl sm:rounded-3xl border border-[#e2e8c0] shadow-2xl p-5 sm:p-6 md:p-8 overflow-hidden max-h-[90dvh] overflow-y-auto">
+      <div className="relative w-full max-w-2xl bg-[#f6f9e6] rounded-2xl sm:rounded-3xl border border-[#ebdcd5] shadow-2xl p-5 sm:p-6 md:p-8 overflow-hidden max-h-[90dvh] overflow-y-auto">
         <button
           onClick={onClose}
           className={`absolute top-4 ${isArabic ? "left-4" : "right-4"} p-2 rounded-full bg-white/80 hover:bg-white text-[#610b0d] transition-colors cursor-pointer`}
@@ -105,8 +105,8 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
                       onClick={() => setSelectedVariant(v.id)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-cairo border transition-all cursor-pointer ${
                         (selectedVariant === v.id || (!selectedVariant && v === product.variants[0]))
-                          ? "bg-[#485c36] text-white border-[#485c36]"
-                          : "bg-white text-gray-700 border-[#e2e8c0]"
+                          ? "bg-[#610b0d] text-white border-[#610b0d]"
+                          : "bg-white text-gray-700 border-[#ebdcd5]"
                       }`}
                     >
                       {isArabic ? v.titleAr : v.titleEn} ({v.price} {currency})
@@ -117,9 +117,9 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
             )}
 
             {/* Price & Deposit */}
-            <div className="pt-2 border-t border-[#e2e8c0]">
+            <div className="pt-2 border-t border-[#ebdcd5]">
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold font-cairo text-[#485c36]">
+                <span className="text-2xl font-bold font-cairo text-[#610b0d]">
                   {price * quantity} {currency}
                 </span>
                 
@@ -130,7 +130,7 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
             <div className="flex items-center gap-3 pt-2">
               <button
                 onClick={handleAdd}
-                className="flex-1 py-3 rounded-xl bg-[#485c36] hover:bg-[#3a4a2b] text-[#f6f9e6] font-cairo font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 cursor-pointer"
+                className="flex-1 py-3 rounded-xl bg-[#610b0d] hover:bg-[#470708] text-[#f6f9e6] font-cairo font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 cursor-pointer"
               >
                 {added ? (
                   <>
@@ -148,7 +148,7 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
               <Link
                 href={`/product/${product.slug}`}
                 onClick={onClose}
-                className="p-3 rounded-xl border border-[#485c36] text-[#485c36] hover:bg-[#485c36]/10 transition-colors"
+                className="p-3 rounded-xl border border-[#610b0d] text-[#610b0d] hover:bg-[#610b0d]/10 transition-colors"
                 title={t.product.fullStory}
               >
                 {isArabic ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}

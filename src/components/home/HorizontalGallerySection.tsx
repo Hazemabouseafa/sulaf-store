@@ -142,9 +142,9 @@ export function HorizontalGallerySection() {
               )}
             </div>
 
-            <div className="lg:col-span-6 lg:border-s border-[#485c36]/25 lg:ps-10 space-y-3 text-start">
+            <div className="lg:col-span-6 lg:border-s border-[#610b0d]/25 lg:ps-10 space-y-3 text-start">
               {vis.galleryDesc !== false && (
-                <p className="text-xs sm:text-sm text-[#18271b]/80 leading-relaxed max-w-md">
+                <p className="text-xs sm:text-sm text-[#220809]/80 leading-relaxed max-w-md">
                   {custom.galleryDescText || t.gallery.desc}
                 </p>
               )}
@@ -153,7 +153,7 @@ export function HorizontalGallerySection() {
                 <div>
                   <Link
                     href="/shop"
-                    className="inline-flex items-center gap-2 text-xs font-bold text-[#18271b] hover:text-[#610b0d] border-b border-[#18271b]/45 pb-1 transition-colors"
+                    className="inline-flex items-center gap-2 text-xs font-bold text-[#610b0d] hover:text-[#ca384a] border-b border-[#610b0d]/45 pb-1 transition-colors"
                   >
                     <span>{custom.galleryViewAllText || t.gallery.viewAll}</span>
                     <ArrowIcon className="w-3.5 h-3.5" />
@@ -188,25 +188,25 @@ export function HorizontalGallerySection() {
 
                   {arch.accentType === "darkCrescent" && (
                     <>
-                      <div className="absolute top-6 -left-2.5 w-16 h-40 rounded-l-full bg-[#18271b] pointer-events-none transition-transform duration-500 group-hover:-translate-x-1" />
-                      <div className="absolute -bottom-1 -right-2 w-12 h-44 bg-[#18271b] rounded-br-xl pointer-events-none transition-transform duration-500 group-hover:translate-x-1" />
-                      <div className="absolute -top-2 inset-x-3 h-28 rounded-t-full border border-[#485c36]/30 rotate-6 pointer-events-none" />
+                      <div className="absolute top-6 -left-2.5 w-16 h-40 rounded-l-full bg-[#220809] pointer-events-none transition-transform duration-500 group-hover:-translate-x-1" />
+                      <div className="absolute -bottom-1 -right-2 w-12 h-44 bg-[#220809] rounded-br-xl pointer-events-none transition-transform duration-500 group-hover:translate-x-1" />
+                      <div className="absolute -top-2 inset-x-3 h-28 rounded-t-full border border-[#610b0d]/30 rotate-6 pointer-events-none" />
                     </>
                   )}
 
                   {arch.accentType === "cornerNode" && (
-                    <div className="hidden lg:block absolute -top-4 -right-3 w-12 h-full border-t border-r border-[#485c36]/30 pointer-events-none">
-                      <span className="w-3 h-3 rounded-full border border-[#485c36]/50 bg-[#f4f1e6] absolute -top-1.5 -left-1.5" />
+                    <div className="hidden lg:block absolute -top-4 -right-3 w-12 h-full border-t border-r border-[#610b0d]/30 pointer-events-none">
+                      <span className="w-3 h-3 rounded-full border border-[#610b0d]/50 bg-[#f6f9e6] absolute -top-1.5 -left-1.5" />
                     </div>
                   )}
 
                   {/* Main Arch Card */}
                   <div
                     onClick={() => router.push(arch.href)}
-                    className={`relative z-10 rounded-t-full bg-[#f4f1e6] group-hover:bg-[#faf8f0] pt-9 pb-7 px-4 flex flex-col items-center text-center justify-between min-h-[255px] cursor-pointer silk-card shadow-[0_8px_24px_rgba(24,39,27,0.04)] ${
+                    className={`relative z-10 rounded-t-full bg-[#f6f9e6] group-hover:bg-[#faf8f0] pt-9 pb-7 px-4 flex flex-col items-center text-center justify-between min-h-[255px] cursor-pointer silk-card shadow-[0_8px_24px_rgba(97,11,13,0.06)] ${
                       arch.accentType === "roseBorder"
                         ? "border border-[#ca384a]/45 hover:border-[#ca384a]"
-                        : "border border-[#485c36]/25 hover:border-[#18271b]"
+                        : "border border-[#610b0d]/25 hover:border-[#610b0d]"
                     }`}
                   >
                     {/* Top Minimal Botanical / Geometric Symbol with gentle float */}
@@ -223,7 +223,7 @@ export function HorizontalGallerySection() {
                           ? "text-[#ca384a]/80"
                           : arch.accentType === "sand"
                           ? "text-[#b69b68]"
-                          : "text-[#485c36]/75"
+                          : "text-[#610b0d]/75"
                       }`}
                     >
                       {idx % 2 === 1 ? (
@@ -235,17 +235,17 @@ export function HorizontalGallerySection() {
 
                     {/* Center Number + Serif Title + Subtitle */}
                     <div className="space-y-1.5 my-4">
-                      <span className="font-mono text-[10px] text-[#485c36]/70 block">
+                      <span className="font-mono text-[10px] text-[#610b0d]/70 block">
                         {arch.num}
                       </span>
                       <h3
                         className={`${
                           isArabic ? "font-amiri text-xl" : "font-cormorant text-xl"
-                        } font-bold text-[#18271b] group-hover:text-[#610b0d] transition-colors`}
+                        } font-bold text-[#220809] group-hover:text-[#610b0d] transition-colors`}
                       >
                         {isArabic ? arch.titleAr : arch.titleEn}
                       </h3>
-                      <p className="text-[11px] text-[#485c36]/80">
+                      <p className="text-[11px] text-[#610b0d]/80">
                         {isArabic ? arch.subAr : arch.subEn}
                       </p>
                       {linkedProd && (
@@ -463,7 +463,7 @@ export function HorizontalGallerySection() {
       {/* ===================================================================== */}
       {/* SECTION 5: "THE SULAF DIFFERENCE — MORE THAN SKINCARE" (LEFT + 4)     */}
       {/* ===================================================================== */}
-      <section className="bg-[#f4f1e6] text-[#18271b] py-16 sm:py-20 border-t border-[#485c36]/15">
+      <section className="bg-[#f6f9e6] text-[#220809] py-16 sm:py-20 border-t border-[#610b0d]/15">
         <div className="max-w-6xl mx-auto px-6 sm:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             
@@ -479,7 +479,7 @@ export function HorizontalGallerySection() {
                   isArabic
                     ? "font-amiri text-3xl sm:text-4xl leading-snug"
                     : "font-cormorant text-3xl sm:text-4xl leading-tight"
-                } font-normal text-[#18271b]`}
+                } font-normal text-[#220809]`}
               >
                 {custom.diffHeadingText ||
                   (isArabic ? (
@@ -494,21 +494,21 @@ export function HorizontalGallerySection() {
             </div>
 
             {/* Right/End 4 Icon Columns with Vertical Dividers (8 Cols) */}
-            <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x rtl:sm:divide-x-reverse divide-[#485c36]/20 border-s border-[#485c36]/20">
+            <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x rtl:sm:divide-x-reverse divide-[#610b0d]/20 border-s border-[#610b0d]/20">
               
               <motion.div
                 whileHover={{ y: -4 }}
                 className="py-4 px-4 flex flex-col items-center text-center space-y-2"
               >
-                <Leaf className="w-6 h-6 text-[#18271b] stroke-[1.4]" />
+                <Leaf className="w-6 h-6 text-[#610b0d] stroke-[1.4]" />
                 <h3
                   className={`${
                     isArabic ? "font-amiri text-lg" : "font-cormorant text-base"
-                  } font-bold text-[#18271b]`}
+                  } font-bold text-[#220809]`}
                 >
                   {custom.diff1Title || (isArabic ? t.hero.clinicalDose : "Premium Ingredients")}
                 </h3>
-                <p className="text-[11px] text-[#485c36]/80 leading-relaxed">
+                <p className="text-[11px] text-[#610b0d]/80 leading-relaxed">
                   {custom.diff1Desc || (isArabic ? t.hero.clinicalDoseDesc : "Naturally sourced, carefully selected.")}
                 </p>
               </motion.div>
@@ -517,15 +517,15 @@ export function HorizontalGallerySection() {
                 whileHover={{ y: -4 }}
                 className="py-4 px-4 flex flex-col items-center text-center space-y-2"
               >
-                <FlaskConical className="w-6 h-6 text-[#18271b] stroke-[1.4]" />
+                <FlaskConical className="w-6 h-6 text-[#610b0d] stroke-[1.4]" />
                 <h3
                   className={`${
                     isArabic ? "font-amiri text-lg" : "font-cormorant text-base"
-                  } font-bold text-[#18271b]`}
+                  } font-bold text-[#220809]`}
                 >
                   {custom.diff2Title || (isArabic ? t.hero.fastAbsorption : "Dermatologically Tested")}
                 </h3>
-                <p className="text-[11px] text-[#485c36]/80 leading-relaxed">
+                <p className="text-[11px] text-[#610b0d]/80 leading-relaxed">
                   {custom.diff2Desc || (isArabic ? t.hero.fastAbsorptionDesc : "Safe, effective, and skin-friendly.")}
                 </p>
               </motion.div>
@@ -534,17 +534,17 @@ export function HorizontalGallerySection() {
                 whileHover={{ y: -4 }}
                 className="py-4 px-4 flex flex-col items-center text-center space-y-2"
               >
-                <div className="text-[#18271b]">
+                <div className="text-[#610b0d]">
                   <SulafRosette className="w-6 h-6" strokeWidth={1.8} />
                 </div>
                 <h3
                   className={`${
                     isArabic ? "font-amiri text-lg" : "font-cormorant text-base"
-                  } font-bold text-[#18271b]`}
+                  } font-bold text-[#220809]`}
                 >
                   {custom.diff3Title || (isArabic ? t.hero.barrierRepair : "Heritage Inspired")}
                 </h3>
-                <p className="text-[11px] text-[#485c36]/80 leading-relaxed">
+                <p className="text-[11px] text-[#610b0d]/80 leading-relaxed">
                   {custom.diff3Desc || (isArabic ? t.hero.barrierRepairDesc : "Centuries of wisdom, modernized.")}
                 </p>
               </motion.div>
@@ -553,15 +553,15 @@ export function HorizontalGallerySection() {
                 whileHover={{ y: -4 }}
                 className="py-4 px-4 flex flex-col items-center text-center space-y-2"
               >
-                <Heart className="w-6 h-6 text-[#18271b] stroke-[1.4]" />
+                <Heart className="w-6 h-6 text-[#610b0d] stroke-[1.4]" />
                 <h3
                   className={`${
                     isArabic ? "font-amiri text-lg" : "font-cormorant text-base"
-                  } font-bold text-[#18271b]`}
+                  } font-bold text-[#220809]`}
                 >
                   {custom.diff4Title || (isArabic ? "معاينة العبوة قبل الدفع" : "Real Results")}
                 </h3>
-                <p className="text-[11px] text-[#485c36]/80 leading-relaxed">
+                <p className="text-[11px] text-[#610b0d]/80 leading-relaxed">
                   {custom.diff4Desc ||
                     (isArabic
                       ? "شحن فوري مؤمن لجميع المحافظات مع حق المعاينة."

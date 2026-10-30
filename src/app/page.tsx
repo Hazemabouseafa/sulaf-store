@@ -6,6 +6,7 @@ import { useStoreSettings } from "@/lib/settings/store-settings-context";
 import { DEFAULT_HOMEPAGE_SECTIONS_ORDER, HomepageSectionKey } from "@/lib/settings/store-settings";
 import dynamic from "next/dynamic";
 import { HeroSection } from "@/components/home/HeroSection";
+import { SingleProductShowcaseSection } from "@/components/home/SingleProductShowcaseSection";
 import { HorizontalGallerySection } from "@/components/home/HorizontalGallerySection";
 import { CustomSectionRenderer } from "@/components/home/CustomSectionRenderer";
 
@@ -32,6 +33,7 @@ const ConsultationBanner = dynamic(
 
 const SECTION_COMPONENTS: Record<HomepageSectionKey, React.ComponentType> = {
   heroSection: HeroSection,
+  singleProductShowcase: SingleProductShowcaseSection,
   aboutSection: HomeAboutSection,
   artOfCosmeceuticals: CosmeceuticalsArtSection,
   gallerySection: HorizontalGallerySection,
@@ -44,6 +46,7 @@ export default function HomePage() {
   const { settings } = useStoreSettings();
   const vis = settings.sectionsVisibility || {
     heroSection: true,
+    singleProductShowcase: true,
     aboutSection: false,
     artOfCosmeceuticals: false,
     gallerySection: true,
@@ -75,6 +78,7 @@ export default function HomePage() {
           }
 
           const sectionLabels: Record<string, string> = {
+            singleProductShowcase: "قسم استعراض المنتج الواحد الأيقوني",
             aboutSection: "قسم عن سُلاف والقصة",
             artOfCosmeceuticals: "قسم فن الـ Cosmeceuticals",
             gallerySection: "معرض المستحضرات والطقوس",

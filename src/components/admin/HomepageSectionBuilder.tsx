@@ -70,7 +70,15 @@ const BUILTIN_META: Partial<
     descAr: "البيت الشعري، الوصف، الأزرار، وشريط الطقوس الأخضر الداكن بالأقواس الأربعة",
     descEn: "Main archway hero, poetic verse, CTAs, and dark forest 4-arch ritual band",
     icon: Sparkles,
-    color: "bg-emerald-600",
+    color: "bg-[#610b0d]",
+  },
+  singleProductShowcase: {
+    nameAr: "قسم استعراض المنتج الواحد الأيقوني",
+    nameEn: "Single Product Spotlight & Commerce",
+    descAr: "عرض المستحضر الأيقوني الأكثر طلباً مع التركيبة الثلاثية، السعر وزر الإضافة للسلة الفوري",
+    descEn: "Spotlight showcase for flagship hero product with actives, pricing, and instant add-to-bag",
+    icon: Package,
+    color: "bg-[#610b0d]",
   },
   gallerySection: {
     nameAr: "معرض الـ 5 أقواس والأكثر مبيعاً وميثاق الثقة",

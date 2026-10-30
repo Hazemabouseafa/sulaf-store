@@ -53,36 +53,86 @@
   --font-cairo: 'Aqeeq Rounded Pro', 'Aqeeq', 'Almarai', 'Cairo', sans-serif;
   --font-plex: 'Aqeeq Rounded Pro', 'Aqeeq', 'Almarai', 'Cairo', sans-serif;
   --font-inter: 'Glacial Indifference', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Color utilities aliases (Dominant: #610b0d Burgundy) */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-light: var(--primary-light);
+  --color-cream: var(--cream);
+  --color-cream-dark: var(--cream-dark);
+  --color-burgundy: var(--burgundy);
+  --color-burgundy-dark: var(--burgundy-dark);
+  --color-burgundy-light: var(--burgundy-light);
+  --color-pink-soft: var(--pink-soft);
+  --color-red-accent: var(--red-accent);
+  --color-olive: var(--olive);
+  --color-olive-dark: var(--olive-dark);
+  --color-olive-light: var(--olive-light);
 }
 
 @layer base {
   :root {
-    --background: #f4f1e6;
-    --foreground: #1c2616;
+    /* Primary / Dominant: #610b0d (Rich Royal Burgundy) */
+    --background: #f6f9e6;
+    --foreground: #220809;
 
-    --primary: #485c36;
-    --primary-foreground: #f4f1e6;
-    --primary-dark: #38492a;
-    --primary-light: #587042;
+    --primary: #610b0d;
+    --primary-foreground: #f6f9e6;
+    --primary-dark: #470708;
+    --primary-light: #7e0e11;
 
-    --cream: #f4f1e6;
-    --cream-dark: #e8e3d0;
+    /* Base Canvas & Background: #f6f9e6 (Soft Andalusian Ivory / Cream) */
+    --cream: #f6f9e6;
+    --cream-dark: #e8ecd1;
 
     --burgundy: #610b0d;
-    --burgundy-dark: #400708;
-    --burgundy-light: #831215;
+    --burgundy-dark: #470708;
+    --burgundy-light: #7e0e11;
 
+    /* Accent 1: #f3a5a1 (Soft Blush Rose / Coral Pink) */
     --pink-soft: #f3a5a1;
     --pink-soft-light: #fae1df;
 
+    /* Accent 2: #ca384a (Vibrant Carmine / Rose Red) */
     --red-accent: #ca384a;
     --red-accent-dark: #a82637;
+
+    /* Olive / Green replaced completely with #610b0d (Burgundy) */
+    --olive: #610b0d;
+    --olive-dark: #470708;
+    --olive-light: #7e0e11;
 
     --gold: #ca384a;
     --gold-light: #f3a5a1;
     --gold-dark: #a82637;
 
-    --border: #dbe2bd;
+    --border: #ebdcd5;
+  }
+
+  /* Universal Green to Burgundy (#610b0d) transformation rules */
+  .bg-\[\#485c36\], .bg-\[\#38492a\], .bg-\[\#3a4d2c\], .bg-\[\#3a4a2b\], .bg-\[\#3d502d\], .bg-\[\#2d3b21\], .bg-\[\#233019\], .bg-\[\#2c3821\], .bg-\[\#18271b\], .bg-\[\#162519\], .bg-\[\#1f3322\], .bg-\[\#142217\], .bg-\[\#1f3123\], .bg-\[\#243928\], .bg-\[\#222b1a\], .bg-\[\#22301e\], .bg-\[\#24301a\], .bg-\[\#1f2915\], .bg-\[\#1c2616\], .bg-emerald-600, .bg-emerald-700, .bg-emerald-800, .bg-green-600, .bg-green-700 {
+    background-color: #610b0d !important;
+  }
+
+  .text-\[\#485c36\], .text-\[\#38492a\], .text-\[\#3a4d2c\], .text-\[\#3a4a2b\], .text-\[\#3d502d\], .text-\[\#2c3821\], .text-\[\#24301a\], .text-\[\#1f2915\], .text-\[\#22301e\], .text-\[\#1c2616\], .text-emerald-600, .text-emerald-700, .text-green-600, .text-green-700 {
+    color: #610b0d !important;
+  }
+
+  .border-\[\#485c36\], .border-\[\#38492a\], .border-\[\#3d502d\], .border-\[\#2c3821\], .border-emerald-600, .border-green-600 {
+    border-color: #610b0d !important;
+  }
+
+  .hover\:bg-\[\#3d502d\]:hover, .hover\:bg-\[\#2d3b21\]:hover, .hover\:bg-\[\#233019\]:hover, .hover\:bg-\[\#2c3821\]:hover, .hover\:bg-\[\#38482a\]:hover, .hover\:bg-\[\#3a4a2b\]:hover, .hover\:bg-\[\#485c36\]:hover {
+    background-color: #470708 !important;
+  }
+
+  .hover\:text-\[\#485c36\]:hover, .hover\:text-\[\#3d502d\]:hover {
+    color: #610b0d !important;
+  }
+
+  .hover\:border-\[\#485c36\]:hover {
+    border-color: #610b0d !important;
   }
 
   html, body {

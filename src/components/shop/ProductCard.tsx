@@ -85,7 +85,7 @@ export function ProductCard({
                   e.stopPropagation();
                   onQuickView(product);
                 }}
-                className="p-1 text-[#485c36]/70 hover:text-[#610b0d] cursor-pointer"
+                className="p-1 text-[#610b0d]/70 hover:text-[#610b0d] cursor-pointer"
                 title={t.product.quickView}
                 aria-label={t.product.quickView}
               >
@@ -106,13 +106,13 @@ export function ProductCard({
           alt={productName}
           width={125}
           height={125}
-          className="object-contain transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-translate-y-2.5 drop-shadow-[0_8px_16px_rgba(24,39,27,0.06)] group-hover:drop-shadow-[0_18px_30px_rgba(24,39,27,0.18)]"
+          className="object-contain transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-translate-y-2.5 drop-shadow-[0_8px_16px_rgba(97,11,13,0.06)] group-hover:drop-shadow-[0_18px_30px_rgba(97,11,13,0.18)]"
         />
       </div>
 
       {/* Category + Serif Title + Triplet */}
       <div className="space-y-1.5 my-2">
-        <span className="font-mono text-[9px] tracking-[0.22em] uppercase text-[#485c36]/75 block">
+        <span className="font-mono text-[9px] tracking-[0.22em] uppercase text-[#610b0d]/75 block">
           {isArabic ? product.badgeAr || "مستحضر سريري" : "CLINICAL FORMULA"}
         </span>
 
@@ -121,19 +121,19 @@ export function ProductCard({
             isArabic
               ? "font-gulzar text-xl leading-snug"
               : "font-cinzel text-xl leading-snug"
-          } font-bold text-[#1e2b18] group-hover:text-[#610b0d] transition-colors line-clamp-2 min-h-[2.75rem]`}
+          } font-bold text-[#220809] group-hover:text-[#610b0d] transition-colors line-clamp-2 min-h-[2.75rem]`}
         >
           {productName}
         </h3>
 
-        <p className="text-[11px] text-[#485c36]/80 pt-1 line-clamp-1">
+        <p className="text-[11px] text-[#610b0d]/80 pt-1 line-clamp-1">
           {triplet}
         </p>
       </div>
 
       {/* Bottom: Shop Now + Quick Add */}
-      <div className="pt-4 mt-2 border-t border-[#485c36]/10 flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#1e2b18] group-hover:text-[#610b0d] transition-colors">
+      <div className="pt-4 mt-2 border-t border-[#610b0d]/10 flex items-center justify-between gap-2">
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#220809] group-hover:text-[#610b0d] transition-colors">
           <span>{isArabic ? "اطلبي الآن" : "Shop Now"}</span>
           <ArrowIcon className="w-3.5 h-3.5" />
         </span>
@@ -143,8 +143,8 @@ export function ProductCard({
           onClick={handleAddToCart}
           className={`px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
             added
-              ? "bg-[#610b0d] text-[#f3a5a1]"
-              : "bg-[#22301e] hover:bg-[#610b0d] text-[#f6f9e6]"
+              ? "bg-[#ca384a] text-white"
+              : "bg-[#610b0d] hover:bg-[#470708] text-[#f6f9e6]"
           }`}
         >
           {added ? (

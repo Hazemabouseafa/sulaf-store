@@ -117,6 +117,12 @@ const HOMEPAGE_SECTION_META: Record<
     desc: "العنوان والبيت الشعري والشارات والوعد السريري",
     icon: Sparkles,
   },
+  singleProductShowcase: {
+    nameAr: "قسم استعراض المنتج الواحد الأيقوني",
+    nameEn: "Single Product Spotlight & Commerce",
+    desc: "عرض المستحضر الأيقوني الأكثر طلباً مع التركيبة الثلاثية، السعر وزر الإضافة للسلة الفوري",
+    icon: Package,
+  },
   aboutSection: {
     nameAr: "قسم عن سُلاف والقصة",
     nameEn: "About Sulaf & Story",

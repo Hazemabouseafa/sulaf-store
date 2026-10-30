@@ -117,11 +117,11 @@ export const CLINICAL_ACTIVES: OrbIngredient[] = [
 export function MoleculeSvg({ type }: { type: string }) {
   if (type === "urea") {
     return (
-      <svg viewBox="0 0 80 80" className="w-12 h-12 text-[#485c36]">
+      <svg viewBox="0 0 80 80" className="w-12 h-12 text-[#610b0d]">
         <line x1="40" y1="18" x2="40" y2="38" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
         <line x1="44" y1="18" x2="44" y2="38" stroke="currentColor" strokeWidth="2" strokeDasharray="3,2" strokeLinecap="round" />
         <circle cx="42" cy="15" r="5" fill="#ca384a" opacity="0.9" />
-        <circle cx="42" cy="42" r="5" fill="#485c36" />
+        <circle cx="42" cy="42" r="5" fill="#610b0d" />
         <line x1="42" y1="42" x2="22" y2="58" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
         <line x1="42" y1="42" x2="62" y2="58" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
         <circle cx="20" cy="60" r="5" fill="#d4af37" />
@@ -137,7 +137,7 @@ export function MoleculeSvg({ type }: { type: string }) {
         <line x1="38" y1="40" x2="38" y2="24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
         <circle cx="38" cy="20" r="4.5" fill="#ca384a" />
         <line x1="56" y1="52" x2="56" y2="68" stroke="currentColor" strokeWidth="2" strokeDasharray="2,2" strokeLinecap="round" />
-        <circle cx="56" cy="70" r="4" fill="#485c36" />
+        <circle cx="56" cy="70" r="4" fill="#610b0d" />
         <circle cx="20" cy="55" r="4.5" fill="#d4af37" />
       </svg>
     );
@@ -164,7 +164,7 @@ export function MoleculeSvg({ type }: { type: string }) {
 
   if (type === "niacinamide") {
     return (
-      <svg viewBox="0 0 80 80" className="w-12 h-12 text-[#3a4b2b]">
+      <svg viewBox="0 0 80 80" className="w-12 h-12 text-[#610b0d]">
         <polygon
           points="40,16 62,28 62,52 40,64 18,52 18,28"
           stroke="currentColor"
@@ -197,7 +197,7 @@ export function MoleculeSvg({ type }: { type: string }) {
           fill="none"
           strokeLinecap="round"
         />
-        <circle cx="40" cy="40" r="5" fill="#485c36" />
+        <circle cx="40" cy="40" r="5" fill="#610b0d" />
         <circle cx="15" cy="60" r="4" fill="#ca384a" />
         <circle cx="65" cy="20" r="4.5" fill="#d4af37" />
       </svg>

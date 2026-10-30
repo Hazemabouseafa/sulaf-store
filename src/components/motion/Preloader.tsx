@@ -34,10 +34,10 @@ export function Preloader() {
             filter: "blur(8px)",
           }}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#485c36] text-[#f6f9e6] select-none overflow-hidden"
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#610b0d] text-[#f6f9e6] select-none overflow-hidden"
           style={{
             background:
-              "radial-gradient(ellipse at 50% 40%, #587042 0%, #485c36 50%, #25331c 100%)",
+              "radial-gradient(ellipse at 50% 40%, #7e1215 0%, #610b0d 50%, #280405 100%)",
           }}
         >
           {/* Continuous Flowing & Breathing Atmospheric Glows (Green & Gold Harmony) */}

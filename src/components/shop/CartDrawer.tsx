@@ -131,11 +131,11 @@ export function CartDrawer() {
                   : t.cart.freeShippingAchieved}
               </span>
             </span>
-            <span className="font-bold text-[#485c36]">{progressPercent}%</span>
+            <span className="font-bold text-[#610b0d]">{progressPercent}%</span>
           </div>
           <div className="w-full h-1.5 rounded-full bg-white/80 overflow-hidden">
             <div
-              className="h-full bg-[#485c36] rounded-full transition-all duration-500"
+              className="h-full bg-[#610b0d] rounded-full transition-all duration-500"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -145,16 +145,16 @@ export function CartDrawer() {
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {items.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center py-12">
-              <div className="w-20 h-20 rounded-full bg-[#485c36]/10 flex items-center justify-center mb-4">
-                <ShoppingBag className="w-10 h-10 text-[#485c36]/60" />
+              <div className="w-20 h-20 rounded-full bg-[#610b0d]/10 flex items-center justify-center mb-4">
+                <ShoppingBag className="w-10 h-10 text-[#610b0d]/60" />
               </div>
-              <p className="font-amiri text-xl font-bold text-[#485c36]">{t.cart.emptyTitle}</p>
+              <p className="font-amiri text-xl font-bold text-[#610b0d]">{t.cart.emptyTitle}</p>
               <p className="text-xs text-gray-600 mt-1 max-w-xs">
                 {t.cart.emptyDesc}
               </p>
               <button
                 onClick={closeCart}
-                className="mt-6 px-6 py-2.5 rounded-xl bg-[#485c36] text-[#f6f9e6] text-sm font-semibold hover:bg-[#3a4a2b] transition-colors cursor-pointer"
+                className="mt-6 px-6 py-2.5 rounded-xl bg-[#610b0d] text-[#f6f9e6] text-sm font-semibold hover:bg-[#470708] transition-colors cursor-pointer"
               >
                 {t.cart.startShopping}
               </button>
@@ -294,7 +294,7 @@ export function CartDrawer() {
                   </div>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-[#485c36] text-[#f6f9e6] rounded-xl text-xs font-semibold hover:bg-[#3a4a2b] transition-colors cursor-pointer"
+                    className="px-4 py-2 bg-[#610b0d] text-[#f6f9e6] rounded-xl text-xs font-semibold hover:bg-[#470708] transition-colors cursor-pointer"
                   >
                     {t.cart.applyCoupon}
                   </button>
@@ -335,7 +335,7 @@ export function CartDrawer() {
                   <span>{remainingCod} {currency}</span>
                 </div>
               )}
-              <div className="flex justify-between text-base font-bold text-[#485c36] pt-1 border-t border-dashed border-[#e2e8c0]">
+              <div className="flex justify-between text-base font-bold text-[#610b0d] pt-1 border-t border-dashed border-[#e2e8c0]">
                 <span>{t.cart.dueNow}</span>
                 <span>{payNowAmount} {currency}</span>
               </div>
@@ -345,7 +345,7 @@ export function CartDrawer() {
             <Link
               href="/checkout"
               onClick={closeCart}
-              className="w-full py-3.5 rounded-2xl bg-[#485c36] hover:bg-[#3a4a2b] text-[#f6f9e6] font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-95"
+              className="w-full py-3.5 rounded-2xl bg-[#610b0d] hover:bg-[#470708] text-[#f6f9e6] font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-95"
             >
               <span>{t.cart.checkoutBtn}</span>
               <ArrowIcon className="w-4 h-4" />

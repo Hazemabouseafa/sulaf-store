@@ -3,15 +3,16 @@ import React from "react";
 export default function Loading() {
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#485c36] text-[#f6f9e6] select-none overflow-hidden"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#610b0d] text-[#f6f9e6] select-none overflow-hidden"
       style={{
         background:
-          "radial-gradient(ellipse at 50% 40%, #587042 0%, #485c36 50%, #25331c 100%)",
+          "radial-gradient(ellipse at 50% 40%, #7e1215 0%, #610b0d 50%, #280405 100%)",
       }}
     >
       {/* Ambient background glows */}
-      <div className="absolute w-80 h-80 rounded-full bg-[#f3e5ab]/15 blur-[100px] pointer-events-none -top-12 animate-pulse" />
-      <div className="absolute w-80 h-80 rounded-full bg-[#ca384a]/20 blur-[90px] pointer-events-none -bottom-12 animate-pulse" />
+      <div className="absolute w-80 h-80 rounded-full bg-[#f3a5a1]/20 blur-[100px] pointer-events-none -top-12 animate-pulse" />
+      <div className="absolute w-80 h-80 rounded-full bg-[#ca384a]/25 blur-[90px] pointer-events-none -bottom-12 animate-pulse" />
+      <div className="absolute w-80 h-80 rounded-full bg-[#485c36]/15 blur-[90px] pointer-events-none -bottom-12 -left-10 animate-pulse" />
 
       {/* Rosette Spinner (Continuous Smooth Spin) */}
       <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">

@@ -35,7 +35,7 @@ export function Footer() {
     <footer
       data-live-section="footerSection"
       data-section-name="تذييل الموقع (Footer)"
-      className="relative bg-[#18271b] text-[#f6f9e6] pt-16 pb-10 overflow-hidden select-none font-cairo"
+      className="relative bg-[#220406] text-[#f6f9e6] pt-16 pb-10 overflow-hidden select-none font-cairo border-t border-[#610b0d]/40"
       dir={dir}
     >
       {/* Subtle Botanical Line-Art in Bottom Right Corner matching Reference Image */}

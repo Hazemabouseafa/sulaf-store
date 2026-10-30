@@ -35,10 +35,12 @@
     "gallerySection": true,
     "clinicalStorySection": false,
     "reviewsSection": false,
-    "consultationSection": true
+    "consultationSection": true,
+    "singleProductShowcase": true
   },
   "sectionsOrder": [
     "heroSection",
+    "singleProductShowcase",
     "gallerySection",
     "reviewsSection",
     "consultationSection"
@@ -159,6 +161,7 @@
     "webhookUrl": "/api/webhooks/sha7nawy"
   },
   "shipping": {
+    "activeProvider": "stox",
     "defaultUnifiedRate": 45,
     "freeShippingThreshold": 800,
     "customGovernorateRates": [
@@ -191,7 +194,6 @@
     "alexDelta": 55,
     "canal": 60,
     "upperEgypt": 70,
-    "activeProvider": "stox",
     "providers": {
       "stox": {
         "id": "stox",
@@ -272,18 +274,28 @@
     "showClosePerson": true
   },
   "themeColors": {
-    "primary": "#485c36",
-    "primaryHover": "#38492a",
+    "primary": "#610b0d",
+    "primaryHover": "#470708",
     "secondary": "#610b0d",
     "gold": "#ca384a",
-    "background": "#f4f1e6",
+    "background": "#f6f9e6",
     "surface": "#ffffff",
-    "text": "#1c2616",
+    "text": "#220809",
     "rose": "#f3a5a1",
     "crimson": "#ca384a"
   },
   "customLinks": {},
-  "liveTextOverrides": {},
+  "liveTextOverrides": {
+    "secPath::gallerySection::div:nth-of-type(1) > section:nth-of-type(1)::طقوس_سلاف_للترمي": {
+      "isHidden": true
+    },
+    "secPath::gallerySection::div:nth-of-type(1) > section:nth-of-type(2)::الأكثر_مبيعاً_وا": {
+      "isHidden": true
+    },
+    "secPath::gallerySection::div:nth-of-type(1) > section:nth-of-type(3)::حيث_يلتقي_العلم_": {
+      "isHidden": true
+    }
+  },
   "contacts": {
     "whatsapp": "+201099887766",
     "phone": "19876",

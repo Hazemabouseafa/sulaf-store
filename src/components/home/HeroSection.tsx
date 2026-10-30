@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useCart } from "@/lib/cart/cart-context";
@@ -11,11 +11,10 @@ import { MOCK_PRODUCTS } from "@/lib/data/mock-data";
 import {
   ArrowLeft,
   ArrowRight,
-  Sparkles,
-  Diamond,
-  Leaf,
   ShoppingBag,
   Check,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 
 /**
@@ -83,6 +82,15 @@ export function HeroSection() {
   const roughAway = products[0] || MOCK_PRODUCTS[0];
   const [addedHero, setAddedHero] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isMuted, setIsMuted] = useState(true);
+
+  const toggleSound = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(videoRef.current.muted);
+    }
+  };
 
   useEffect(() => {
     if (typeof window !== "undefined" && (window as any).__SULAF_LOADED__) {
@@ -126,48 +134,15 @@ export function HeroSection() {
     setTimeout(() => setAddedHero(false), 1800);
   }
 
-  const ritualArches = [
-    {
-      num: "01",
-      icon: Sparkles,
-      title: custom.ritualArch1Title || (isArabic ? t.hero.clinicalDose : "30% PURE UREA"),
-      desc: custom.ritualArch1Desc || (isArabic ? t.hero.clinicalDoseDesc : "30% Pure Urea + 2% Medical Salicylic Acid"),
-      href: "/product/absolutes-smoothing-body-cream",
-    },
-    {
-      num: "02",
-      icon: Diamond,
-      title: custom.ritualArch2Title || (isArabic ? t.hero.barrierRepair : "BARRIER REPAIR"),
-      desc: custom.ritualArch2Desc || (isArabic ? t.hero.barrierRepairDesc : "Phyto-ceramides & ammonium lactate"),
-      href: "/shop",
-    },
-    {
-      num: "03",
-      icon: Sparkles,
-      title: custom.ritualArch3Title || (isArabic ? t.hero.fastAbsorption : "SILKY ABSORPTION"),
-      desc: custom.ritualArch3Desc || (isArabic ? t.hero.fastAbsorptionDesc : "Non-greasy finish tailored for warm climates"),
-      href: "/shop",
-    },
-    {
-      num: "04",
-      icon: Leaf,
-      title: custom.ritualArch4Title || (isArabic ? "نتائج من اليوم السابع" : "7-DAY SILK RESET"),
-      desc: custom.ritualArch4Desc || (isArabic
-        ? "القضاء الجذري على مظهر جلد الوزة والخشونة المتصلبة"
-        : "Eliminate keratosis pilaris & severe roughness"),
-      href: "/guide",
-    },
-  ];
-
   return (
     <div className="w-full font-cairo">
       {/* ===================================================================== */}
       {/* SECTION 1: SUNLIT ARCHITECTURAL ARCHWAY HERO WITH SULAF TEXTS         */}
       {/* ===================================================================== */}
-      <section className="relative bg-[#f4f1e6] text-[#18271b] pt-8 sm:pt-12 pb-24 sm:pb-28 overflow-hidden">
+      <section className="relative bg-[#f6f9e6] text-[#220809] pt-8 sm:pt-12 pb-12 sm:pb-16 overflow-hidden">
         {/* Ambient Floating Luminous Drift Orbs */}
-        <div className="absolute -top-16 -right-16 w-96 h-96 rounded-full bg-gradient-to-br from-[#d4af37]/20 via-[#f3a5a1]/15 to-transparent blur-3xl pointer-events-none animate-ambient-drift" />
-        <div className="absolute top-1/2 -left-20 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-[#485c36]/15 via-[#f3a5a1]/10 to-transparent blur-3xl pointer-events-none animate-ambient-drift" style={{ animationDelay: "-7s" }} />
+        <div className="absolute -top-16 -right-16 w-96 h-96 rounded-full bg-gradient-to-br from-[#610b0d]/20 via-[#f3a5a1]/15 to-transparent blur-3xl pointer-events-none animate-ambient-drift" />
+        <div className="absolute top-1/2 -left-20 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-[#610b0d]/15 via-[#f3a5a1]/10 to-transparent blur-3xl pointer-events-none animate-ambient-drift" style={{ animationDelay: "-7s" }} />
 
         {/* Diagonal Sunlit Architectural Shadow Rays across the Limestone Wall */}
         <div
@@ -197,7 +172,7 @@ export function HeroSection() {
                   transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                   className="space-y-1.5"
                 >
-                  <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[#485c36] block">
+                  <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[#610b0d] block">
                     {custom.heroHeritageText || t.hero.clinicalHeritage}
                   </span>
                   <div className="flex items-center gap-3">
@@ -221,7 +196,7 @@ export function HeroSection() {
                     isArabic
                       ? "font-gulzar text-[clamp(2rem,4vw,3.35rem)] leading-[1.6]"
                       : "font-cinzel text-[clamp(2.2rem,4.4vw,3.7rem)] leading-[1.15]"
-                  } font-normal text-[#18271b]`}
+                  } font-normal text-[#220809]`}
                 >
                   <span className="block">
                     {wordsLine1.map((word, i) => (
@@ -271,7 +246,7 @@ export function HeroSection() {
                     isArabic
                       ? "font-amiri text-base sm:text-lg leading-relaxed"
                       : "font-cormorant italic text-base sm:text-lg leading-relaxed"
-                  } text-[#18271b]/85 max-w-md`}
+                  } text-[#220809]/85 max-w-md`}
                 >
                   {custom.heroSubheading ||
                     (isArabic ? settings.hero.subheading || t.hero.subheading : t.hero.subheading)}
@@ -292,7 +267,7 @@ export function HeroSection() {
                       whileHover={{ scale: 1.03, y: -2 }}
                       whileTap={{ scale: 0.97 }}
                       onClick={handleQuickOrder}
-                      className="inline-flex items-center gap-3 px-7 py-3.5 rounded-full bg-[#18271b] hover:bg-[#610b0d] text-[#f6f9e6] text-xs font-bold tracking-wide transition-all duration-300 shadow-[0_12px_28px_rgba(24,39,27,0.2)] hover:shadow-[0_16px_36px_rgba(97,11,13,0.35)] cursor-pointer animate-sulaf-shimmer"
+                      className="inline-flex items-center gap-3 px-7 py-3.5 rounded-full bg-[#610b0d] hover:bg-[#470708] text-[#f6f9e6] text-xs font-bold tracking-wide transition-all duration-300 shadow-[0_12px_28px_rgba(97,11,13,0.35)] hover:shadow-[0_16px_36px_rgba(97,11,13,0.5)] cursor-pointer animate-sulaf-shimmer"
                     >
                       {addedHero ? (
                         <>
@@ -318,7 +293,7 @@ export function HeroSection() {
                     <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}>
                       <Link
                         href="/shop"
-                        className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full border border-[#18271b]/30 hover:border-[#610b0d] text-[#18271b] hover:text-[#610b0d] text-xs font-bold transition-colors"
+                        className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full border-2 border-[#610b0d]/30 hover:border-[#610b0d] text-[#610b0d] hover:bg-[#610b0d]/5 text-xs font-bold transition-all"
                       >
                         <span>{custom.heroSecondaryCtaText || t.hero.ctaExplore}</span>
                         <ArrowIcon className="w-3.5 h-3.5" />
@@ -335,13 +310,13 @@ export function HeroSection() {
                 initial={{ opacity: 0, y: 28, scale: 0.95 }}
                 animate={isReady ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 28, scale: 0.95 }}
                 transition={{ duration: 1.05, ease: [0.16, 1, 0.3, 1] }}
-                className="relative w-full max-w-[380px] h-[420px] sm:h-[470px] rounded-t-full overflow-hidden shadow-[0_28px_65px_rgba(24,39,27,0.2)] border border-[#485c36]/20 bg-[#dfd8c5]"
+                className="relative w-full max-w-[380px] h-[420px] sm:h-[470px] rounded-t-full overflow-hidden shadow-[0_28px_65px_rgba(97,11,13,0.18)] border border-[#610b0d]/20 bg-[#dfd8c5]"
               >
                 {/* Distant Serene Horizon / Sky Strip on the Right */}
-                <div className="absolute inset-y-0 right-0 w-[26%] bg-gradient-to-b from-[#9eb1aa] via-[#c7d2cb] to-[#e3dfd3]" />
+                <div className="absolute inset-y-0 right-0 w-[26%] bg-gradient-to-b from-[#e8dad5] via-[#eddcd7] to-[#f6f9e6]" />
 
-                {/* Deep Forest Green Inner Sanctum Wall with Slowly Rotating & Breathing Rosette */}
-                <div className="absolute inset-y-0 left-[12%] w-[64%] bg-gradient-to-b from-[#162519] via-[#1f3322] to-[#142217] flex items-center justify-center shadow-2xl">
+                {/* Deep Burgundy Inner Sanctum Wall with Slowly Rotating & Breathing Rosette */}
+                <div className="absolute inset-y-0 left-[12%] w-[64%] bg-gradient-to-b from-[#380607] via-[#520a0b] to-[#250304] flex items-center justify-center shadow-2xl">
                   <motion.div
                     animate={{
                       rotate: 360,
@@ -371,7 +346,7 @@ export function HeroSection() {
                   initial={{ y: 24, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.9, delay: 0.45 }}
-                  className="absolute bottom-0 right-0 w-[62%] h-28 bg-gradient-to-tl from-[#d8cfb8] via-[#eae4d5] to-[#f4f1e6] rounded-tl-[3rem] shadow-lg"
+                  className="absolute bottom-0 right-0 w-[62%] h-28 bg-gradient-to-tl from-[#d8cfb8] via-[#eae4d5] to-[#f6f9e6] rounded-tl-[3rem] shadow-lg"
                 />
 
                 {/* Gently Swaying Botanical Olive Foliage Silhouette in Foreground */}
@@ -390,23 +365,23 @@ export function HeroSection() {
                   />
                   <path
                     d="M85 110 C65 105, 55 95, 72 88 C82 95, 85 105, 85 110 Z"
-                    fill="#263822"
+                    fill="#610b0d"
                   />
                   <path
                     d="M78 85 C58 78, 48 66, 66 60 C76 68, 78 78, 78 85 Z"
-                    fill="#354a2d"
+                    fill="#7e0e11"
                   />
                   <path
                     d="M92 95 C105 82, 115 75, 102 65 C92 72, 90 85, 92 95 Z"
-                    fill="#18271b"
+                    fill="#470708"
                   />
                   <path
                     d="M68 58 C50 48, 45 36, 62 34 C70 42, 70 52, 68 58 Z"
-                    fill="#263822"
+                    fill="#610b0d"
                   />
                   <path
                     d="M82 65 C96 52, 106 42, 92 35 C82 44, 80 56, 82 65 Z"
-                    fill="#354a2d"
+                    fill="#7e0e11"
                   />
                 </motion.svg>
               </motion.div>
@@ -418,9 +393,9 @@ export function HeroSection() {
                 initial={{ opacity: 0, x: 10 }}
                 animate={isReady ? { opacity: 1, x: 0 } : { opacity: 0, x: 10 }}
                 transition={{ duration: 0.8, delay: isReady ? 0.5 : 0 }}
-                className="flex flex-col items-start gap-2 border-s border-[#485c36]/30 ps-3 py-2"
+                className="flex flex-col items-start gap-2 border-s border-[#610b0d]/30 ps-3 py-2"
               >
-                <div className="font-mono text-[9px] tracking-[0.26em] uppercase text-[#485c36] leading-relaxed">
+                <div className="font-mono text-[9px] tracking-[0.26em] uppercase text-[#610b0d] leading-relaxed">
                   <span className="block">{isArabic ? "أصـالـة" : "TRADITION"}</span>
                   <span className="block">{isArabic ? "تـلـتـقـي" : "MEETS"}</span>
                   <span className="block font-bold text-[#610b0d]">
@@ -431,22 +406,22 @@ export function HeroSection() {
                   animate={{ scale: [1, 1.3, 1], opacity: [0.7, 1, 0.7] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  <FourPointStar className="w-3 h-3 text-[#18271b] mt-1" />
+                  <FourPointStar className="w-3 h-3 text-[#610b0d] mt-1" />
                 </motion.div>
               </motion.div>
 
-              <div className="w-px flex-1 bg-[#485c36]/25 my-3" />
+              <div className="w-px flex-1 bg-[#610b0d]/25 my-3" />
 
               <a
                 href="#sulaf-ritual-band"
-                className="flex flex-col items-center gap-2 text-[#18271b]/80 hover:text-[#610b0d] transition-colors"
+                className="flex flex-col items-center gap-2 text-[#220809]/80 hover:text-[#610b0d] transition-colors"
               >
-                <FourPointStar className="w-2.5 h-2.5" />
-                <div className="w-5 h-9 rounded-full border border-[#18271b]/45 flex items-start justify-center p-1">
+                <FourPointStar className="w-2.5 h-2.5 text-[#610b0d]" />
+                <div className="w-5 h-9 rounded-full border border-[#610b0d]/45 flex items-start justify-center p-1">
                   <motion.span
                     animate={{ y: [0, 12, 0] }}
                     transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-                    className="w-1 h-2 rounded-full bg-[#18271b]"
+                    className="w-1 h-2 rounded-full bg-[#610b0d]"
                   />
                 </div>
                 <span className="font-mono text-[9px] tracking-widest uppercase">
@@ -457,136 +432,38 @@ export function HeroSection() {
 
           </div>
         </div>
-
-        {/* Bottom Wave Transition into the Dark Forest Green Ritual Section */}
-        <div className="absolute bottom-0 inset-x-0 w-full overflow-hidden leading-none pointer-events-none z-20">
-          <svg
-            viewBox="0 0 1440 70"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-full h-10 sm:h-14"
-            preserveAspectRatio="none"
-          >
-            <path
-              d="M0 10 L380 10 C480 10, 520 68, 640 68 L1440 68 L1440 70 L0 70 Z"
-              fill="#18271b"
-            />
-          </svg>
-        </div>
       </section>
 
       {/* ===================================================================== */}
-      {/* SECTION 2: DARK FOREST BAND — SULAF CLINICAL PILLARS & 4 ARCHES       */}
+      {/* SECTION 2: FULL-BLEED BACKGROUND CINEMATIC VIDEO (ZERO TEXT)          */}
       {/* ===================================================================== */}
       <section
         id="sulaf-ritual-band"
-        className="relative bg-[#18271b] text-[#f6f9e6] py-16 sm:py-24 overflow-hidden"
+        className="relative w-full h-[60vh] sm:h-[75vh] md:h-[85vh] lg:h-[90vh] min-h-[420px] overflow-hidden bg-black"
       >
-        <div className="max-w-6xl mx-auto px-6 sm:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-            
-            {/* Left/Start Editorial Column (4 Cols) */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              className="lg:col-span-4 lg:border-e border-[#f6f9e6]/15 lg:pe-8 space-y-4 text-start"
-            >
-              {custom.ritualBadgeText && (
-                <span className="font-mono text-[10px] tracking-[0.28em] uppercase text-[#f3a5a1] block">
-                  {custom.ritualBadgeText}
-                </span>
-              )}
+        <video
+          ref={videoRef}
+          src="/videos/SULAF.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        />
 
-              <h2
-                className={`${
-                  isArabic
-                    ? "font-gulzar text-3xl sm:text-4xl leading-snug"
-                    : "font-cinzel text-3xl sm:text-5xl leading-[1.1]"
-                } font-normal text-[#f6f9e6]`}
-              >
-                {custom.ritualHeadingText || (isArabic ? settings.hero.heading || t.hero.heading : t.hero.heading)}
-                {(custom.ritualHeadingAccent || isArabic) && (
-                  <>
-                    <br />
-                    <span className="italic text-[#f3a5a1]">
-                      {custom.ritualHeadingAccent || (isArabic ? "برفقٍ لا ينهزم." : "")}
-                    </span>
-                  </>
-                )}
-              </h2>
-
-              <p className="text-xs sm:text-sm text-[#f6f9e6]/75 leading-relaxed max-w-xs">
-                {custom.ritualDescText || t.gallery.desc}
-              </p>
-
-              <div className="pt-2">
-                <Link
-                  href="/guide"
-                  className="inline-flex items-center gap-2 text-xs font-bold text-[#f6f9e6] hover:text-[#f3a5a1] border-b border-[#f6f9e6]/40 pb-1 transition-colors"
-                >
-                  <span>{custom.ritualLinkText || (isArabic ? t.clinicalEvidence.usageGuide : "Discover the Ritual")}</span>
-                  <ArrowIcon className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </motion.div>
-
-            {/* Right/End 4 Closed Wireframe Arches with Staggered & Hover Animations (8 Cols) */}
-            <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-5">
-              {ritualArches.map((arch, idx) => {
-                const Icon = arch.icon;
-                return (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, y: 24 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6, delay: idx * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                    whileHover={{ y: -8 }}
-                  >
-                    <Link
-                      href={arch.href}
-                      className="group h-full rounded-t-full border border-[#f6f9e6]/20 hover:border-[#f3a5a1]/70 bg-[#1f3123]/40 hover:bg-[#243928]/70 pt-7 pb-6 px-4 flex flex-col items-center text-center justify-between min-h-[245px] sm:min-h-[265px] transition-all duration-300 shadow-sm hover:shadow-[0_16px_35px_rgba(0,0,0,0.28)]"
-                    >
-                      <span className="font-mono text-[9px] text-[#f6f9e6]/40 tracking-widest">
-                        {arch.num}
-                      </span>
-
-                      <motion.div
-                        animate={{ y: [0, -4, 0] }}
-                        transition={{
-                          duration: 3.5,
-                          delay: idx * 0.4,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                        className="my-2 text-[#f6f9e6]/90 group-hover:text-[#f3a5a1] transition-colors"
-                      >
-                        <Icon className="w-6 h-6 stroke-[1.3]" />
-                      </motion.div>
-
-                      <div className="space-y-1.5 my-1">
-                        <span className="font-mono text-[10px] text-[#f3a5a1] font-bold block">
-                          {arch.num}
-                        </span>
-                        <h3 className="font-cairo text-xs font-bold text-[#f6f9e6]">
-                          {arch.title}
-                        </h3>
-                        <p className="text-[11px] text-[#f6f9e6]/70 leading-relaxed">
-                          {arch.desc}
-                        </p>
-                      </div>
-
-                      <ArrowIcon className="w-3.5 h-3.5 text-[#f6f9e6]/60 group-hover:text-[#f3a5a1] group-hover:scale-110 transition-all mt-2" />
-                    </Link>
-                  </motion.div>
-                );
-              })}
-            </div>
-
-          </div>
-        </div>
+        {/* Minimal Audio Toggle Button (Icon only - zero text) */}
+        <button
+          type="button"
+          onClick={toggleSound}
+          aria-label={isMuted ? "Unmute video" : "Mute video"}
+          className="absolute bottom-6 start-6 z-20 w-11 h-11 rounded-full bg-black/60 hover:bg-black/85 backdrop-blur-md text-[#f6f9e6] border border-white/20 flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-xl"
+        >
+          {isMuted ? (
+            <VolumeX className="w-5 h-5 text-[#f6f9e6]/80" />
+          ) : (
+            <Volume2 className="w-5 h-5 text-[#f3a5a1]" />
+          )}
+        </button>
       </section>
     </div>
   );

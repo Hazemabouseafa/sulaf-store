@@ -1,52 +1,5 @@
 [
   {
-    "nameAr": "dsadsa",
-    "nameEn": "test",
-    "subtitleAr": "مستحضر علاجي متقدم",
-    "subtitleEn": "test sub",
-    "descriptionAr": "تركيبة صيدلانية متطورة لترميم حاجز البشرة.",
-    "descriptionEn": "dsadsadsadsada",
-    "usageInstructionsAr": "",
-    "usageInstructionsEn": "dasdsadsadsa",
-    "price": 420,
-    "compareAtPrice": 530,
-    "stock": 100,
-    "sku": "SLF-900",
-    "imageUrl": "/brand/sulaf-flower-symbol.png",
-    "id": "prod-1793257512705",
-    "slug": "test",
-    "rating": 5,
-    "reviewsCount": 1,
-    "accentColor": "#3d502d",
-    "images": [
-      {
-        "url": "/brand/sulaf-flower-symbol.png",
-        "alt": "dsadsa",
-        "isPrimary": true
-      }
-    ],
-    "variants": [
-      {
-        "id": "var-prod-1793257512705",
-        "titleAr": "العبوة الأساسية (200 مل)",
-        "titleEn": "Standard Jar 200ml",
-        "sku": "SLF-900",
-        "price": 420,
-        "stock": 100,
-        "volumeMl": 200
-      }
-    ],
-    "activeIngredients": [],
-    "reviews": [],
-    "routineStepsAr": [
-      "تطبيق المستحضر مرتين يومياً على بشرة نظيفة."
-    ],
-    "skinTypeAr": "لكافة أنواع البشرة",
-    "concernsAr": [
-      "العناية والترميم"
-    ]
-  },
-  {
     "id": "prod-absolutes-cream",
     "nameAr": "Absolutes Smoothing Body Cream",
     "nameEn": "Absolutes Smoothing Body Cream",
