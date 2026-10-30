@@ -137,326 +137,182 @@ export function HeroSection() {
   return (
     <div className="w-full font-cairo">
       {/* ===================================================================== */}
-      {/* SECTION 1: SUNLIT ARCHITECTURAL ARCHWAY HERO WITH SULAF TEXTS         */}
+      {/* HERO SECTION: FULL-BLEED VIDEO BACKGROUND WITH HIGH-CONTRAST TEXT    */}
       {/* ===================================================================== */}
-      <section className="relative bg-[#f6f9e6] text-[#220809] pt-8 sm:pt-12 pb-12 sm:pb-16 overflow-hidden">
-        {/* Ambient Floating Luminous Drift Orbs */}
-        <div className="absolute -top-16 -right-16 w-96 h-96 rounded-full bg-gradient-to-br from-[#610b0d]/20 via-[#f3a5a1]/15 to-transparent blur-3xl pointer-events-none animate-ambient-drift" />
-        <div className="absolute top-1/2 -left-20 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-[#610b0d]/15 via-[#f3a5a1]/10 to-transparent blur-3xl pointer-events-none animate-ambient-drift" style={{ animationDelay: "-7s" }} />
-
-        {/* Diagonal Sunlit Architectural Shadow Rays across the Limestone Wall */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              "linear-gradient(128deg, rgba(232,226,209,0.75) 0%, rgba(244,241,230,0.15) 38%, rgba(244,241,230,0.9) 62%, rgba(226,220,202,0.7) 100%)",
-          }}
-        />
-
-        {/* Animated Drifting Sunbeam Shimmer */}
-        <motion.div
-          animate={{ x: [-35, 35, -35], opacity: [0.35, 0.6, 0.35] }}
-          transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
-          className="hidden lg:block absolute -top-24 left-1/4 w-[440px] h-[145%] bg-white/50 -rotate-[28deg] blur-2xl pointer-events-none"
-        />
-
-        <div className="max-w-6xl mx-auto px-6 sm:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center min-h-[490px] sm:min-h-[550px]">
-            
-            {/* LEFT/START EDITORIAL COLUMN WITH SULAF COPY (5 Cols) */}
-            <div className="lg:col-span-5 space-y-6 text-start relative z-20">
-              {vis.heroBadge !== false && (
-                <motion.div
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
-                  transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                  className="space-y-1.5"
-                >
-                  <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[#610b0d] block">
-                    {custom.heroHeritageText || t.hero.clinicalHeritage}
-                  </span>
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-[#610b0d] font-bold">
-                      {custom.heroBadgeText || (isArabic ? settings.hero.badge || t.hero.badge : t.hero.badge)}
-                    </span>
-                    <motion.span
-                      initial={{ width: 0 }}
-                      animate={isReady ? { width: 48 } : { width: 0 }}
-                      transition={{ duration: 0.9, delay: isReady ? 0.3 : 0 }}
-                      className="h-px bg-[#610b0d]/50 inline-block"
-                    />
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Sulaf Poetic Verse with Word-by-Word Fluid Animation */}
-              {vis.heroPoem !== false && (
-                <h1
-                  className={`${
-                    isArabic
-                      ? "font-gulzar text-[clamp(2rem,4vw,3.35rem)] leading-[1.6]"
-                      : "font-cinzel text-[clamp(2.2rem,4.4vw,3.7rem)] leading-[1.15]"
-                  } font-normal text-[#220809]`}
-                >
-                  <span className="block">
-                    {wordsLine1.map((word, i) => (
-                      <motion.span
-                        key={`l1-${i}`}
-                        initial={{ opacity: 0, y: 18, filter: "blur(4px)" }}
-                        animate={isReady ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 18, filter: "blur(4px)" }}
-                        transition={{
-                          duration: 0.65,
-                          delay: isReady ? (0.05 + i * 0.07) : 0,
-                          ease: [0.16, 1, 0.3, 1],
-                        }}
-                        className="inline-block me-2"
-                      >
-                        {word}
-                      </motion.span>
-                    ))}
-                  </span>
-
-                  <span className="block italic text-[#610b0d] mt-1.5">
-                    {wordsLine2.map((word, i) => (
-                      <motion.span
-                        key={`l2-${i}`}
-                        initial={{ opacity: 0, y: 18, filter: "blur(4px)" }}
-                        animate={isReady ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 18, filter: "blur(4px)" }}
-                        transition={{
-                          duration: 0.65,
-                          delay: isReady ? (0.35 + i * 0.08) : 0,
-                          ease: [0.16, 1, 0.3, 1],
-                        }}
-                        className="inline-block me-2"
-                      >
-                        {word}
-                      </motion.span>
-                    ))}
-                  </span>
-                </h1>
-              )}
-
-              {/* Authentic Sulaf Clinical Subheading */}
-              {vis.heroSubheading !== false && (
-                <motion.p
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
-                  transition={{ duration: 0.8, delay: isReady ? 0.65 : 0, ease: [0.16, 1, 0.3, 1] }}
-                  className={`${
-                    isArabic
-                      ? "font-amiri text-base sm:text-lg leading-relaxed"
-                      : "font-cormorant italic text-base sm:text-lg leading-relaxed"
-                  } text-[#220809]/85 max-w-md`}
-                >
-                  {custom.heroSubheading ||
-                    (isArabic ? settings.hero.subheading || t.hero.subheading : t.hero.subheading)}
-                </motion.p>
-              )}
-
-              {/* Sulaf CTA Buttons with Hover Fluidity */}
-              {(vis.heroPrimaryCta !== false || vis.heroSecondaryCta !== false) && (
-                <motion.div
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
-                  transition={{ duration: 0.8, delay: isReady ? 0.8 : 0, ease: [0.16, 1, 0.3, 1] }}
-                  className="pt-2 flex flex-wrap items-center gap-3"
-                >
-                  {vis.heroPrimaryCta !== false && (
-                    <motion.button
-                      type="button"
-                      whileHover={{ scale: 1.03, y: -2 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={handleQuickOrder}
-                      className="inline-flex items-center gap-3 px-7 py-3.5 rounded-full bg-[#610b0d] hover:bg-[#470708] text-[#f6f9e6] text-xs font-bold tracking-wide transition-all duration-300 shadow-[0_12px_28px_rgba(97,11,13,0.35)] hover:shadow-[0_16px_36px_rgba(97,11,13,0.5)] cursor-pointer animate-sulaf-shimmer"
-                    >
-                      {addedHero ? (
-                        <>
-                          <Check className="w-4 h-4 text-[#f3a5a1]" />
-                          <span>{isArabic ? "تمت الإضافة لحقيبتكِ ✓" : "Added to Bag ✓"}</span>
-                        </>
-                      ) : (
-                        <>
-                          <ShoppingBag className="w-3.5 h-3.5 text-[#f3a5a1]" />
-                          <span>
-                            {custom.heroPrimaryCtaText ||
-                              (isArabic
-                                ? settings.hero.ctaText || t.hero.ctaOrder
-                                : t.hero.ctaOrder)}
-                          </span>
-                          <ArrowIcon className="w-3.5 h-3.5" />
-                        </>
-                      )}
-                    </motion.button>
-                  )}
-
-                  {vis.heroSecondaryCta !== false && (
-                    <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}>
-                      <Link
-                        href="/shop"
-                        className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full border-2 border-[#610b0d]/30 hover:border-[#610b0d] text-[#610b0d] hover:bg-[#610b0d]/5 text-xs font-bold transition-all"
-                      >
-                        <span>{custom.heroSecondaryCtaText || t.hero.ctaExplore}</span>
-                        <ArrowIcon className="w-3.5 h-3.5" />
-                      </Link>
-                    </motion.div>
-                  )}
-                </motion.div>
-              )}
-            </div>
-
-            {/* CENTER 3D ARCHITECTURAL ANDALUSIAN ARCHWAY SCENE WITH LIVE MOTION (5 Cols) */}
-            <div className="lg:col-span-5 relative flex items-center justify-center">
-              <motion.div
-                initial={{ opacity: 0, y: 28, scale: 0.95 }}
-                animate={isReady ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 28, scale: 0.95 }}
-                transition={{ duration: 1.05, ease: [0.16, 1, 0.3, 1] }}
-                className="relative w-full max-w-[380px] h-[420px] sm:h-[470px] rounded-t-full overflow-hidden shadow-[0_28px_65px_rgba(97,11,13,0.18)] border border-[#610b0d]/20 bg-[#dfd8c5]"
-              >
-                {/* Distant Serene Horizon / Sky Strip on the Right */}
-                <div className="absolute inset-y-0 right-0 w-[26%] bg-gradient-to-b from-[#e8dad5] via-[#eddcd7] to-[#f6f9e6]" />
-
-                {/* Deep Burgundy Inner Sanctum Wall with Slowly Rotating & Breathing Rosette */}
-                <div className="absolute inset-y-0 left-[12%] w-[64%] bg-gradient-to-b from-[#380607] via-[#520a0b] to-[#250304] flex items-center justify-center shadow-2xl">
-                  <motion.div
-                    animate={{
-                      rotate: 360,
-                      scale: [1, 1.06, 1],
-                    }}
-                    transition={{
-                      rotate: { duration: 85, repeat: Infinity, ease: "linear" },
-                      scale: { duration: 6, repeat: Infinity, ease: "easeInOut" },
-                    }}
-                    className="text-[#c5b37a]/85 -mt-12"
-                  >
-                    <SulafRosette className="w-24 h-24 sm:w-28 sm:h-28" strokeWidth={1.2} />
-                  </motion.div>
-                </div>
-
-                {/* Inner Limestone Archway Depth Reveal on Left */}
-                <div className="absolute inset-y-0 left-0 w-[22%] bg-gradient-to-r from-[#e7e1d0] to-[#cfc6b0] rounded-tr-full" />
-
-                {/* Sculptural Sunlit Curved Plinth / Steps at the Base of the Archway */}
-                <motion.div
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.9, delay: 0.35 }}
-                  className="absolute bottom-0 left-0 w-[55%] h-44 bg-gradient-to-tr from-[#d5ccb6] to-[#ece7d8] rounded-tr-[5rem] shadow-md"
-                />
-                <motion.div
-                  initial={{ y: 24, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.9, delay: 0.45 }}
-                  className="absolute bottom-0 right-0 w-[62%] h-28 bg-gradient-to-tl from-[#d8cfb8] via-[#eae4d5] to-[#f6f9e6] rounded-tl-[3rem] shadow-lg"
-                />
-
-                {/* Gently Swaying Botanical Olive Foliage Silhouette in Foreground */}
-                <motion.svg
-                  animate={{ rotate: [-2.5, 2.5, -2.5], y: [0, -2, 0] }}
-                  transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
-                  style={{ transformOrigin: "bottom right" }}
-                  viewBox="0 0 120 140"
-                  fill="none"
-                  className="absolute bottom-0 right-0 w-28 h-32 text-[#18271b] z-20 pointer-events-none"
-                >
-                  <path
-                    d="M95 140 C90 100, 75 65, 55 30"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
-                  <path
-                    d="M85 110 C65 105, 55 95, 72 88 C82 95, 85 105, 85 110 Z"
-                    fill="#610b0d"
-                  />
-                  <path
-                    d="M78 85 C58 78, 48 66, 66 60 C76 68, 78 78, 78 85 Z"
-                    fill="#7e0e11"
-                  />
-                  <path
-                    d="M92 95 C105 82, 115 75, 102 65 C92 72, 90 85, 92 95 Z"
-                    fill="#470708"
-                  />
-                  <path
-                    d="M68 58 C50 48, 45 36, 62 34 C70 42, 70 52, 68 58 Z"
-                    fill="#610b0d"
-                  />
-                  <path
-                    d="M82 65 C96 52, 106 42, 92 35 C82 44, 80 56, 82 65 Z"
-                    fill="#7e0e11"
-                  />
-                </motion.svg>
-              </motion.div>
-            </div>
-
-            {/* FAR RIGHT/END VERTICAL SCROLL INDICATOR COLUMN (2 Cols) */}
-            <div className="hidden lg:flex lg:col-span-2 flex-col items-center justify-between h-[430px] py-4">
-              <motion.div
-                initial={{ opacity: 0, x: 10 }}
-                animate={isReady ? { opacity: 1, x: 0 } : { opacity: 0, x: 10 }}
-                transition={{ duration: 0.8, delay: isReady ? 0.5 : 0 }}
-                className="flex flex-col items-start gap-2 border-s border-[#610b0d]/30 ps-3 py-2"
-              >
-                <div className="font-mono text-[9px] tracking-[0.26em] uppercase text-[#610b0d] leading-relaxed">
-                  <span className="block">{isArabic ? "أصـالـة" : "TRADITION"}</span>
-                  <span className="block">{isArabic ? "تـلـتـقـي" : "MEETS"}</span>
-                  <span className="block font-bold text-[#610b0d]">
-                    {isArabic ? "بـالـعـلـم" : "SCIENCE"}
-                  </span>
-                </div>
-                <motion.div
-                  animate={{ scale: [1, 1.3, 1], opacity: [0.7, 1, 0.7] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <FourPointStar className="w-3 h-3 text-[#610b0d] mt-1" />
-                </motion.div>
-              </motion.div>
-
-              <div className="w-px flex-1 bg-[#610b0d]/25 my-3" />
-
-              <a
-                href="#sulaf-ritual-band"
-                className="flex flex-col items-center gap-2 text-[#220809]/80 hover:text-[#610b0d] transition-colors"
-              >
-                <FourPointStar className="w-2.5 h-2.5 text-[#610b0d]" />
-                <div className="w-5 h-9 rounded-full border border-[#610b0d]/45 flex items-start justify-center p-1">
-                  <motion.span
-                    animate={{ y: [0, 12, 0] }}
-                    transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-                    className="w-1 h-2 rounded-full bg-[#610b0d]"
-                  />
-                </div>
-                <span className="font-mono text-[9px] tracking-widest uppercase">
-                  {isArabic ? "مرري" : "Scroll"}
-                </span>
-              </a>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ===================================================================== */}
-      {/* SECTION 2: FULL-BLEED BACKGROUND CINEMATIC VIDEO (ZERO TEXT)          */}
-      {/* ===================================================================== */}
-      <section
-        id="sulaf-ritual-band"
-        className="relative w-full h-[60vh] sm:h-[75vh] md:h-[85vh] lg:h-[90vh] min-h-[420px] overflow-hidden bg-black"
-      >
+      <section className="relative w-full min-h-[82vh] sm:min-h-[88vh] lg:min-h-[92vh] flex items-center overflow-hidden bg-black text-[#f6f9e6]">
+        
+        {/* Full-bleed background video filled completely */}
         <video
           ref={videoRef}
           src="/videos/SULAF.mp4"
           autoPlay
           loop
-          muted
+          muted={isMuted}
           playsInline
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
         />
 
-        {/* Minimal Audio Toggle Button (Icon only - zero text) */}
+        {/* Cinematic dark gradients for pristine legibility and zero contrast clash */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/35 rtl:from-black/85 rtl:via-black/60 rtl:to-black/35 z-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/55 z-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-black/25 z-10 pointer-events-none" />
+
+        {/* Ambient Warm Golden & Burgundy Vignette Glow */}
+        <div className="absolute -top-24 -right-24 w-[480px] h-[480px] rounded-full bg-gradient-to-br from-[#ca384a]/25 via-[#610b0d]/15 to-transparent blur-3xl pointer-events-none z-10" />
+        <div className="absolute bottom-12 -left-24 w-[480px] h-[480px] rounded-full bg-gradient-to-tr from-[#610b0d]/30 via-[#ca384a]/15 to-transparent blur-3xl pointer-events-none z-10" />
+
+        {/* Editorial Text Content */}
+        <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-24 sm:py-28 relative z-20 w-full">
+          <div className="max-w-3xl space-y-6 text-start">
+            
+            {/* Top Heritage Badge */}
+            {vis.heroBadge !== false && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="space-y-1.5"
+              >
+                <span className="font-mono text-[10px] sm:text-[11px] tracking-[0.25em] uppercase text-[#f3a5a1] block font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+                  {custom.heroHeritageText || t.hero.clinicalHeritage}
+                </span>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-xs sm:text-sm tracking-[0.2em] uppercase text-white font-bold drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+                    {custom.heroBadgeText || (isArabic ? settings.hero.badge || t.hero.badge : t.hero.badge)}
+                  </span>
+                  <motion.span
+                    initial={{ width: 0 }}
+                    animate={isReady ? { width: 56 } : { width: 0 }}
+                    transition={{ duration: 0.9, delay: isReady ? 0.3 : 0 }}
+                    className="h-px bg-[#f3a5a1]/70 inline-block shadow-sm"
+                  />
+                </div>
+              </motion.div>
+            )}
+
+            {/* Sulaf Poetic Verse with Word-by-Word Fluid Animation */}
+            {vis.heroPoem !== false && (
+              <h1
+                className={`${
+                  isArabic
+                    ? "font-gulzar text-[clamp(2.3rem,4.6vw,3.8rem)] leading-[1.6]"
+                    : "font-cinzel text-[clamp(2.4rem,4.8vw,4.2rem)] leading-[1.15]"
+                } font-normal text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.9)]`}
+              >
+                <span className="block">
+                  {wordsLine1.map((word, i) => (
+                    <motion.span
+                      key={`l1-${i}`}
+                      initial={{ opacity: 0, y: 18, filter: "blur(4px)" }}
+                      animate={isReady ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 18, filter: "blur(4px)" }}
+                      transition={{
+                        duration: 0.65,
+                        delay: isReady ? (0.05 + i * 0.07) : 0,
+                        ease: [0.16, 1, 0.3, 1],
+                      }}
+                      className="inline-block me-2"
+                    >
+                      {word}
+                    </motion.span>
+                  ))}
+                </span>
+
+                <span className="block italic text-[#f3a5a1] mt-2 drop-shadow-[0_4px_22px_rgba(202,56,74,0.45)]">
+                  {wordsLine2.map((word, i) => (
+                    <motion.span
+                      key={`l2-${i}`}
+                      initial={{ opacity: 0, y: 18, filter: "blur(4px)" }}
+                      animate={isReady ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 18, filter: "blur(4px)" }}
+                      transition={{
+                        duration: 0.65,
+                        delay: isReady ? (0.35 + i * 0.08) : 0,
+                        ease: [0.16, 1, 0.3, 1],
+                      }}
+                      className="inline-block me-2"
+                    >
+                      {word}
+                    </motion.span>
+                  ))}
+                </span>
+              </h1>
+            )}
+
+            {/* Authentic Sulaf Clinical Subheading */}
+            {vis.heroSubheading !== false && (
+              <motion.p
+                initial={{ opacity: 0, y: 16 }}
+                animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+                transition={{ duration: 0.8, delay: isReady ? 0.65 : 0, ease: [0.16, 1, 0.3, 1] }}
+                className={`${
+                  isArabic
+                    ? "font-amiri text-lg sm:text-xl leading-relaxed"
+                    : "font-cormorant italic text-lg sm:text-xl leading-relaxed"
+                } text-[#f6f9e6]/95 max-w-2xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]`}
+              >
+                {custom.heroSubheading ||
+                  (isArabic ? settings.hero.subheading || t.hero.subheading : t.hero.subheading)}
+              </motion.p>
+            )}
+
+            {/* Sulaf CTA Buttons */}
+            {(vis.heroPrimaryCta !== false || vis.heroSecondaryCta !== false) && (
+              <motion.div
+                initial={{ opacity: 0, y: 14 }}
+                animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+                transition={{ duration: 0.8, delay: isReady ? 0.8 : 0, ease: [0.16, 1, 0.3, 1] }}
+                className="pt-4 flex flex-wrap items-center gap-3.5"
+              >
+                {vis.heroPrimaryCta !== false && (
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.03, y: -2 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={handleQuickOrder}
+                    className="inline-flex items-center gap-3 px-8 py-3.5 rounded-full bg-[#ca384a] hover:bg-[#a52838] text-white text-xs sm:text-sm font-bold tracking-wide transition-all duration-300 shadow-[0_12px_28px_rgba(202,56,74,0.45)] hover:shadow-[0_16px_36px_rgba(202,56,74,0.6)] border border-[#f3a5a1]/40 cursor-pointer animate-sulaf-shimmer"
+                  >
+                    {addedHero ? (
+                      <>
+                        <Check className="w-4 h-4 text-[#f3e5ab]" />
+                        <span>{isArabic ? "تمت الإضافة لحقيبتكِ ✓" : "Added to Bag ✓"}</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingBag className="w-4 h-4 text-[#f3e5ab]" />
+                        <span>
+                          {custom.heroPrimaryCtaText ||
+                            (isArabic
+                              ? settings.hero.ctaText || t.hero.ctaOrder
+                              : t.hero.ctaOrder)}
+                        </span>
+                        <ArrowIcon className="w-4 h-4" />
+                      </>
+                    )}
+                  </motion.button>
+                )}
+
+                {vis.heroSecondaryCta !== false && (
+                  <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}>
+                    <Link
+                      href="/shop"
+                      className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full border border-white/35 hover:border-white/70 bg-white/10 hover:bg-white/20 text-[#f6f9e6] backdrop-blur-md text-xs sm:text-sm font-bold transition-all shadow-lg"
+                    >
+                      <span>{custom.heroSecondaryCtaText || t.hero.ctaExplore}</span>
+                      <ArrowIcon className="w-4 h-4" />
+                    </Link>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+
+          </div>
+        </div>
+
+        {/* Minimal Audio Toggle Button */}
         <button
           type="button"
           onClick={toggleSound}
           aria-label={isMuted ? "Unmute video" : "Mute video"}
-          className="absolute bottom-6 start-6 z-20 w-11 h-11 rounded-full bg-black/60 hover:bg-black/85 backdrop-blur-md text-[#f6f9e6] border border-white/20 flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-xl"
+          className="absolute bottom-14 sm:bottom-20 start-6 sm:start-10 z-30 w-11 h-11 rounded-full bg-black/60 hover:bg-black/85 backdrop-blur-md text-[#f6f9e6] border border-white/20 flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-xl cursor-pointer"
         >
           {isMuted ? (
             <VolumeX className="w-5 h-5 text-[#f6f9e6]/80" />
@@ -464,6 +320,22 @@ export function HeroSection() {
             <Volume2 className="w-5 h-5 text-[#f3a5a1]" />
           )}
         </button>
+
+        {/* Bottom Wavy Curve Shape Divider (التعريجة) transitioning into Royal Burgundy Section */}
+        <div className="absolute bottom-0 inset-x-0 w-full overflow-hidden leading-none pointer-events-none z-20">
+          <svg
+            viewBox="0 0 1440 70"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-full h-10 sm:h-14 lg:h-18"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M0 10 L380 10 C480 10, 520 68, 640 68 L1440 68 L1440 70 L0 70 Z"
+              fill="#610b0d"
+            />
+          </svg>
+        </div>
       </section>
     </div>
   );

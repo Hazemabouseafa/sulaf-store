@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -11,7 +11,7 @@ import { useCart } from "@/lib/cart/cart-context";
 import { useStoreSettings } from "@/lib/settings/store-settings-context";
 
 export function SingleProductShowcaseSection() {
-  const { isArabic, t } = useLanguage();
+  const { isArabic } = useLanguage();
   const { addItem } = useCart();
   const products = useProducts();
   const { settings } = useStoreSettings();
@@ -34,7 +34,6 @@ export function SingleProductShowcaseSection() {
     ) ||
     products[0] ||
     null;
-
 
   if (!heroProduct) return null;
 
@@ -60,18 +59,21 @@ export function SingleProductShowcaseSection() {
     <section
       data-live-section="singleProductShowcase"
       data-section-name="قسم استعراض المنتج الواحد"
-      className="relative w-full py-16 sm:py-24 bg-[#f6f9e6] text-[#220809] overflow-hidden border-b border-[#610b0d]/10"
+      className="relative w-full pt-16 sm:pt-24 pb-20 sm:pb-28 bg-[#610b0d] text-[#f6f9e6] overflow-hidden"
     >
-      {/* Ambient Floating Luminous Glows matching Hero Section */}
-      <div className="absolute -top-16 -right-16 w-96 h-96 rounded-full bg-gradient-to-br from-[#610b0d]/15 via-[#f3a5a1]/10 to-transparent blur-3xl pointer-events-none" />
-      <div className="absolute top-1/2 -left-20 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-[#610b0d]/10 via-[#f3a5a1]/10 to-transparent blur-3xl pointer-events-none" />
+      {/* Ambient Rich Burgundy Background Depth */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#610b0d] via-[#52090b] to-[#420607] pointer-events-none" />
 
-      {/* Diagonal Sunlit Architectural Shadow Rays across the Limestone Wall */}
+      {/* Floating Luminous Glows */}
+      <div className="absolute -top-16 -right-16 w-96 h-96 rounded-full bg-gradient-to-br from-[#ca384a]/25 via-[#f3a5a1]/15 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 -left-20 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-[#ca384a]/20 via-[#f3a5a1]/10 to-transparent blur-3xl pointer-events-none" />
+
+      {/* Subtle Andalusian Architectural Vignette Overlay */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none opacity-20"
         style={{
           background:
-            "linear-gradient(128deg, rgba(232,226,209,0.75) 0%, rgba(244,241,230,0.15) 38%, rgba(244,241,230,0.9) 62%, rgba(226,220,202,0.7) 100%)",
+            "radial-gradient(ellipse at 50% 50%, rgba(243,165,161,0.18) 0%, transparent 75%)",
         }}
       />
 
@@ -91,7 +93,7 @@ export function SingleProductShowcaseSection() {
                 src={productImage}
                 alt={heroProduct.nameAr || "Sulaf Product"}
                 fill
-                className="object-contain object-center"
+                className="object-contain object-center drop-shadow-[0_20px_45px_rgba(0,0,0,0.55)]"
                 sizes="(max-width: 768px) 100vw, 50vw"
                 priority
                 unoptimized
@@ -99,7 +101,7 @@ export function SingleProductShowcaseSection() {
             </div>
           </motion.div>
 
-          {/* SIMPLE TEXT SIDE (6 Cols on desktop): Elegant, simple copy beside it */}
+          {/* SIMPLE TEXT SIDE (6 Cols on desktop): High-contrast white and ivory copy on Royal Burgundy */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -108,8 +110,8 @@ export function SingleProductShowcaseSection() {
             className="md:col-span-6 space-y-4 text-start"
           >
             {/* Subtle Pill Badge */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#610b0d]/10 border border-[#610b0d]/20 text-[#610b0d] text-xs font-bold tracking-wide">
-              <Sparkles className="w-3.5 h-3.5 text-[#610b0d]" />
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#ca384a]/40 border border-[#f3a5a1]/30 text-[#f3e5ab] text-xs font-bold tracking-wide shadow-sm">
+              <Sparkles className="w-3.5 h-3.5 text-[#f3a5a1]" />
               <span>
                 {heroProduct.badgeAr || (isArabic ? "مستحضر سُـلاف الأيقوني" : "Sulaf Flagship Formulation")}
               </span>
@@ -117,7 +119,7 @@ export function SingleProductShowcaseSection() {
 
             {/* Product Title */}
             <h2
-              className={`text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#220809] tracking-tight ${
+              className={`text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)] ${
                 isArabic ? "font-gulzar leading-snug" : "font-cinzel"
               }`}
             >
@@ -126,16 +128,16 @@ export function SingleProductShowcaseSection() {
 
             {/* Simple Subtitle */}
             {(heroProduct.subtitleAr || heroProduct.subtitleEn) && (
-              <p className="text-xs sm:text-sm font-semibold text-[#610b0d] font-mono tracking-wide">
+              <p className="text-xs sm:text-sm font-semibold text-[#f3a5a1] font-mono tracking-wide drop-shadow-sm">
                 {isArabic
                   ? (heroProduct.subtitleAr || heroProduct.subtitleEn)
                   : (heroProduct.subtitleEn || heroProduct.subtitleAr)}
               </p>
             )}
 
-            {/* Dynamic Product Description from DB (كلام المستحضر المعدل) */}
+            {/* Dynamic Product Description from DB */}
             <p
-              className={`text-sm sm:text-base text-[#220809]/80 leading-relaxed max-w-xl ${
+              className={`text-sm sm:text-base text-[#f6f9e6]/90 leading-relaxed max-w-xl ${
                 isArabic ? "font-cairo" : "font-glacial"
               }`}
             >
@@ -145,30 +147,30 @@ export function SingleProductShowcaseSection() {
             </p>
 
             {/* Price & Action */}
-            <div className="pt-2 flex flex-wrap items-center gap-4">
+            <div className="pt-3 flex flex-wrap items-center gap-4">
               <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl sm:text-3xl font-bold font-mono text-[#220809]">
+                <span className="text-2xl sm:text-3xl font-bold font-mono text-white drop-shadow-sm">
                   {heroProduct.price}
                 </span>
-                <span className="text-xs font-bold text-[#610b0d]">{currency}</span>
+                <span className="text-xs font-bold text-[#f3a5a1]">{currency}</span>
                 {heroProduct.compareAtPrice > heroProduct.price && (
-                  <span className="text-xs text-[#220809]/45 line-through ms-1 font-mono">
+                  <span className="text-xs text-white/50 line-through ms-1 font-mono">
                     {heroProduct.compareAtPrice} {currency}
                   </span>
                 )}
               </div>
 
-              {/* Action Buttons: Simple & Clean in Royal Burgundy & Ivory Accents */}
-              <div className="flex items-center gap-2.5">
+              {/* Action Buttons: Clean & Elegant */}
+              <div className="flex items-center gap-3">
                 <motion.button
                   type="button"
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleQuickAdd}
-                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold transition-all shadow-md cursor-pointer ${
+                  className={`inline-flex items-center gap-2 px-6 py-3 rounded-full text-xs font-bold transition-all shadow-md cursor-pointer ${
                     added
-                      ? "bg-[#ca384a] text-white"
-                      : "bg-[#610b0d] hover:bg-[#470708] text-[#f6f9e6] shadow-[#610b0d]/20 hover:shadow-[0_8px_20px_rgba(97,11,13,0.3)]"
+                      ? "bg-[#2563eb] text-white"
+                      : "bg-[#ca384a] hover:bg-[#a52838] text-white border border-[#f3a5a1]/35 shadow-[0_8px_20px_rgba(202,56,74,0.4)]"
                   }`}
                 >
                   {added ? (
@@ -178,7 +180,7 @@ export function SingleProductShowcaseSection() {
                     </>
                   ) : (
                     <>
-                      <ShoppingBag className="w-3.5 h-3.5 text-[#f3a5a1]" />
+                      <ShoppingBag className="w-3.5 h-3.5 text-[#f3e5ab]" />
                       <span>{isArabic ? "أضيفي للحقيبة" : "Add to Bag"}</span>
                     </>
                   )}
@@ -186,7 +188,7 @@ export function SingleProductShowcaseSection() {
 
                 <Link
                   href={`/product/${heroProduct.slug || heroProduct.id}`}
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full border border-[#610b0d]/30 hover:border-[#610b0d] text-[#610b0d] hover:bg-[#610b0d]/5 text-xs font-bold transition-all"
+                  className="inline-flex items-center gap-1.5 px-5 py-3 rounded-full border border-white/30 hover:border-white/60 text-white hover:bg-white/10 backdrop-blur-sm text-xs font-bold transition-all"
                 >
                   <span>{isArabic ? "استكشفي المستحضر" : "Explore Product"}</span>
                   <ArrowIcon className="w-3.5 h-3.5" />
@@ -197,6 +199,22 @@ export function SingleProductShowcaseSection() {
           </motion.div>
 
         </div>
+      </div>
+
+      {/* Bottom Wavy Curve Divider (التعريجة السفلية) into Cream Gallery Section */}
+      <div className="absolute bottom-0 inset-x-0 w-full overflow-hidden leading-none pointer-events-none z-20">
+        <svg
+          viewBox="0 0 1440 70"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-full h-8 sm:h-12"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0 68 L380 68 C480 68, 520 10, 640 10 L1440 10 L1440 70 L0 70 Z"
+            fill="#f4f1e6"
+          />
+        </svg>
       </div>
     </section>
   );
