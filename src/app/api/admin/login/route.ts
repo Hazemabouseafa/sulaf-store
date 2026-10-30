@@ -8,10 +8,13 @@ export async function POST(req: NextRequest) {
     const { username, password } = await req.json();
     const settings = readJsonFile<any>("store-settings.json", {});
 
-    const expectedUser = settings.admin?.username || "admin";
-    const expectedPass = settings.admin?.password || "sulaf2026";
+    const expectedUser = (settings.admin?.username || "admin").trim();
+    const expectedPass = (settings.admin?.password || "sulaf2026").trim();
 
-    if (username === expectedUser && password === expectedPass) {
+    const inputUser = (username || "").trim();
+    const inputPass = (password || "").trim();
+
+    if (inputUser === expectedUser && inputPass === expectedPass) {
       return NextResponse.json({
         success: true,
         message: "تم تسجيل الدخول بنجاح كمدير عام لمتجر سلاف.",

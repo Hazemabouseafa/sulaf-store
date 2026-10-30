@@ -22,23 +22,59 @@ export default function AdminLoginPage() {
     }
   }, [router]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
 
-    setTimeout(() => {
-      const res = adminLogin(username, password);
-      if (res.success) {
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("sulaf_admin_auth", "true");
+          const session = {
+            username: username.trim(),
+            loginTime: new Date().toISOString(),
+            token: data.token || ("token_" + Math.random().toString(36).substring(2)),
+          };
+          localStorage.setItem("sulaf_admin_auth_session", JSON.stringify(session));
+          document.cookie = `sulaf_admin_token=${session.token}; path=/; max-age=604800; SameSite=Lax`;
+        }
         setIsSuccess(true);
         setTimeout(() => {
           router.push("/admin");
-        }, 700);
-      } else {
-        setError(res.error || "بيانات الدخول غير صحيحة. تحقق من اسم المستخدم وكلمة المرور.");
-        setIsLoading(false);
+        }, 500);
+        return;
       }
-    }, 500);
+
+      const localRes = adminLogin(username, password);
+      if (localRes.success) {
+        setIsSuccess(true);
+        setTimeout(() => {
+          router.push("/admin");
+        }, 500);
+        return;
+      }
+
+      setError(data.error || "بيانات الدخول غير صحيحة. تحقق من اسم المستخدم وكلمة المرور.");
+    } catch {
+      const localRes = adminLogin(username, password);
+      if (localRes.success) {
+        setIsSuccess(true);
+        setTimeout(() => {
+          router.push("/admin");
+        }, 500);
+        return;
+      }
+      setError("حدث خطأ أثناء محاولة تسجيل الدخول.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleFillDemo = () => {

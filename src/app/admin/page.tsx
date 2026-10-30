@@ -51,6 +51,8 @@ import {
   XCircle,
   Eye,
   EyeOff,
+  KeyRound,
+  Lock,
   LogOut,
   ExternalLink,
   Search,
@@ -460,6 +462,21 @@ export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Admin Password Change State
+  const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+    newUsername: "",
+  });
+  const [showCurrentPass, setShowCurrentPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
+  const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
 
   // Navigation Tab
   // Shipping Provider API States
@@ -1483,6 +1500,86 @@ export default function AdminPage() {
     showToast("تم تسجيل الخروج بنجاح.");
   }
 
+  async function handleChangeAdminPassword(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    setPasswordError(null);
+    setPasswordSuccess(null);
+
+    const currentPass = passwordForm.currentPassword.trim();
+    const newPass = passwordForm.newPassword.trim();
+    const confirmPass = passwordForm.confirmPassword.trim();
+    const newUsr = passwordForm.newUsername.trim();
+
+    if (!currentPass) {
+      setPasswordError(adminLang === "ar" ? "يرجى إدخال كلمة المرور الحالية." : "Please enter your current password.");
+      return;
+    }
+
+    if (!newPass) {
+      setPasswordError(adminLang === "ar" ? "يرجى إدخال كلمة المرور الجديدة." : "Please enter a new password.");
+      return;
+    }
+
+    if (newPass.length < 6) {
+      setPasswordError(adminLang === "ar" ? "يجب ألا تقل كلمة المرور الجديدة عن 6 خانات." : "New password must be at least 6 characters.");
+      return;
+    }
+
+    if (newPass !== confirmPass) {
+      setPasswordError(adminLang === "ar" ? "كلمة المرور الجديدة وتأكيدها غير متطابقين." : "New password and confirmation do not match.");
+      return;
+    }
+
+    setIsSubmittingPassword(true);
+    try {
+      const res = await fetch("/api/admin/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword: currentPass,
+          newPassword: newPass,
+          confirmPassword: confirmPass,
+          newUsername: newUsr || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setPasswordSuccess(data.message || (adminLang === "ar" ? "تم تغيير كلمة المرور بنجاح!" : "Password updated successfully!"));
+        showToast(adminLang === "ar" ? "✨ تم تغيير كلمة مرور المدير بنجاح!" : "Admin password updated successfully!", "success");
+
+        if (data.admin?.username) {
+          updateSettings({
+            admin: {
+              username: data.admin.username,
+              password: newPass,
+            },
+          });
+        }
+
+        setPasswordForm({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+          newUsername: data.admin?.username || newUsr,
+        });
+
+        setTimeout(() => {
+          setChangePasswordModalOpen(false);
+          setPasswordSuccess(null);
+        }, 1800);
+      } else {
+        setPasswordError(data.error || (adminLang === "ar" ? "فشل تغيير كلمة المرور." : "Failed to change password."));
+        showToast(data.error || "فشل تغيير كلمة المرور", "error");
+      }
+    } catch (err: any) {
+      setPasswordError(err.message || (adminLang === "ar" ? "حدث خطأ في الاتصال بالخادم." : "Network error."));
+      showToast("حدث خطأ في الاتصال بالخادم", "error");
+    } finally {
+      setIsSubmittingPassword(false);
+    }
+  }
+
   // ----------------------------------------------------------------
   // Order Operations (Real Backend API)
   // ----------------------------------------------------------------
@@ -2349,6 +2446,25 @@ export default function AdminPage() {
             <ExternalLink className="w-4 h-4" />
             <span className="hidden sm:inline">{ADMIN_I18N[adminLang].header.preview}</span>
           </Link>
+
+          <button
+            onClick={() => {
+              setPasswordError(null);
+              setPasswordSuccess(null);
+              setPasswordForm({
+                currentPassword: "",
+                newPassword: "",
+                confirmPassword: "",
+                newUsername: settings?.admin?.username || "admin",
+              });
+              setChangePasswordModalOpen(true);
+            }}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition-colors cursor-pointer shadow-2xs"
+            title={adminLang === "ar" ? "تغيير كلمة مرور المدير" : "Change Admin Password"}
+          >
+            <KeyRound className="w-4 h-4 text-amber-700" />
+            <span className="hidden sm:inline">{adminLang === "ar" ? "تغيير كلمة المرور" : "Change Password"}</span>
+          </button>
 
           <button
             onClick={handleLogout}
@@ -7297,6 +7413,152 @@ export default function AdminPage() {
               </div>
 
               <form onSubmit={handleSaveSettings} className="space-y-6">
+                {/* 0. Admin Security & Password Change */}
+                <div className="bg-gradient-to-br from-white to-[#fcfdf8] p-6 rounded-3xl border-2 border-amber-300/80 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-amber-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-amber-100 text-amber-900 flex items-center justify-center shadow-xs">
+                        <Lock className="w-5 h-5 text-amber-800" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-base text-gray-900 flex items-center gap-2">
+                          <span>{adminLang === "ar" ? "أمان الحساب وكلمة مرور المدير" : "Admin Security & Password"}</span>
+                          <span className="text-[10px] bg-amber-100 text-amber-900 font-black px-2 py-0.5 rounded-full">
+                            {adminLang === "ar" ? "محمي" : "Protected"}
+                          </span>
+                        </h3>
+                        <p className="text-xs text-gray-500 font-semibold mt-0.5">
+                          {adminLang === "ar"
+                            ? "تغيير اسم المستخدم وكلمة المرور الخاصة بالدخول للوحة تحكم سُـلاف"
+                            : "Change admin login username and password credentials."}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPasswordError(null);
+                        setPasswordSuccess(null);
+                        setPasswordForm({
+                          currentPassword: "",
+                          newPassword: "",
+                          confirmPassword: "",
+                          newUsername: settings?.admin?.username || "admin",
+                        });
+                        setChangePasswordModalOpen(true);
+                      }}
+                      className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95"
+                    >
+                      <KeyRound className="w-4 h-4" />
+                      <span>{adminLang === "ar" ? "فتح نافذة تغيير كلمة المرور" : "Open Password Modal"}</span>
+                    </button>
+                  </div>
+
+                  {/* Inline Quick Change Form */}
+                  <div className="pt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Current Password */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                          {adminLang === "ar" ? "كلمة المرور الحالية *" : "Current Password *"}
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showCurrentPass ? "text" : "password"}
+                            value={passwordForm.currentPassword}
+                            onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                            placeholder={adminLang === "ar" ? "أدخل كلمة المرور الحالية..." : "Current password..."}
+                            className="w-full px-4 py-2.5 pe-10 rounded-xl border border-gray-300 text-sm font-semibold text-gray-900 focus:border-[#3d502d] focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowCurrentPass(!showCurrentPass)}
+                            className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          >
+                            {showCurrentPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* New Password */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                          {adminLang === "ar" ? "كلمة المرور الجديدة *" : "New Password *"}
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showNewPass ? "text" : "password"}
+                            value={passwordForm.newPassword}
+                            onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                            placeholder={adminLang === "ar" ? "6 خانات على الأقل..." : "At least 6 characters..."}
+                            className="w-full px-4 py-2.5 pe-10 rounded-xl border border-gray-300 text-sm font-semibold text-gray-900 focus:border-[#3d502d] focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPass(!showNewPass)}
+                            className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          >
+                            {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Confirm New Password */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                          {adminLang === "ar" ? "تأكيد كلمة المرور الجديدة *" : "Confirm New Password *"}
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showConfirmPass ? "text" : "password"}
+                            value={passwordForm.confirmPassword}
+                            onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                            placeholder={adminLang === "ar" ? "أعد كتابة كلمة المرور..." : "Retype new password..."}
+                            className="w-full px-4 py-2.5 pe-10 rounded-xl border border-gray-300 text-sm font-semibold text-gray-900 focus:border-[#3d502d] focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPass(!showConfirmPass)}
+                            className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          >
+                            {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Alerts */}
+                    {passwordError && (
+                      <div className="mt-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                        <span>{passwordError}</span>
+                      </div>
+                    )}
+                    {passwordSuccess && (
+                      <div className="mt-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>{passwordSuccess}</span>
+                      </div>
+                    )}
+
+                    <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
+                      <div className="text-[11px] text-gray-500 font-semibold">
+                        {adminLang === "ar" ? "اسم المستخدم الحالي المسجل:" : "Active Admin Username:"} <span className="font-mono font-bold text-gray-800">{settings?.admin?.username || "admin"}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleChangeAdminPassword()}
+                        disabled={isSubmittingPassword || !passwordForm.currentPassword || !passwordForm.newPassword}
+                        className="px-6 py-2.5 rounded-xl bg-[#3d502d] hover:bg-[#2c3a21] disabled:opacity-50 text-white font-bold text-xs flex items-center gap-2 shadow cursor-pointer transition-all active:scale-95"
+                      >
+                        <KeyRound className="w-4 h-4 text-amber-300" />
+                        <span>{isSubmittingPassword ? (adminLang === "ar" ? "جاري التحديث..." : "Updating...") : (adminLang === "ar" ? "حفظ وتحديث كلمة المرور" : "Save New Password")}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 {/* 1. Payment Methods Config */}
                 <div className="bg-white p-6 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-4">
                   <h3 className="font-bold text-base text-[#3d502d] flex items-center gap-2">
@@ -8261,6 +8523,183 @@ export default function AdminPage() {
               setBuilderModalProduct(null);
             }}
           />
+        )}
+        {/* Modal: Change Admin Password */}
+        {changePasswordModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+            <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-gray-200 overflow-hidden text-start font-cairo animate-scale-up">
+              <div className="p-5 bg-gradient-to-r from-[#2c3821] via-[#3d502d] to-[#2c3821] text-white flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center justify-center">
+                    <KeyRound className="w-5 h-5 text-amber-300" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-base">
+                      {adminLang === "ar" ? "تغيير كلمة مرور المدير" : "Change Admin Password"}
+                    </h3>
+                    <p className="text-[11px] text-emerald-200 mt-0.5">
+                      {adminLang === "ar" ? "تأمين لوحة التحكم وتحديث بيانات الدخول" : "Secure dashboard credentials"}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setChangePasswordModalOpen(false)}
+                  className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleChangeAdminPassword} className="p-6 space-y-4">
+                {passwordError && (
+                  <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                    <span>{passwordError}</span>
+                  </div>
+                )}
+
+                {passwordSuccess && (
+                  <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>{passwordSuccess}</span>
+                  </div>
+                )}
+
+                {/* Optional Username Change */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                    {adminLang === "ar" ? "اسم المستخدم (Username)" : "Admin Username"}
+                  </label>
+                  <input
+                    type="text"
+                    value={passwordForm.newUsername}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, newUsername: e.target.value })}
+                    placeholder="admin"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm font-semibold text-gray-900 focus:border-[#3d502d] focus:outline-none"
+                  />
+                  <span className="text-[10px] text-gray-400 mt-1 block">
+                    {adminLang === "ar" ? "يمكنك الإبقاء عليه كما هو أو تغييره حسب رغبتك" : "Leave as is or update if desired"}
+                  </span>
+                </div>
+
+                {/* Current Password */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                    {adminLang === "ar" ? "كلمة المرور الحالية *" : "Current Password *"}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showCurrentPass ? "text" : "password"}
+                      required
+                      value={passwordForm.currentPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                      placeholder="••••••••"
+                      className="w-full px-4 py-2.5 pe-10 rounded-xl border border-gray-300 text-sm text-gray-900 focus:border-[#3d502d] focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPass(!showCurrentPass)}
+                      className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showCurrentPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* New Password */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                    {adminLang === "ar" ? "كلمة المرور الجديدة *" : "New Password *"}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showNewPass ? "text" : "password"}
+                      required
+                      minLength={6}
+                      value={passwordForm.newPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                      placeholder={adminLang === "ar" ? "6 خانات على الأقل" : "Min 6 characters"}
+                      className="w-full px-4 py-2.5 pe-10 rounded-xl border border-gray-300 text-sm text-gray-900 focus:border-[#3d502d] focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPass(!showNewPass)}
+                      className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                    {adminLang === "ar" ? "تأكيد كلمة المرور الجديدة *" : "Confirm New Password *"}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPass ? "text" : "password"}
+                      required
+                      minLength={6}
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                      placeholder={adminLang === "ar" ? "أعد كتابة كلمة المرور..." : "Retype new password"}
+                      className={`w-full px-4 py-2.5 pe-10 rounded-xl border text-sm text-gray-900 focus:outline-none ${
+                        passwordForm.confirmPassword && passwordForm.newPassword !== passwordForm.confirmPassword
+                          ? "border-rose-400 bg-rose-50/20"
+                          : passwordForm.confirmPassword && passwordForm.newPassword === passwordForm.confirmPassword
+                          ? "border-emerald-400 bg-emerald-50/20"
+                          : "border-gray-300 focus:border-[#3d502d]"
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPass(!showConfirmPass)}
+                      className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {passwordForm.confirmPassword && passwordForm.newPassword === passwordForm.confirmPassword && (
+                    <span className="text-[11px] text-emerald-600 font-bold mt-1 flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5" />
+                      {adminLang === "ar" ? "كلمتا المرور متطابقتان ✓" : "Passwords match ✓"}
+                    </span>
+                  )}
+                </div>
+
+                <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setChangePasswordModalOpen(false)}
+                    className="px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 text-xs font-bold hover:bg-gray-50 cursor-pointer"
+                  >
+                    {adminLang === "ar" ? "إلغاء" : "Cancel"}
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmittingPassword}
+                    className="px-6 py-2.5 rounded-xl bg-[#3d502d] hover:bg-[#2d3a22] text-white text-xs font-bold flex items-center gap-2 shadow-md cursor-pointer transition-all active:scale-95 disabled:opacity-60"
+                  >
+                    {isSubmittingPassword ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>{adminLang === "ar" ? "جاري الحفظ..." : "Saving..."}</span>
+                      </>
+                    ) : (
+                      <>
+                        <KeyRound className="w-4 h-4 text-amber-300" />
+                        <span>{adminLang === "ar" ? "حفظ كلمة المرور الجديدة" : "Save New Password"}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         )}
         </main>
       </div>
