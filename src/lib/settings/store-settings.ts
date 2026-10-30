@@ -741,6 +741,28 @@ export interface LiveTextOverride {
   isDeleted?: boolean;
 }
 
+export interface CustomSocialLink {
+  id: string;
+  platform: string;
+  title: string;
+  url: string;
+  enabled?: boolean;
+}
+
+export interface SocialMediaSettings {
+  instagram?: string;
+  facebook?: string;
+  tiktok?: string;
+  twitter?: string;
+  youtube?: string;
+  snapchat?: string;
+  telegram?: string;
+  whatsapp?: string;
+  linkedin?: string;
+  pinterest?: string;
+  customLinks?: CustomSocialLink[];
+}
+
 export interface StoreSettings {
   defaultLanguage?: "ar" | "en";
   brandName: string;
@@ -831,6 +853,8 @@ export interface StoreSettings {
   customLinks?: Record<string, string>;
   liveTextOverrides?: Record<string, LiveTextOverride>;
 
+  socialMedia?: SocialMediaSettings;
+
   contacts: {
     whatsapp: string;
     phone: string;
@@ -838,6 +862,12 @@ export interface StoreSettings {
     instagram: string;
     facebook: string;
     tiktok: string;
+    twitter?: string;
+    youtube?: string;
+    snapchat?: string;
+    telegram?: string;
+    linkedin?: string;
+    pinterest?: string;
   };
 
   products: {
@@ -1077,6 +1107,20 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   customLinks: {},
   liveTextOverrides: {},
 
+  socialMedia: {
+    instagram: "https://instagram.com/sulaf.eg",
+    facebook: "https://facebook.com/sulaf.eg",
+    tiktok: "https://tiktok.com/@sulaf.eg",
+    twitter: "",
+    youtube: "",
+    snapchat: "",
+    telegram: "",
+    whatsapp: "+201099887766",
+    linkedin: "",
+    pinterest: "",
+    customLinks: [],
+  },
+
   contacts: {
     whatsapp: "+201099887766",
     phone: "19876",
@@ -1084,6 +1128,12 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
     instagram: "https://instagram.com/sulaf.eg",
     facebook: "https://facebook.com/sulaf.eg",
     tiktok: "https://tiktok.com/@sulaf.eg",
+    twitter: "",
+    youtube: "",
+    snapchat: "",
+    telegram: "",
+    linkedin: "",
+    pinterest: "",
   },
 
   products: {
@@ -1139,6 +1189,17 @@ export function getClientSettings(): StoreSettings {
       themeColors: {
         ...DEFAULT_THEME_COLORS,
         ...(parsed.themeColors || {}),
+      },
+      socialMedia: {
+        ...DEFAULT_STORE_SETTINGS.socialMedia,
+        ...(parsed.socialMedia || {}),
+        customLinks: Array.isArray(parsed.socialMedia?.customLinks)
+          ? parsed.socialMedia.customLinks
+          : [],
+      },
+      contacts: {
+        ...DEFAULT_STORE_SETTINGS.contacts,
+        ...(parsed.contacts || {}),
       },
     };
   } catch (e) {

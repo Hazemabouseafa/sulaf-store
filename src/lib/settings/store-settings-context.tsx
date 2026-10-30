@@ -49,6 +49,14 @@ export function StoreSettingsProvider({
         liveTextOverrides: {
           ...(initialSettings.liveTextOverrides || {}),
         },
+        socialMedia: {
+          ...DEFAULT_STORE_SETTINGS.socialMedia,
+          ...(initialSettings.socialMedia || {}),
+        },
+        contacts: {
+          ...DEFAULT_STORE_SETTINGS.contacts,
+          ...(initialSettings.contacts || {}),
+        },
       };
     }
     return DEFAULT_STORE_SETTINGS;

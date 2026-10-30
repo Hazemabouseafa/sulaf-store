@@ -33,7 +33,13 @@ import {
   ThemeColorsSettings,
   ThemePreset,
   adjustHexBrightness,
+  CustomSocialLink,
+  SocialMediaSettings,
 } from "@/lib/settings/store-settings";
+import {
+  SocialIcon,
+  SUPPORTED_SOCIAL_PLATFORMS,
+} from "@/components/brand/SocialIcons";
 import {
   ShieldCheck,
   Package,
@@ -43,6 +49,7 @@ import {
   Users,
   Settings,
   TrendingUp,
+  Share2,
   DollarSign,
   Plus,
   Trash2,
@@ -1027,10 +1034,25 @@ export default function AdminPage() {
   });
 
   // Settings Edit State
-    const [newGovName, setNewGovName] = useState("أسوان");
+  const [newGovName, setNewGovName] = useState("أسوان");
   const [newGovFee, setNewGovFee] = useState(65);
+  const [newCustomSocialPlatform, setNewCustomSocialPlatform] = useState("threads");
+  const [newCustomSocialTitle, setNewCustomSocialTitle] = useState("");
+  const [newCustomSocialUrl, setNewCustomSocialUrl] = useState("");
+
   const [settingsForm, setSettingsForm] = useState({
     whatsapp: "",
+    socialInstagram: "",
+    socialFacebook: "",
+    socialTiktok: "",
+    socialTwitter: "",
+    socialYoutube: "",
+    socialSnapchat: "",
+    socialTelegram: "",
+    socialWhatsapp: "",
+    socialLinkedin: "",
+    socialPinterest: "",
+    customSocialLinks: [] as CustomSocialLink[],
     instapay: "",
     vodafone: "",
     shippingFeeCairo: 45,
@@ -1103,6 +1125,17 @@ export default function AdminPage() {
     if (settings) {
       setSettingsForm({
         whatsapp: settings.contacts?.whatsapp || "01099887766",
+        socialInstagram: settings.socialMedia?.instagram ?? settings.contacts?.instagram ?? "",
+        socialFacebook: settings.socialMedia?.facebook ?? settings.contacts?.facebook ?? "",
+        socialTiktok: settings.socialMedia?.tiktok ?? settings.contacts?.tiktok ?? "",
+        socialTwitter: settings.socialMedia?.twitter ?? settings.contacts?.twitter ?? "",
+        socialYoutube: settings.socialMedia?.youtube ?? settings.contacts?.youtube ?? "",
+        socialSnapchat: settings.socialMedia?.snapchat ?? settings.contacts?.snapchat ?? "",
+        socialTelegram: settings.socialMedia?.telegram ?? settings.contacts?.telegram ?? "",
+        socialWhatsapp: settings.socialMedia?.whatsapp ?? settings.contacts?.whatsapp ?? "",
+        socialLinkedin: settings.socialMedia?.linkedin ?? settings.contacts?.linkedin ?? "",
+        socialPinterest: settings.socialMedia?.pinterest ?? settings.contacts?.pinterest ?? "",
+        customSocialLinks: settings.socialMedia?.customLinks || [],
         instapay: settings.payment?.instapayHandle || "sulaf.care@instapay",
         vodafone: settings.payment?.vodafoneCash || "01099887766",
         shippingFeeCairo: settings.shipping?.cairoGiza || 45,
@@ -1920,7 +1953,44 @@ export default function AdminPage() {
     setSettingsForm({ ...settingsForm, customGovernorateRates: updated });
   }
 
-  
+  function handleAddCustomSocialLink() {
+    if (!newCustomSocialUrl.trim()) {
+      showToast("يرجى كتابة رابط المنصة", "error");
+      return;
+    }
+    const newLink: CustomSocialLink = {
+      id: "social-" + Date.now(),
+      platform: newCustomSocialPlatform,
+      title: newCustomSocialTitle.trim() || newCustomSocialPlatform,
+      url: newCustomSocialUrl.trim(),
+      enabled: true,
+    };
+    setSettingsForm((prev) => ({
+      ...prev,
+      customSocialLinks: [...(prev.customSocialLinks || []), newLink],
+    }));
+    setNewCustomSocialTitle("");
+    setNewCustomSocialUrl("");
+    showToast("تمت إضافة الرابط المخصص بنجاح ✓");
+  }
+
+  function handleToggleCustomSocialLink(id: string) {
+    setSettingsForm((prev) => ({
+      ...prev,
+      customSocialLinks: (prev.customSocialLinks || []).map((l) =>
+        l.id === id ? { ...l, enabled: l.enabled === false ? true : false } : l
+      ),
+    }));
+  }
+
+  function handleDeleteCustomSocialLink(id: string) {
+    setSettingsForm((prev) => ({
+      ...prev,
+      customSocialLinks: (prev.customSocialLinks || []).filter((l) => l.id !== id),
+    }));
+    showToast("تم حذف الرابط بنجاح");
+  }
+
   async function handleSaveSettings(e: React.FormEvent) {
     e.preventDefault();
     try {
@@ -1955,6 +2025,28 @@ export default function AdminPage() {
         contacts: {
           ...settings.contacts,
           whatsapp: settingsForm.whatsapp,
+          instagram: settingsForm.socialInstagram,
+          facebook: settingsForm.socialFacebook,
+          tiktok: settingsForm.socialTiktok,
+          twitter: settingsForm.socialTwitter,
+          youtube: settingsForm.socialYoutube,
+          snapchat: settingsForm.socialSnapchat,
+          telegram: settingsForm.socialTelegram,
+          linkedin: settingsForm.socialLinkedin,
+          pinterest: settingsForm.socialPinterest,
+        },
+        socialMedia: {
+          instagram: settingsForm.socialInstagram,
+          facebook: settingsForm.socialFacebook,
+          tiktok: settingsForm.socialTiktok,
+          twitter: settingsForm.socialTwitter,
+          youtube: settingsForm.socialYoutube,
+          snapchat: settingsForm.socialSnapchat,
+          telegram: settingsForm.socialTelegram,
+          whatsapp: settingsForm.socialWhatsapp || settingsForm.whatsapp,
+          linkedin: settingsForm.socialLinkedin,
+          pinterest: settingsForm.socialPinterest,
+          customLinks: settingsForm.customSocialLinks,
         },
         paymob: {
           ...settings.paymob,
@@ -7970,6 +8062,215 @@ export default function AdminPage() {
                         />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#3d502d]"></div>
                       </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4.5 Social Media Channels Manager (وسائل وحسابات التواصل الاجتماعي) */}
+                <div className="bg-white p-6 rounded-3xl border border-[#dbe2bd] shadow-sm space-y-6">
+                  <div className="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-gray-100">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 rounded-2xl bg-[#ca384a]/10 flex items-center justify-center text-[#ca384a]">
+                        <Share2 className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-base text-gray-900 flex items-center gap-2">
+                          <span>روابط وسائل وحسابات التواصل الاجتماعي (Social Media Channels)</span>
+                          <span className="text-[10px] bg-rose-50 text-rose-700 font-bold px-2.5 py-0.5 rounded-full border border-rose-200">
+                            تظهر تلقائياً في تذييل الموقع (Footer)
+                          </span>
+                        </h3>
+                        <p className="text-xs text-gray-500 font-semibold mt-0.5">
+                          أضف روابط صفحاتك وقنواتك على مختلف المنصات، وسيظهر رمز كل منصة تلقائياً في الفوتر. الحقول الفارغة لا تظهر.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Standard Platforms Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {SUPPORTED_SOCIAL_PLATFORMS.map((platform) => {
+                      const fieldKey = `social${platform.key.charAt(0).toUpperCase() + platform.key.slice(1)}`;
+                      const val = (settingsForm as any)[fieldKey] || "";
+
+                      return (
+                        <div
+                          key={platform.key}
+                          className="p-3.5 rounded-2xl border border-gray-200 bg-[#fdfdfc] hover:border-gray-300 transition-colors"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <label className="text-xs font-bold text-gray-800 flex items-center gap-2">
+                              <span
+                                className="w-6 h-6 rounded-lg flex items-center justify-center"
+                                style={{ backgroundColor: platform.bgLight, color: platform.color }}
+                              >
+                                <SocialIcon platform={platform.key} className="w-3.5 h-3.5" />
+                              </span>
+                              <span>{platform.nameAr}</span>
+                            </label>
+                            {val.trim() && (
+                              <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md flex items-center gap-1">
+                                <Check className="w-3 h-3" />
+                                <span>مفعّل بالفوتر</span>
+                              </span>
+                            )}
+                          </div>
+                          <input
+                            type="text"
+                            value={val}
+                            onChange={(e) =>
+                              setSettingsForm({
+                                ...settingsForm,
+                                [fieldKey]: e.target.value,
+                              })
+                            }
+                            placeholder={platform.placeholder}
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs sm:text-sm font-medium text-gray-900 focus:border-[#3d502d] focus:outline-none placeholder:text-gray-400"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Custom Social Links Section */}
+                  <div className="pt-4 border-t border-gray-100 space-y-4">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div>
+                        <h4 className="font-bold text-xs sm:text-sm text-gray-900 flex items-center gap-2">
+                          <Plus className="w-4 h-4 text-emerald-700" />
+                          <span>إضافة منصة أو رابط تواصل إضافي مخصص (Custom Social Links):</span>
+                        </h4>
+                        <p className="text-[11px] text-gray-500 font-medium mt-0.5">
+                          مثل Threads، Telegram، Discord، مدونة، بودكاست، أو أي رابط خارجي ترغب بظهوره في الفوتر
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Form to add custom social link */}
+                    <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200 grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                      <div className="sm:col-span-3">
+                        <label className="block text-[11px] font-bold text-gray-700 mb-1">نوع الأيقونة / المنصة</label>
+                        <select
+                          value={newCustomSocialPlatform}
+                          onChange={(e) => setNewCustomSocialPlatform(e.target.value)}
+                          className="w-full px-3 py-2.5 rounded-xl border border-gray-300 text-xs font-semibold bg-white text-gray-900 focus:outline-none"
+                        >
+                          <option value="threads">Threads</option>
+                          <option value="telegram">Telegram</option>
+                          <option value="whatsapp">WhatsApp</option>
+                          <option value="custom">رابط عام (Globe)</option>
+                        </select>
+                      </div>
+
+                      <div className="sm:col-span-4">
+                        <label className="block text-[11px] font-bold text-gray-700 mb-1">اسم الحساب / المنصة</label>
+                        <input
+                          type="text"
+                          value={newCustomSocialTitle}
+                          onChange={(e) => setNewCustomSocialTitle(e.target.value)}
+                          placeholder="مثال: حسابنا على Threads"
+                          className="w-full px-3 py-2.5 rounded-xl border border-gray-300 text-xs font-semibold text-gray-900 focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-4">
+                        <label className="block text-[11px] font-bold text-gray-700 mb-1">الرابط الكامل (URL)</label>
+                        <input
+                          type="text"
+                          value={newCustomSocialUrl}
+                          onChange={(e) => setNewCustomSocialUrl(e.target.value)}
+                          placeholder="https://..."
+                          className="w-full px-3 py-2.5 rounded-xl border border-gray-300 text-xs font-semibold text-gray-900 focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-1">
+                        <button
+                          type="button"
+                          onClick={handleAddCustomSocialLink}
+                          className="w-full py-2.5 rounded-xl bg-[#3d502d] hover:bg-[#2b3a1f] text-white font-bold text-xs flex items-center justify-center cursor-pointer transition-all shadow-xs"
+                          title="إضافة"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Custom Links List */}
+                    {settingsForm.customSocialLinks && settingsForm.customSocialLinks.length > 0 && (
+                      <div className="space-y-2">
+                        {settingsForm.customSocialLinks.map((custom) => (
+                          <div
+                            key={custom.id}
+                            className="p-3 rounded-xl border border-gray-200 bg-white flex items-center justify-between gap-3 shadow-2xs"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-gray-700">
+                                <SocialIcon platform={custom.platform} className="w-3.5 h-3.5" />
+                              </span>
+                              <div>
+                                <span className="text-xs font-bold text-gray-900 block">{custom.title}</span>
+                                <span className="text-[10px] text-gray-500 font-mono block truncate max-w-xs">{custom.url}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleToggleCustomSocialLink(custom.id)}
+                                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer transition-colors ${
+                                  custom.enabled !== false
+                                    ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                    : "bg-gray-100 text-gray-500"
+                                }`}
+                              >
+                                {custom.enabled !== false ? "مفعّل" : "معطّل"}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteCustomSocialLink(custom.id)}
+                                className="p-1 rounded-lg text-rose-600 hover:bg-rose-50 cursor-pointer"
+                                title="حذف الرابط"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Live Footer Preview */}
+                  <div className="p-4 rounded-2xl bg-[#220406] text-[#f6f9e6] border border-[#610b0d]/50 space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold text-[#f3a5a1]">
+                      <span>معاينة حية لشكل الرموز في الفوتر حالياً:</span>
+                      <span className="text-[10px] text-[#f6f9e6]/60 font-mono">Footer Live Preview</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      {SUPPORTED_SOCIAL_PLATFORMS.filter(
+                        (p) => Boolean(((settingsForm as any)[`social${p.key.charAt(0).toUpperCase() + p.key.slice(1)}`] || "").trim())
+                      ).map((p) => (
+                        <span
+                          key={p.key}
+                          className="w-8 h-8 rounded-lg border border-[#f6f9e6]/25 bg-white/5 flex items-center justify-center text-[#f6f9e6]/90 shadow-sm"
+                          title={p.nameAr}
+                        >
+                          <SocialIcon platform={p.key} className="w-4 h-4" />
+                        </span>
+                      ))}
+                      {(settingsForm.customSocialLinks || [])
+                        .filter((c) => c.enabled !== false && !!c.url?.trim())
+                        .map((c) => (
+                          <span
+                            key={c.id}
+                            className="w-8 h-8 rounded-lg border border-[#f6f9e6]/25 bg-white/5 flex items-center justify-center text-[#f6f9e6]/90 shadow-sm"
+                            title={c.title}
+                          >
+                            <SocialIcon platform={c.platform} className="w-4 h-4" />
+                          </span>
+                        ))}
                     </div>
                   </div>
                 </div>

@@ -6,6 +6,7 @@ import { SulafLogo } from "../brand/SulafLogo";
 import { SULAF_SETTINGS } from "@/lib/data/mock-data";
 import { useStoreSettings } from "@/lib/settings/store-settings-context";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { SocialIcon } from "../brand/SocialIcons";
 import {
   MessageCircle,
   Mail,
@@ -83,31 +84,117 @@ export function Footer() {
                   : "Clinical Precision. Andalusian Soul.")}
             </p>
 
-            <div className="pt-2 flex items-center gap-2.5">
-              <a
-                href={`https://wa.me/${
-                  settings.contacts?.whatsapp
-                    ? settings.contacts.whatsapp.replace(/[^0-9]/g, "")
-                    : SULAF_SETTINGS.whatsappNumber
-                }`}
-                target="_blank"
-                rel="noreferrer"
-                className="w-8 h-8 rounded-lg border border-[#f6f9e6]/25 hover:border-[#f3a5a1] flex items-center justify-center text-[#f6f9e6]/80 hover:text-[#f3a5a1] transition-colors"
-                aria-label="WhatsApp"
-              >
-                <MessageCircle className="w-4 h-4" />
-              </a>
+            {/* Social Media & Contact Links Row */}
+            <div className="pt-2 flex flex-wrap items-center gap-2">
+              {(() => {
+                const socialList = [
+                  {
+                    platform: "instagram",
+                    url: settings.socialMedia?.instagram ?? settings.contacts?.instagram,
+                    label: "Instagram",
+                  },
+                  {
+                    platform: "facebook",
+                    url: settings.socialMedia?.facebook ?? settings.contacts?.facebook,
+                    label: "Facebook",
+                  },
+                  {
+                    platform: "tiktok",
+                    url: settings.socialMedia?.tiktok ?? settings.contacts?.tiktok,
+                    label: "TikTok",
+                  },
+                  {
+                    platform: "twitter",
+                    url: settings.socialMedia?.twitter ?? settings.contacts?.twitter,
+                    label: "X (Twitter)",
+                  },
+                  {
+                    platform: "youtube",
+                    url: settings.socialMedia?.youtube ?? settings.contacts?.youtube,
+                    label: "YouTube",
+                  },
+                  {
+                    platform: "snapchat",
+                    url: settings.socialMedia?.snapchat ?? settings.contacts?.snapchat,
+                    label: "Snapchat",
+                  },
+                  {
+                    platform: "telegram",
+                    url: settings.socialMedia?.telegram ?? settings.contacts?.telegram,
+                    label: "Telegram",
+                  },
+                  {
+                    platform: "whatsapp",
+                    url:
+                      settings.socialMedia?.whatsapp ||
+                      (settings.contacts?.whatsapp
+                        ? settings.contacts.whatsapp.startsWith("http")
+                          ? settings.contacts.whatsapp
+                          : `https://wa.me/${settings.contacts.whatsapp.replace(/[^0-9]/g, "")}`
+                        : `https://wa.me/${SULAF_SETTINGS.whatsappNumber}`),
+                    label: "WhatsApp",
+                  },
+                  {
+                    platform: "linkedin",
+                    url: settings.socialMedia?.linkedin ?? settings.contacts?.linkedin,
+                    label: "LinkedIn",
+                  },
+                  {
+                    platform: "pinterest",
+                    url: settings.socialMedia?.pinterest ?? settings.contacts?.pinterest,
+                    label: "Pinterest",
+                  },
+                ];
+
+                const customList = (settings.socialMedia?.customLinks || [])
+                  .filter((c) => c.enabled !== false && !!c.url?.trim())
+                  .map((c) => ({
+                    platform: c.platform || "custom",
+                    url: c.url,
+                    label: c.title || "Social Link",
+                  }));
+
+                const activeSocials: Array<{ platform: string; url: string; label: string }> = [
+                  ...socialList.filter((s): s is { platform: string; url: string; label: string } => Boolean(s.url && s.url.trim())),
+                  ...customList,
+                ];
+
+                return activeSocials.map((social, idx) => {
+                  const href = social.url.startsWith("http")
+                    ? social.url
+                    : social.platform === "whatsapp"
+                    ? `https://wa.me/${social.url.replace(/[^0-9]/g, "")}`
+                    : `https://${social.url}`;
+
+                  return (
+                    <a
+                      key={`${social.platform}-${idx}`}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-8 h-8 rounded-lg border border-[#f6f9e6]/25 hover:border-[#f3a5a1] bg-white/5 hover:bg-[#ca384a]/30 flex items-center justify-center text-[#f6f9e6]/80 hover:text-[#f3a5a1] transition-all hover:scale-110 active:scale-95 shadow-sm"
+                      aria-label={social.label}
+                      title={social.label}
+                    >
+                      <SocialIcon platform={social.platform} className="w-4 h-4" />
+                    </a>
+                  );
+                });
+              })()}
+
               <a
                 href={`mailto:${settings.contacts?.email || "care@sulaf.com"}`}
-                className="w-8 h-8 rounded-lg border border-[#f6f9e6]/25 hover:border-[#f3a5a1] flex items-center justify-center text-[#f6f9e6]/80 hover:text-[#f3a5a1] transition-colors"
+                className="w-8 h-8 rounded-lg border border-[#f6f9e6]/25 hover:border-[#f3a5a1] bg-white/5 hover:bg-[#ca384a]/30 flex items-center justify-center text-[#f6f9e6]/80 hover:text-[#f3a5a1] transition-all hover:scale-110 active:scale-95 shadow-sm"
                 aria-label="Email"
+                title="Email"
               >
                 <Mail className="w-4 h-4" />
               </a>
               <Link
                 href="/contact"
-                className="w-8 h-8 rounded-lg border border-[#f6f9e6]/25 hover:border-[#f3a5a1] flex items-center justify-center text-[#f6f9e6]/80 hover:text-[#f3a5a1] transition-colors"
-                aria-label="Location"
+                className="w-8 h-8 rounded-lg border border-[#f6f9e6]/25 hover:border-[#f3a5a1] bg-white/5 hover:bg-[#ca384a]/30 flex items-center justify-center text-[#f6f9e6]/80 hover:text-[#f3a5a1] transition-all hover:scale-110 active:scale-95 shadow-sm"
+                aria-label={isArabic ? "موقعنا وتواصل معنا" : "Contact & Location"}
+                title={isArabic ? "موقعنا وتواصل معنا" : "Contact & Location"}
               >
                 <MapPin className="w-4 h-4" />
               </Link>

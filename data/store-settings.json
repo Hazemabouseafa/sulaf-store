@@ -297,13 +297,32 @@
       "isHidden": true
     }
   },
+  "socialMedia": {
+    "instagram": "https://instagram.com/sulaf.eg",
+    "facebook": "https://facebook.com/sulaf.eg",
+    "tiktok": "https://tiktok.com/@sulaf.eg",
+    "twitter": "",
+    "youtube": "",
+    "snapchat": "",
+    "telegram": "",
+    "whatsapp": "+201099887766",
+    "linkedin": "",
+    "pinterest": "",
+    "customLinks": []
+  },
   "contacts": {
     "whatsapp": "+201099887766",
     "phone": "19876",
     "email": "care@sulaf.com",
     "instagram": "https://instagram.com/sulaf.eg",
     "facebook": "https://facebook.com/sulaf.eg",
-    "tiktok": "https://tiktok.com/@sulaf.eg"
+    "tiktok": "https://tiktok.com/@sulaf.eg",
+    "twitter": "",
+    "youtube": "",
+    "snapchat": "",
+    "telegram": "",
+    "linkedin": "",
+    "pinterest": ""
   },
   "products": {
     "roughAwayPrice": 420,
