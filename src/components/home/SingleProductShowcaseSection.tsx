@@ -37,6 +37,7 @@ export function SingleProductShowcaseSection() {
 
   if (!heroProduct) return null;
 
+  const productHref = `/product/${heroProduct.slug || heroProduct.id}`;
   const currency = isArabic ? "ج.م" : "EGP";
   const ArrowIcon = isArabic ? ArrowLeft : ArrowRight;
 
@@ -80,7 +81,7 @@ export function SingleProductShowcaseSection() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 sm:gap-12 items-center">
           
-          {/* IMAGE SIDE: Pure product image filling the area completely with NO pedestal or surrounding elements */}
+          {/* IMAGE SIDE: Pure product image linked to product page with NO pedestal or surrounding elements */}
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -88,20 +89,24 @@ export function SingleProductShowcaseSection() {
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             className="md:col-span-6 flex items-center justify-center w-full"
           >
-            <div className="relative w-full max-w-lg aspect-square sm:aspect-[4/5] md:aspect-square flex items-center justify-center">
+            <Link
+              href={productHref}
+              aria-label={heroProduct.nameAr || "Sulaf Product"}
+              className="relative w-full max-w-lg aspect-square sm:aspect-[4/5] md:aspect-square flex items-center justify-center cursor-pointer group"
+            >
               <Image
                 src={productImage}
                 alt={heroProduct.nameAr || "Sulaf Product"}
                 fill
-                className="object-contain object-center drop-shadow-[0_20px_45px_rgba(0,0,0,0.55)]"
+                className="object-contain object-center drop-shadow-[0_20px_45px_rgba(0,0,0,0.55)] transition-transform duration-500 group-hover:scale-105"
                 sizes="(max-width: 768px) 100vw, 50vw"
                 priority
                 unoptimized
               />
-            </div>
+            </Link>
           </motion.div>
 
-          {/* SIMPLE TEXT SIDE (6 Cols on desktop): High-contrast white and ivory copy on Royal Burgundy */}
+          {/* TEXT SIDE: Every word and element linked directly to the product page */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -109,46 +114,69 @@ export function SingleProductShowcaseSection() {
             transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="md:col-span-6 space-y-4 text-start"
           >
-            {/* Subtle Pill Badge */}
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#ca384a]/40 border border-[#f3a5a1]/30 text-[#f3e5ab] text-xs font-bold tracking-wide shadow-sm">
-              <Sparkles className="w-3.5 h-3.5 text-[#f3a5a1]" />
-              <span>
-                {heroProduct.badgeAr || (isArabic ? "مستحضر سُـلاف الأيقوني" : "Sulaf Flagship Formulation")}
-              </span>
+            {/* Subtle Pill Badge linked to Product */}
+            <div>
+              <Link
+                href={productHref}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#ca384a]/40 border border-[#f3a5a1]/30 hover:border-[#f3a5a1]/70 text-[#f3e5ab] hover:text-white text-xs font-bold tracking-wide shadow-sm transition-all cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#f3a5a1]" />
+                <span>
+                  {heroProduct.badgeAr || (isArabic ? "مستحضر سُـلاف الأيقوني" : "Sulaf Flagship Formulation")}
+                </span>
+              </Link>
             </div>
 
-            {/* Product Title */}
+            {/* Product Title linked to Product */}
             <h2
               className={`text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)] ${
                 isArabic ? "font-gulzar leading-snug" : "font-cinzel"
               }`}
             >
-              {isArabic ? (heroProduct.nameAr || "Absolutes Smoothing Body Cream") : (heroProduct.nameEn || heroProduct.nameAr)}
+              <Link
+                href={productHref}
+                className="hover:text-[#f3a5a1] transition-colors cursor-pointer block"
+              >
+                {isArabic ? (heroProduct.nameAr || "Absolutes Smoothing Body Cream") : (heroProduct.nameEn || heroProduct.nameAr)}
+              </Link>
             </h2>
 
-            {/* Simple Subtitle */}
+            {/* Simple Subtitle linked to Product */}
             {(heroProduct.subtitleAr || heroProduct.subtitleEn) && (
               <p className="text-xs sm:text-sm font-semibold text-[#f3a5a1] font-mono tracking-wide drop-shadow-sm">
-                {isArabic
-                  ? (heroProduct.subtitleAr || heroProduct.subtitleEn)
-                  : (heroProduct.subtitleEn || heroProduct.subtitleAr)}
+                <Link
+                  href={productHref}
+                  className="hover:text-white transition-colors cursor-pointer inline-block"
+                >
+                  {isArabic
+                    ? (heroProduct.subtitleAr || heroProduct.subtitleEn)
+                    : (heroProduct.subtitleEn || heroProduct.subtitleAr)}
+                </Link>
               </p>
             )}
 
-            {/* Dynamic Product Description from DB */}
+            {/* Dynamic Product Description linked to Product */}
             <p
               className={`text-sm sm:text-base text-[#f6f9e6]/90 leading-relaxed max-w-xl ${
                 isArabic ? "font-cairo" : "font-glacial"
               }`}
             >
-              {isArabic
-                ? (heroProduct.descriptionAr || "تحفة صيدلانية سريرية مصممة لإنهاء مظهر جلد الوزة والخشونة المتصلبة، تمنح بشرتكِ نعومة الحرير الأندلسي الفاخر بلطفٍ سريري متقن دون أي تقشير كاشط.")
-                : (heroProduct.descriptionEn || heroProduct.descriptionAr || "A clinical formulation crafted to end Keratosis Pilaris (Strawberry Skin) and structural roughness, restoring silk-like skin with pure pharmaceutical gentleness.")}
+              <Link
+                href={productHref}
+                className="hover:text-white transition-colors cursor-pointer block"
+              >
+                {isArabic
+                  ? (heroProduct.descriptionAr || "تحفة صيدلانية سريرية مصممة لإنهاء مظهر جلد الوزة والخشونة المتصلبة، تمنح بشرتكِ نعومة الحرير الأندلسي الفاخر بلطفٍ سريري متقن دون أي تقشير كاشط.")
+                  : (heroProduct.descriptionEn || heroProduct.descriptionAr || "A clinical formulation crafted to end Keratosis Pilaris (Strawberry Skin) and structural roughness, restoring silk-like skin with pure pharmaceutical gentleness.")}
+              </Link>
             </p>
 
             {/* Price & Action */}
             <div className="pt-3 flex flex-wrap items-center gap-4">
-              <div className="flex items-baseline gap-1.5">
+              <Link
+                href={productHref}
+                className="flex items-baseline gap-1.5 cursor-pointer hover:opacity-90 transition-opacity"
+              >
                 <span className="text-2xl sm:text-3xl font-bold font-mono text-white drop-shadow-sm">
                   {heroProduct.price}
                 </span>
@@ -158,7 +186,7 @@ export function SingleProductShowcaseSection() {
                     {heroProduct.compareAtPrice} {currency}
                   </span>
                 )}
-              </div>
+              </Link>
 
               {/* Action Buttons: Clean & Elegant */}
               <div className="flex items-center gap-3">
@@ -187,7 +215,7 @@ export function SingleProductShowcaseSection() {
                 </motion.button>
 
                 <Link
-                  href={`/product/${heroProduct.slug || heroProduct.id}`}
+                  href={productHref}
                   className="inline-flex items-center gap-1.5 px-5 py-3 rounded-full border border-white/30 hover:border-white/60 text-white hover:bg-white/10 backdrop-blur-sm text-xs font-bold transition-all"
                 >
                   <span>{isArabic ? "استكشفي المستحضر" : "Explore Product"}</span>
