@@ -3,6 +3,7 @@
     "id": "prod-absolutes-cream",
     "nameAr": "Absolutes Smoothing Body Cream",
     "nameEn": "Absolutes Smoothing Body Cream",
+    "isFeatured": true,
     "slug": "absolutes-smoothing-body-cream",
     "subtitleAr": "Architectural Keratolytic Reset | 30% Pure Urea • 10% Ammonium Lactate • 2% Salicylic Acid",
     "subtitleEn": "Architectural Keratolytic Reset | 30% Pure Urea • 10% Ammonium Lactate • 2% Salicylic Acid",
@@ -33,12 +34,17 @@
       {
         "url": "/brand/sulaf-flower-symbol.png",
         "alt": "Absolutes Smoothing Body Cream Front View",
-        "isPrimary": true
+        "isPrimary": false
       },
       {
         "url": "/brand/sulaf-logo-full.png",
         "alt": "Absolutes Smoothing Body Cream Brand Lockup",
         "isPrimary": false
+      },
+      {
+        "url": "/api/uploads/whatsapp-image-2026-10-22-at-0-1793375714339-b1r3h.jpg",
+        "alt": "Absolutes Smoothing Body Cream",
+        "isPrimary": true
       }
     ],
     "variants": [
@@ -194,7 +200,8 @@
     "inci": "Aqua (Deionized Water), Urea, Ammonium Lactate, Niacinamide, Salicylic Acid, Butyrospermum Parkii (Shea) Butter, Cetearyl Alcohol, Glycerin, Polysorbate 60, C12-15 Alkyl Benzoate, Panthenol (D-Panthenol), Centella Asiatica Leaf Extract, Ceramide NP, Ceramide AP, Ceramide EOP, Phytosphingosine, Cholesterol, Tocopherol (Vitamin E), Allantoin, Argania Spinosa (Argan) Kernel Oil, Persea Gratissima (Avocado) Oil, Prunus Amygdalus Dulcis (Sweet Almond) Oil, Dimethicone, Theobroma Cacao (Cocoa) Seed Butter, Cetyl Alcohol, Phenoxyethanol, Ethylhexylglycerin, Disodium EDTA, Fragrance.",
     "signatureTitle": "The Sulaf Signature",
     "signatureArabic": "ما كان في رِفقٍ يُداوينا سُلافُ بهِ.. إلّا تحوّل حُسنًا لا ينهزمُ.",
-    "signatureTranslation": "Never was Sulaf's gentleness poured into our healing, but that grace triumphed, undefeated."
+    "signatureTranslation": "Never was Sulaf's gentleness poured into our healing, but that grace triumphed, undefeated.",
+    "imageUrl": "/api/uploads/whatsapp-image-2026-10-22-at-0-1793375714339-b1r3h.jpg"
   },
   {
     "id": "prod-barrier-elixir",

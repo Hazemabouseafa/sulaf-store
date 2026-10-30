@@ -37,13 +37,36 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: "المستحضر غير موجود." }, { status: 404 });
     }
 
+    const updatedImages =
+      body.images && body.images.length > 0
+        ? body.images
+        : body.imageUrl
+          ? [{ url: body.imageUrl, alt: body.nameAr || products[index].nameAr, isPrimary: true }]
+          : products[index].images;
+
     products[index] = {
       ...products[index],
       ...body,
+      images: updatedImages,
       price: body.price !== undefined ? Number(body.price) : products[index].price,
       stock: body.stock !== undefined ? Number(body.stock) : products[index].stock,
       compareAtPrice: body.compareAtPrice !== undefined ? Number(body.compareAtPrice) : products[index].compareAtPrice,
     };
+
+    if (body.isFeatured !== undefined) {
+      if (body.isFeatured) {
+        products.forEach((p, i) => {
+          p.isFeatured = (i === index);
+        });
+        try {
+          const settings = readJsonFile<any>("store-settings.json", {});
+          settings.featuredProductId = products[index].id;
+          writeJsonFile("store-settings.json", settings);
+        } catch {}
+      } else {
+        products[index].isFeatured = false;
+      }
+    }
 
     writeJsonFile("products.json", products);
     return NextResponse.json({

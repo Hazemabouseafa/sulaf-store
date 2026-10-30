@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -8,34 +8,58 @@ import { ArrowRight, ArrowLeft, Sparkles, Check, ShoppingBag } from "lucide-reac
 import { useLanguage } from "@/lib/i18n/language-context";
 import { useProducts } from "@/lib/products/product-store";
 import { useCart } from "@/lib/cart/cart-context";
+import { useStoreSettings } from "@/lib/settings/store-settings-context";
 
 export function SingleProductShowcaseSection() {
   const { isArabic, t } = useLanguage();
   const { addItem } = useCart();
   const products = useProducts();
+  const { settings } = useStoreSettings();
   const [added, setAdded] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  // Find flagship hero product "Absolutes Smoothing Body Cream"
+  // Find featured product by settings ID, isFeatured flag, or first product
   const heroProduct =
+    (settings?.featuredProductId &&
+      products.find(
+        (p) =>
+          p.id === settings.featuredProductId ||
+          p.slug === settings.featuredProductId
+      )) ||
+    products.find((p) => (p as any).isFeatured === true) ||
     products.find(
       (p) =>
         p.slug === "absolutes-smoothing-body-cream" ||
         p.id === "prod-absolutes-cream" ||
-        p.nameAr?.includes("Absolutes") ||
-        p.nameEn?.includes("Absolutes")
+        p.nameAr?.includes("Absolutes")
     ) ||
     products[0] ||
     null;
+
+  // Sync active image index when heroProduct changes or primary image is set
+  useEffect(() => {
+    if (heroProduct?.images && heroProduct.images.length > 0) {
+      const pIdx = heroProduct.images.findIndex((img) => img.isPrimary);
+      setActiveImageIndex(pIdx >= 0 ? pIdx : 0);
+    } else {
+      setActiveImageIndex(0);
+    }
+  }, [heroProduct?.id, heroProduct?.images]);
 
   if (!heroProduct) return null;
 
   const currency = isArabic ? "ج.م" : "EGP";
   const ArrowIcon = isArabic ? ArrowLeft : ArrowRight;
 
+  const currentImgObj =
+    heroProduct.images?.[activeImageIndex] ||
+    heroProduct.images?.find((img) => img.isPrimary) ||
+    heroProduct.images?.[0];
+
   const productImage =
-    heroProduct.images && heroProduct.images.length > 0
-      ? heroProduct.images[0].url
-      : "/brand/sulaf-flower-symbol.png";
+    currentImgObj?.url ||
+    (heroProduct as any)?.imageUrl ||
+    "/brand/sulaf-flower-symbol.png";
 
   const handleQuickAdd = () => {
     addItem(heroProduct, heroProduct.variants?.[0], 1);
@@ -71,7 +95,7 @@ export function SingleProductShowcaseSection() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="md:col-span-5 flex justify-center"
+            className="md:col-span-5 flex flex-col items-center justify-center"
           >
             <div className="relative w-64 sm:w-72 aspect-square rounded-[2.5rem] bg-white/70 backdrop-blur-md border border-[#610b0d]/15 p-6 flex items-center justify-center shadow-[0_20px_50px_rgba(97,11,13,0.08)] group">
               <div className="relative w-44 sm:w-52 h-44 sm:h-52 transition-transform duration-500 group-hover:scale-105">
@@ -81,9 +105,38 @@ export function SingleProductShowcaseSection() {
                   fill
                   className="object-contain drop-shadow-[0_16px_30px_rgba(97,11,13,0.18)]"
                   priority
+                  unoptimized
                 />
               </div>
             </div>
+
+            {/* Thumbnail Navigation Row if Multiple Images */}
+            {heroProduct.images && heroProduct.images.length > 1 && (
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-4 z-20">
+                {heroProduct.images.map((img, idx) => {
+                  const isSelected = activeImageIndex === idx;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setActiveImageIndex(idx)}
+                      className={`w-11 h-11 rounded-xl p-1 bg-white border-2 transition-all cursor-pointer overflow-hidden ${
+                        isSelected
+                          ? "border-[#610b0d] shadow-sm scale-105"
+                          : "border-[#610b0d]/20 hover:border-[#610b0d]/40 opacity-70 hover:opacity-100"
+                      }`}
+                      title={img.alt || heroProduct.nameAr}
+                    >
+                      <img
+                        src={img.url}
+                        alt={img.alt || heroProduct.nameAr}
+                        className="w-full h-full object-contain"
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </motion.div>
 
           {/* SIMPLE TEXT SIDE (7 Cols on desktop): Elegant, simple copy beside it */}
@@ -97,7 +150,9 @@ export function SingleProductShowcaseSection() {
             {/* Subtle Pill Badge */}
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#610b0d]/10 border border-[#610b0d]/20 text-[#610b0d] text-xs font-bold tracking-wide">
               <Sparkles className="w-3.5 h-3.5 text-[#610b0d]" />
-              <span>{isArabic ? "مستحضر سُـلاف الأيقوني" : "Sulaf Flagship Formulation"}</span>
+              <span>
+                {heroProduct.badgeAr || (isArabic ? "مستحضر سُـلاف الأيقوني" : "Sulaf Flagship Formulation")}
+              </span>
             </div>
 
             {/* Product Title */}
@@ -110,19 +165,23 @@ export function SingleProductShowcaseSection() {
             </h2>
 
             {/* Simple Subtitle */}
-            <p className="text-xs sm:text-sm font-semibold text-[#610b0d] font-mono tracking-wide">
-              {isArabic ? heroProduct.subtitleAr : (heroProduct.subtitleEn || heroProduct.subtitleAr)}
-            </p>
+            {(heroProduct.subtitleAr || heroProduct.subtitleEn) && (
+              <p className="text-xs sm:text-sm font-semibold text-[#610b0d] font-mono tracking-wide">
+                {isArabic
+                  ? (heroProduct.subtitleAr || heroProduct.subtitleEn)
+                  : (heroProduct.subtitleEn || heroProduct.subtitleAr)}
+              </p>
+            )}
 
-            {/* Simple Elegant Description (كلام بسيط) */}
+            {/* Dynamic Product Description from DB (كلام المستحضر المعدل) */}
             <p
               className={`text-sm sm:text-base text-[#220809]/80 leading-relaxed max-w-xl ${
                 isArabic ? "font-cairo" : "font-glacial"
               }`}
             >
               {isArabic
-                ? "تحفة صيدلانية سريرية مصممة لإنهاء مظهر جلد الوزة والخشونة المتصلبة، تمنح بشرتكِ نعومة الحرير الأندلسي الفاخر بلطفٍ سريري متقن دون أي تقشير كاشط."
-                : "A clinical formulation crafted to end Keratosis Pilaris (Strawberry Skin) and structural roughness, restoring silk-like skin with pure pharmaceutical gentleness."}
+                ? (heroProduct.descriptionAr || "تحفة صيدلانية سريرية مصممة لإنهاء مظهر جلد الوزة والخشونة المتصلبة، تمنح بشرتكِ نعومة الحرير الأندلسي الفاخر بلطفٍ سريري متقن دون أي تقشير كاشط.")
+                : (heroProduct.descriptionEn || heroProduct.descriptionAr || "A clinical formulation crafted to end Keratosis Pilaris (Strawberry Skin) and structural roughness, restoring silk-like skin with pure pharmaceutical gentleness.")}
             </p>
 
             {/* Price & Action */}
@@ -166,7 +225,7 @@ export function SingleProductShowcaseSection() {
                 </motion.button>
 
                 <Link
-                  href={`/product/${heroProduct.slug}`}
+                  href={`/product/${heroProduct.slug || heroProduct.id}`}
                   className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full border border-[#610b0d]/30 hover:border-[#610b0d] text-[#610b0d] hover:bg-[#610b0d]/5 text-xs font-bold transition-all"
                 >
                   <span>{isArabic ? "استكشفي المستحضر" : "Explore Product"}</span>

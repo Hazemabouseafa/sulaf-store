@@ -170,6 +170,8 @@ export interface ProductData {
   stock: number;
   sku: string;
   badgeAr?: string;
+  isFeatured?: boolean;
+  imageUrl?: string;
   accentColor: string;
   images: {
     url: string;

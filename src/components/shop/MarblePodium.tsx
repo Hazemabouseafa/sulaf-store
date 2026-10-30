@@ -45,6 +45,7 @@ export function MarblePodium({
           height={config.imgSize}
           className="object-contain max-h-36 transition-transform duration-500 hover:scale-105"
           priority={priority}
+          unoptimized
           loading={priority ? "eager" : "lazy"}
         />
       </motion.div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { OrderRecord } from "@/lib/orders/order-store";
@@ -11,6 +11,7 @@ import { HomepageSectionBuilder } from "@/components/admin/HomepageSectionBuilde
 import { ShippingCarrierSettings } from "@/components/admin/ShippingCarrierSettings";
 import { CouponData } from "@/lib/coupons/coupon-store";
 import { ReviewItem } from "@/lib/reviews/review-store";
+import { saveProducts } from "@/lib/products/product-store";
 import { useStoreSettings } from "@/lib/settings/store-settings-context";
 import {
   DEFAULT_SHIPPING_PROVIDERS,
@@ -97,6 +98,10 @@ import {
   Globe,
   BookOpen,
   Star,
+  UploadCloud,
+  ImagePlus,
+  Upload,
+  ImageIcon,
 } from "lucide-react";
 
 
@@ -851,8 +856,147 @@ export default function AdminPage() {
     usageInstructionsAr: "",
     usageInstructionsEn: "",
     imageUrl: "/brand/sulaf-flower-symbol.png",
+    images: [] as { url: string; alt: string; isPrimary: boolean }[],
+    isFeatured: false,
     pageBuilder: undefined as ProductPageBuilderData | undefined,
   });
+
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const [customImageUrlInput, setCustomImageUrlInput] = useState("");
+  const productFileInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleProductImageUpload(files: FileList | File[]) {
+    if (!files || files.length === 0) return;
+    setIsUploadingImage(true);
+    try {
+      const formData = new FormData();
+      Array.from(files).forEach((file) => {
+        formData.append("files", file);
+      });
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+
+      if (data.success && data.uploads && data.uploads.length > 0) {
+        const newImages = data.uploads.map((u: any, index: number) => ({
+          url: u.url,
+          alt: productForm.nameAr || "Sulaf Product",
+          isPrimary: productForm.images.length === 0 && index === 0,
+        }));
+
+        setProductForm((prev) => {
+          const combined = [...prev.images, ...newImages];
+          if (!combined.some((img) => img.isPrimary) && combined.length > 0) {
+            combined[0].isPrimary = true;
+          }
+          const primaryUrl = combined.find((img) => img.isPrimary)?.url || combined[0]?.url || prev.imageUrl;
+          return {
+            ...prev,
+            images: combined,
+            imageUrl: primaryUrl,
+          };
+        });
+
+        showToast(data.message || "تم رفع الصور بنجاح.", "success");
+      } else {
+        showToast(data.error || "فشل رفع الصور.", "error");
+      }
+    } catch (err: any) {
+      showToast("حدث خطأ أثناء رفع الصورة: " + (err?.message || ""), "error");
+    } finally {
+      setIsUploadingImage(false);
+      if (productFileInputRef.current) {
+        productFileInputRef.current.value = "";
+      }
+    }
+  }
+
+  function handleAddImageUrl() {
+    if (!customImageUrlInput.trim()) return;
+    const url = customImageUrlInput.trim();
+    setProductForm((prev) => {
+      const isFirst = prev.images.length === 0;
+      const updated = [
+        ...prev.images,
+        {
+          url,
+          alt: prev.nameAr || "Sulaf Product",
+          isPrimary: isFirst,
+        },
+      ];
+      return {
+        ...prev,
+        images: updated,
+        imageUrl: isFirst ? url : prev.imageUrl,
+      };
+    });
+    setCustomImageUrlInput("");
+    showToast("تمت إضافة رابط الصورة بنجاح.");
+  }
+
+  function handleSetPrimaryImage(index: number) {
+    setProductForm((prev) => {
+      const updated = prev.images.map((img, i) => ({
+        ...img,
+        isPrimary: i === index,
+      }));
+      const primaryUrl = updated[index]?.url || prev.imageUrl;
+      return {
+        ...prev,
+        images: updated,
+        imageUrl: primaryUrl,
+      };
+    });
+    showToast("تم تعيين الصورة كصورة رئيسية للمستحضر.");
+  }
+
+  function handleDeleteProductImage(index: number) {
+    setProductForm((prev) => {
+      const updated = prev.images.filter((_, i) => i !== index);
+      if (updated.length > 0 && !updated.some((img) => img.isPrimary)) {
+        updated[0].isPrimary = true;
+      }
+      const primaryUrl = updated.find((img) => img.isPrimary)?.url || (updated[0]?.url || "/brand/sulaf-flower-symbol.png");
+      return {
+        ...prev,
+        images: updated,
+        imageUrl: primaryUrl,
+      };
+    });
+    showToast("تم حذف الصورة من المستحضر.");
+  }
+
+  async function handleSetFeaturedProduct(productId: string, productName: string) {
+    try {
+      const res = await fetch("/api/products", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: productId,
+          action: "setFeatured",
+          isFeatured: true,
+        }),
+      });
+      if (res.ok) {
+        showToast(
+          adminLang === "ar"
+            ? `✨ تم تعيين "${productName}" كمنتج رئيسي في الصفحة الرئيسية بنجاح!`
+            : `"${productName}" is now the featured product on homepage!`,
+          "success"
+        );
+        updateSettings({ featuredProductId: productId });
+        loadLiveBackendData(true);
+      } else {
+        showToast("فشل تعيين المنتج الرئيسي.", "error");
+      }
+    } catch {
+      showToast("حدث خطأ في الاتصال بالخادم.", "error");
+    }
+  }
 
   // New Coupon Form State
   const [couponForm, setCouponForm] = useState({
@@ -1016,7 +1160,10 @@ export default function AdminPage() {
       }
       if (resProducts.ok) {
         const d = await resProducts.json();
-        if (d.products) setProducts(d.products);
+        if (d.products) {
+          setProducts(d.products);
+          saveProducts(d.products);
+        }
       }
       if (resCoupons.ok) {
         const d = await resCoupons.json();
@@ -1439,11 +1586,29 @@ export default function AdminPage() {
             descriptionEn: productForm.descriptionEn,
             usageInstructionsAr: productForm.usageInstructionsAr,
             usageInstructionsEn: productForm.usageInstructionsEn,
-            imageUrl: productForm.imageUrl,
+            imageUrl:
+              productForm.images.find((img) => img.isPrimary)?.url ||
+              productForm.images[0]?.url ||
+              productForm.imageUrl ||
+              "/brand/sulaf-flower-symbol.png",
+            images:
+              productForm.images.length > 0
+                ? productForm.images
+                : [
+                    {
+                      url: productForm.imageUrl || "/brand/sulaf-flower-symbol.png",
+                      alt: productForm.nameAr,
+                      isPrimary: true,
+                    },
+                  ],
+            isFeatured: productForm.isFeatured,
             pageBuilder: productForm.pageBuilder,
           }),
         });
         if (res.ok) {
+          if (productForm.isFeatured) {
+            updateSettings({ featuredProductId: editingProduct.id });
+          }
           showToast("تم تحديث بيانات المستحضر بنجاح على الخادم.");
         }
       } else {
@@ -1465,11 +1630,30 @@ export default function AdminPage() {
             stock: Number(productForm.stock),
             sku: productForm.sku || `SLF-${Math.floor(100 + Math.random() * 900)}`,
             badgeAr: productForm.badgeAr || undefined,
-            imageUrl: productForm.imageUrl || "/brand/sulaf-flower-symbol.png",
+            imageUrl:
+              productForm.images.find((img) => img.isPrimary)?.url ||
+              productForm.images[0]?.url ||
+              productForm.imageUrl ||
+              "/brand/sulaf-flower-symbol.png",
+            images:
+              productForm.images.length > 0
+                ? productForm.images
+                : [
+                    {
+                      url: productForm.imageUrl || "/brand/sulaf-flower-symbol.png",
+                      alt: productForm.nameAr,
+                      isPrimary: true,
+                    },
+                  ],
+            isFeatured: productForm.isFeatured,
             pageBuilder: productForm.pageBuilder,
           }),
         });
         if (res.ok) {
+          const newD = await res.json();
+          if (productForm.isFeatured && newD.product?.id) {
+            updateSettings({ featuredProductId: newD.product.id });
+          }
           showToast("تمت إضافة المستحضر الجديد بنجاح إلى قاعدة البيانات.");
         }
       }
@@ -3434,6 +3618,220 @@ export default function AdminPage() {
                       </div>
                     </div>
 
+                    {/* ========================================================= */}
+                    {/* PRODUCT IMAGES UPLOADER & GALLERY MANAGEMENT             */}
+                    {/* ========================================================= */}
+                    <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#fbfdf7] to-[#f4f7ea] border-2 border-[#610b0d]/20 space-y-4">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-xl bg-[#610b0d] text-[#f6f9e6] flex items-center justify-center shrink-0 shadow-xs">
+                            <ImagePlus className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-sm sm:text-base text-gray-900 flex items-center gap-2">
+                              <span>{adminLang === "ar" ? "صور المستحضر والمعرض الحي" : "Product Images & Media"}</span>
+                              <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-[#610b0d]/10 text-[#610b0d] font-bold">
+                                {productForm.images.length} {adminLang === "ar" ? "صور" : "images"}
+                              </span>
+                            </h3>
+                            <p className="text-xs text-gray-600">
+                              {adminLang === "ar"
+                                ? "ارفع صور المنتج من جهازك أو اسحبها هنا. الصورة المحددة بـ (رئيسية) ستظهر كصورة غلاف في واجهة المتجر."
+                                : "Upload images from your device or drop them here. The primary image will appear across the storefront."}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Direct URL Input quick trigger */}
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                          <input
+                            type="text"
+                            value={customImageUrlInput}
+                            onChange={(e) => setCustomImageUrlInput(e.target.value)}
+                            placeholder={adminLang === "ar" ? "أو الصق رابط صورة مباشر (URL)..." : "Or paste image URL..."}
+                            className="text-xs px-3 py-2 rounded-xl border border-gray-300 bg-white focus:outline-none focus:border-[#610b0d] w-full sm:w-60"
+                            dir="ltr"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleAddImageUrl();
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={handleAddImageUrl}
+                            disabled={!customImageUrlInput.trim()}
+                            className="px-3 py-2 rounded-xl bg-[#610b0d] hover:bg-[#470708] disabled:opacity-50 text-white text-xs font-bold transition-all shrink-0 cursor-pointer"
+                          >
+                            {adminLang === "ar" ? "إضافة" : "Add"}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Drag & Drop File Upload Zone */}
+                      <input
+                        type="file"
+                        ref={productFileInputRef}
+                        accept="image/png,image/jpeg,image/webp,image/svg+xml,image/avif"
+                        multiple
+                        onChange={(e) => e.target.files && handleProductImageUpload(e.target.files)}
+                        className="hidden"
+                      />
+
+                      <div
+                        onClick={() => productFileInputRef.current?.click()}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setIsDraggingImage(true);
+                        }}
+                        onDragLeave={() => setIsDraggingImage(false)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setIsDraggingImage(false);
+                          if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                            handleProductImageUpload(e.dataTransfer.files);
+                          }
+                        }}
+                        className={`relative border-2 border-dashed rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 select-none ${
+                          isDraggingImage
+                            ? "border-[#610b0d] bg-[#610b0d]/10 scale-[1.01]"
+                            : "border-[#610b0d]/30 hover:border-[#610b0d] bg-white hover:bg-[#fcfdfa]"
+                        }`}
+                      >
+                        {isUploadingImage ? (
+                          <div className="flex flex-col items-center gap-3 py-4">
+                            <div className="w-10 h-10 border-3 border-[#610b0d] border-t-transparent rounded-full animate-spin" />
+                            <p className="text-xs font-bold text-[#610b0d]">
+                              {adminLang === "ar" ? "جاري رفع ومعالجة الصور على الخادم..." : "Uploading & optimizing images..."}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-2.5">
+                            <div className="w-12 h-12 rounded-2xl bg-[#610b0d]/10 text-[#610b0d] flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
+                              <UploadCloud className="w-6 h-6" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-gray-800">
+                                {adminLang === "ar"
+                                  ? "اضغط لاختيار صور من جهازك أو اسحب الصور وأفلتها هنا"
+                                  : "Click to upload photos from device or drag and drop"}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {adminLang === "ar"
+                                  ? "يدعم صور PNG, JPG, JPEG, WEBP, SVG حتى 10 ميجابايت لكل صورة"
+                                  : "Supports PNG, JPG, WEBP, SVG up to 10MB per image"}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Uploaded Images Gallery Grid */}
+                      {productForm.images.length > 0 && (
+                        <div className="space-y-2 pt-2">
+                          <div className="flex items-center justify-between text-xs text-gray-600 font-semibold px-1">
+                            <span>{adminLang === "ar" ? "الصور المرفوعة للمستحضر:" : "Uploaded Images:"}</span>
+                            <span className="text-[11px] text-[#610b0d]">
+                              {adminLang === "ar" ? "💡 اضغط على النجمة لتعيين الصورة الرئيسية" : "💡 Click star to set primary image"}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                            {productForm.images.map((img, idx) => {
+                              const isPrimary = img.isPrimary || (idx === 0 && !productForm.images.some((i) => i.isPrimary));
+                              return (
+                                <div
+                                  key={idx}
+                                  className={`group relative rounded-2xl overflow-hidden border-2 transition-all aspect-square bg-white shadow-xs flex flex-col justify-between ${
+                                    isPrimary
+                                      ? "border-[#610b0d] ring-2 ring-[#610b0d]/20"
+                                      : "border-gray-200 hover:border-gray-300"
+                                  }`}
+                                >
+                                  {/* Primary Badge */}
+                                  {isPrimary && (
+                                    <div className="absolute top-2 start-2 z-10 px-2 py-0.5 rounded-full bg-[#610b0d] text-[#f6f9e6] text-[10px] font-bold shadow-xs flex items-center gap-1">
+                                      <Star className="w-3 h-3 fill-current" />
+                                      <span>{adminLang === "ar" ? "رئيسية" : "Primary"}</span>
+                                    </div>
+                                  )}
+
+                                  {/* Image View */}
+                                  <div className="relative w-full h-full p-2 flex items-center justify-center">
+                                    <img
+                                      src={img.url}
+                                      alt={img.alt || productForm.nameAr || "Sulaf Product"}
+                                      className="max-h-full max-w-full object-contain"
+                                    />
+                                  </div>
+
+                                  {/* Hover Actions Bar */}
+                                  <div className="absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-black/80 via-black/50 to-transparent flex items-center justify-between opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                    {!isPrimary && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleSetPrimaryImage(idx);
+                                        }}
+                                        className="p-1 rounded-lg bg-white/90 hover:bg-white text-[#610b0d] text-[10px] font-bold transition-all flex items-center gap-0.5 cursor-pointer"
+                                        title={adminLang === "ar" ? "تعيين كرئيسية" : "Set as primary"}
+                                      >
+                                        <Star className="w-3 h-3" />
+                                      </button>
+                                    )}
+
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteProductImage(idx);
+                                      }}
+                                      className="p-1 rounded-lg bg-rose-600/90 hover:bg-rose-600 text-white transition-all ms-auto cursor-pointer"
+                                      title={adminLang === "ar" ? "حذف الصورة" : "Delete image"}
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Featured Product Designation Switch */}
+                    <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/70 border-2 border-amber-300/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-lg shadow-xs shrink-0">
+                          👑
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-sm sm:text-base text-amber-950">
+                            {adminLang === "ar"
+                              ? "تعيين هذا المستحضر كـ (منتج رئيسي) في واجهة المتجر"
+                              : "Set as Featured Product in Homepage Showcase"}
+                          </h4>
+                          <p className="text-xs text-amber-800/80">
+                            {adminLang === "ar"
+                              ? "سيظهر هذا المستحضر بصوره وتفاصيله وسعره تلقائياً في سيكشن المنتج الواحد بالصفحة الرئيسية."
+                              : "This product, its primary photo, and updated details will appear in the Homepage Showcase section."}
+                          </p>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={productForm.isFeatured}
+                          onChange={(e) => setProductForm({ ...productForm, isFeatured: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className="w-12 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#610b0d]"></div>
+                      </label>
+                    </div>
+
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-xs font-bold text-gray-800 mb-1.5">السعر للبيع (ج.م) *</label>
@@ -3624,6 +4022,8 @@ export default function AdminPage() {
                       usageInstructionsAr: "",
                       usageInstructionsEn: "",
                       imageUrl: "/brand/sulaf-flower-symbol.png",
+                      images: [],
+                      isFeatured: false,
                       pageBuilder: undefined,
                     });
                     setProductModalOpen(true);
@@ -3691,11 +4091,12 @@ export default function AdminPage() {
                             <div className="flex items-center gap-3">
                               <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-200 overflow-hidden shrink-0 flex items-center justify-center p-1">
                                 <Image
-                                  src={product.images[0]?.url || "/brand/sulaf-flower-symbol.png"}
+                                  src={product.images?.[0]?.url || (product as any).imageUrl || "/brand/sulaf-flower-symbol.png"}
                                   alt={product.nameAr}
                                   width={40}
                                   height={40}
                                   className="object-contain"
+                                  unoptimized
                                 />
                               </div>
                               <div>
@@ -3806,6 +4207,25 @@ export default function AdminPage() {
                             )}
                           </td>
 
+                          <td className="py-4 px-4 text-center">
+                            {product.isFeatured || product.id === settings?.featuredProductId ? (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border-2 border-amber-400 text-amber-950 text-xs font-black shadow-xs">
+                                <span>👑</span>
+                                <span>{adminLang === "ar" ? "رئيسي بالواجهة" : "Featured"}</span>
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleSetFeaturedProduct(product.id, product.nameAr)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-amber-100 text-gray-700 hover:text-amber-900 border border-gray-300 hover:border-amber-400 text-xs font-bold transition-all cursor-pointer hover:scale-105 shadow-2xs"
+                                title={adminLang === "ar" ? "تعيين هذا المستحضر ليعرض كمنتج رئيسي في قسم المنتج الواحد بالصفحة الرئيسية" : "Set as featured product on homepage"}
+                              >
+                                <span>👑</span>
+                                <span>{adminLang === "ar" ? "تعيين كرئيسي" : "Set Featured"}</span>
+                              </button>
+                            )}
+                          </td>
+
                           <td className="py-4 px-6 text-center">
                             <div className="flex items-center justify-center gap-1.5">
                               <Link
@@ -3834,7 +4254,11 @@ export default function AdminPage() {
                                     descriptionEn: product.descriptionEn || "",
                                     usageInstructionsAr: product.usageInstructionsAr || "",
                                     usageInstructionsEn: product.usageInstructionsEn || "",
-                                    imageUrl: product.images[0]?.url || "/brand/sulaf-flower-symbol.png",
+                                    imageUrl: product.images?.[0]?.url || (product as any).imageUrl || "/brand/sulaf-flower-symbol.png",
+                                    images: product.images && product.images.length > 0
+                                      ? [...product.images]
+                                      : [{ url: (product as any).imageUrl || "/brand/sulaf-flower-symbol.png", alt: product.nameAr, isPrimary: true }],
+                                    isFeatured: product.isFeatured || product.id === settings?.featuredProductId || false,
                                     pageBuilder: product.pageBuilder,
                                   });
                                   setProductModalOpen(true);

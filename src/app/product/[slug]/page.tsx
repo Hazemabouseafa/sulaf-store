@@ -58,6 +58,7 @@ export default function ProductStoryPage() {
   });
 
   const [inciOpen, setInciOpen] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
     fetch(`/api/products/${encodeURIComponent(slug)}`)
@@ -205,11 +206,41 @@ export default function ProductStoryPage() {
               </div>
 
               <MarblePodium
-                imageSrc={product.images[0]?.url || "/brand/sulaf-flower-symbol.png"}
-                alt="Absolutes Smoothing Body Cream Front View"
+                imageSrc={
+                  product.images?.[selectedImageIndex]?.url ||
+                  product.images?.[0]?.url ||
+                  (product as any).imageUrl ||
+                  "/brand/sulaf-flower-symbol.png"
+                }
+                alt={product.nameAr || "Sulaf Product"}
                 size="lg"
                 priority={true}
               />
+
+              {/* Thumbnails row if multiple images exist */}
+              {product.images && product.images.length > 1 && (
+                <div className="flex flex-wrap items-center justify-center gap-2 mt-4 z-20">
+                  {product.images.map((img, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setSelectedImageIndex(i)}
+                      className={`w-12 h-12 rounded-xl p-1 bg-white border-2 transition-all cursor-pointer overflow-hidden ${
+                        selectedImageIndex === i
+                          ? "border-[#610b0d] shadow-sm scale-105"
+                          : "border-gray-200 hover:border-gray-300 opacity-70 hover:opacity-100"
+                      }`}
+                      title={img.alt || product.nameAr}
+                    >
+                      <img
+                        src={img.url}
+                        alt={img.alt || product.nameAr}
+                        className="w-full h-full object-contain"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {vis.productSignaturePoemVis !== false && (
                 <div className="mt-4 p-3.5 rounded-2xl bg-[#485c36]/10 text-center max-w-sm border border-[#485c36]/20">

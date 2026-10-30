@@ -746,6 +746,7 @@ export interface StoreSettings {
   brandName: string;
   brandTagline: string;
   brandTaglineEn?: string;
+  featuredProductId?: string;
 
   ourStory?: {
     taglineLine1: string;
@@ -973,6 +974,7 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   brandName: "سُـلاف | Sulaf",
   brandTagline: "حيث يلتقي العلم الصيدلاني بالجمال.",
   brandTaglineEn: "Where Pharmaceutical Science Meets Beauty.",
+  featuredProductId: "prod-absolutes-cream",
 
   ourStory: {
     taglineLine1: "SULAF | سُلاف",

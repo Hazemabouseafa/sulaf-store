@@ -11,7 +11,7 @@ export async function GET() {
       { success: true, count: products.length, products },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
         },
       }
     );
@@ -67,6 +67,18 @@ export async function POST(req: NextRequest) {
       concernsAr: body.concernsAr || ["العناية والترميم"],
     };
 
+    if (body.isFeatured) {
+      products.forEach((p) => {
+        p.isFeatured = false;
+      });
+      newProduct.isFeatured = true;
+      try {
+        const settings = readJsonFile<any>("store-settings.json", {});
+        settings.featuredProductId = id;
+        writeJsonFile("store-settings.json", settings);
+      } catch {}
+    }
+
     products.unshift(newProduct);
     writeJsonFile("products.json", products);
 
@@ -110,6 +122,24 @@ export async function PATCH(req: NextRequest) {
       products[index].price = price;
       if (products[index].variants?.[0]) {
         products[index].variants[0].price = price;
+      }
+    }
+
+    if (body.action === "setFeatured" || typeof body.isFeatured === "boolean") {
+      const isFeat = body.action === "setFeatured" ? true : body.isFeatured;
+      products.forEach((p, i) => {
+        if (i === index) {
+          p.isFeatured = isFeat;
+        } else if (isFeat) {
+          p.isFeatured = false;
+        }
+      });
+      if (isFeat) {
+        try {
+          const settings = readJsonFile<any>("store-settings.json", {});
+          settings.featuredProductId = products[index].id;
+          writeJsonFile("store-settings.json", settings);
+        } catch {}
       }
     }
 
