@@ -102,7 +102,7 @@ export function ProductCard({
         {/* Soft luminous breathing aura on hover */}
         <div className="absolute w-24 h-24 rounded-full bg-gradient-to-tr from-[#f3a5a1]/25 via-[#e5c876]/20 to-transparent blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
         <Image
-          src={product.images?.[0]?.url || (product as any).imageUrl || "/brand/sulaf-flower-symbol.png"}
+          src={product.images?.find((img) => img.isPrimary)?.url || product.images?.[0]?.url || (product as any).imageUrl || "/brand/sulaf-flower-symbol.png"}
           alt={productName}
           width={125}
           height={125}

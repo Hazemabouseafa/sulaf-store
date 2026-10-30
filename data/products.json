@@ -274,7 +274,8 @@
     ],
     "reviews": [],
     "rating": 5,
-    "reviewsCount": 0
+    "reviewsCount": 0,
+    "isFeatured": false
   },
   {
     "id": "prod-cleansing-balm",
@@ -347,7 +348,8 @@
     ],
     "reviews": [],
     "rating": 5,
-    "reviewsCount": 0
+    "reviewsCount": 0,
+    "isFeatured": false
   },
   {
     "id": "prod-glycolic-tonic",
@@ -420,6 +422,7 @@
     ],
     "reviews": [],
     "rating": 5,
-    "reviewsCount": 0
+    "reviewsCount": 0,
+    "isFeatured": false
   }
 ]

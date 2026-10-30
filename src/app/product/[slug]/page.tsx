@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -196,26 +197,25 @@ export default function ProductStoryPage() {
           </nav>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* Visual Column: Marble Podium Presentation */}
-            <div className="lg:col-span-6 flex flex-col items-center justify-center p-4 sm:p-8 rounded-3xl bg-[#fdfef8]/90 border border-[#e2e8c0] shadow-sm relative overflow-hidden">
-              <div className="absolute top-4 start-4 z-20">
-                <span className="px-3.5 py-1 rounded-full text-xs font-bold font-cairo bg-[#ca384a] text-white shadow-sm flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>{custom.productPodiumTag || (isArabic ? "ترميم هيكلي سريري" : "Architectural Reset")}</span>
-                </span>
+            {/* Visual Column: Clean, Full-Size Product Showcase */}
+            <div className="lg:col-span-6 flex flex-col items-center justify-center w-full">
+              <div className="relative w-full max-w-lg aspect-square sm:aspect-[4/5] flex items-center justify-center">
+                <Image
+                  src={
+                    product.images?.[selectedImageIndex]?.url ||
+                    product.images?.find((img) => img.isPrimary)?.url ||
+                    product.images?.[0]?.url ||
+                    (product as any).imageUrl ||
+                    "/brand/sulaf-flower-symbol.png"
+                  }
+                  alt={product.nameAr || "Sulaf Product"}
+                  fill
+                  className="object-contain object-center"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  priority
+                  unoptimized
+                />
               </div>
-
-              <MarblePodium
-                imageSrc={
-                  product.images?.[selectedImageIndex]?.url ||
-                  product.images?.[0]?.url ||
-                  (product as any).imageUrl ||
-                  "/brand/sulaf-flower-symbol.png"
-                }
-                alt={product.nameAr || "Sulaf Product"}
-                size="lg"
-                priority={true}
-              />
 
               {/* Thumbnails row if multiple images exist */}
               {product.images && product.images.length > 1 && (
@@ -225,7 +225,7 @@ export default function ProductStoryPage() {
                       key={i}
                       type="button"
                       onClick={() => setSelectedImageIndex(i)}
-                      className={`w-12 h-12 rounded-xl p-1 bg-white border-2 transition-all cursor-pointer overflow-hidden ${
+                      className={`w-14 h-14 rounded-xl p-1 bg-white border-2 transition-all cursor-pointer overflow-hidden ${
                         selectedImageIndex === i
                           ? "border-[#610b0d] shadow-sm scale-105"
                           : "border-gray-200 hover:border-gray-300 opacity-70 hover:opacity-100"

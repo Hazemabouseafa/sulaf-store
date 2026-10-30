@@ -55,7 +55,7 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
           {/* Image */}
           <div className="flex flex-col items-center justify-center p-4 sm:p-6 bg-white/70 rounded-2xl border border-[#e2e8c0]">
             <Image
-              src={product.images?.[0]?.url || (product as any).imageUrl || "/brand/sulaf-flower-symbol.png"}
+              src={product.images?.find((img) => img.isPrimary)?.url || product.images?.[0]?.url || (product as any).imageUrl || "/brand/sulaf-flower-symbol.png"}
               alt={productName}
               width={220}
               height={220}

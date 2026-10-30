@@ -16,7 +16,6 @@ export function SingleProductShowcaseSection() {
   const products = useProducts();
   const { settings } = useStoreSettings();
   const [added, setAdded] = useState(false);
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   // Find featured product by settings ID, isFeatured flag, or first product
   const heroProduct =
@@ -36,15 +35,6 @@ export function SingleProductShowcaseSection() {
     products[0] ||
     null;
 
-  // Sync active image index when heroProduct changes or primary image is set
-  useEffect(() => {
-    if (heroProduct?.images && heroProduct.images.length > 0) {
-      const pIdx = heroProduct.images.findIndex((img) => img.isPrimary);
-      setActiveImageIndex(pIdx >= 0 ? pIdx : 0);
-    } else {
-      setActiveImageIndex(0);
-    }
-  }, [heroProduct?.id, heroProduct?.images]);
 
   if (!heroProduct) return null;
 
@@ -52,7 +42,6 @@ export function SingleProductShowcaseSection() {
   const ArrowIcon = isArabic ? ArrowLeft : ArrowRight;
 
   const currentImgObj =
-    heroProduct.images?.[activeImageIndex] ||
     heroProduct.images?.find((img) => img.isPrimary) ||
     heroProduct.images?.[0];
 
@@ -89,63 +78,34 @@ export function SingleProductShowcaseSection() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 sm:gap-12 items-center">
           
-          {/* IMAGE SIDE (5 Cols on desktop): Just the clean product image on a frosted pedestal */}
+          {/* IMAGE SIDE: Pure product image filling the area completely with NO pedestal or surrounding elements */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
+            initial={{ opacity: 0, scale: 0.98 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="md:col-span-5 flex flex-col items-center justify-center"
+            className="md:col-span-6 flex items-center justify-center w-full"
           >
-            <div className="relative w-64 sm:w-72 aspect-square rounded-[2.5rem] bg-white/70 backdrop-blur-md border border-[#610b0d]/15 p-6 flex items-center justify-center shadow-[0_20px_50px_rgba(97,11,13,0.08)] group">
-              <div className="relative w-44 sm:w-52 h-44 sm:h-52 transition-transform duration-500 group-hover:scale-105">
-                <Image
-                  src={productImage}
-                  alt={heroProduct.nameAr || "Sulaf Product"}
-                  fill
-                  className="object-contain drop-shadow-[0_16px_30px_rgba(97,11,13,0.18)]"
-                  priority
-                  unoptimized
-                />
-              </div>
+            <div className="relative w-full max-w-lg aspect-square sm:aspect-[4/5] md:aspect-square flex items-center justify-center">
+              <Image
+                src={productImage}
+                alt={heroProduct.nameAr || "Sulaf Product"}
+                fill
+                className="object-contain object-center"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority
+                unoptimized
+              />
             </div>
-
-            {/* Thumbnail Navigation Row if Multiple Images */}
-            {heroProduct.images && heroProduct.images.length > 1 && (
-              <div className="flex flex-wrap items-center justify-center gap-2 mt-4 z-20">
-                {heroProduct.images.map((img, idx) => {
-                  const isSelected = activeImageIndex === idx;
-                  return (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setActiveImageIndex(idx)}
-                      className={`w-11 h-11 rounded-xl p-1 bg-white border-2 transition-all cursor-pointer overflow-hidden ${
-                        isSelected
-                          ? "border-[#610b0d] shadow-sm scale-105"
-                          : "border-[#610b0d]/20 hover:border-[#610b0d]/40 opacity-70 hover:opacity-100"
-                      }`}
-                      title={img.alt || heroProduct.nameAr}
-                    >
-                      <img
-                        src={img.url}
-                        alt={img.alt || heroProduct.nameAr}
-                        className="w-full h-full object-contain"
-                      />
-                    </button>
-                  );
-                })}
-              </div>
-            )}
           </motion.div>
 
-          {/* SIMPLE TEXT SIDE (7 Cols on desktop): Elegant, simple copy beside it */}
+          {/* SIMPLE TEXT SIDE (6 Cols on desktop): Elegant, simple copy beside it */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="md:col-span-7 space-y-4 text-start"
+            className="md:col-span-6 space-y-4 text-start"
           >
             {/* Subtle Pill Badge */}
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#610b0d]/10 border border-[#610b0d]/20 text-[#610b0d] text-xs font-bold tracking-wide">
