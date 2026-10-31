@@ -24,7 +24,9 @@ export async function POST(req: NextRequest) {
     const cleanPhone = (body.phone || "").trim().replace(/\s+/g, "");
 
     const existingIndex = customers.findIndex(
-      (c: any) => c.email.toLowerCase() === cleanEmail || (cleanPhone && c.phone.replace(/\s+/g, "") === cleanPhone)
+      (c: any) =>
+        (c.email || "").toLowerCase() === cleanEmail ||
+        (cleanPhone && (c.phone || "").replace(/\s+/g, "") === cleanPhone)
     );
 
     if (existingIndex >= 0) {

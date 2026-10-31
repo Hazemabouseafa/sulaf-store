@@ -20,12 +20,12 @@ export default function ShopPage() {
     const q = searchQuery.toLowerCase();
     return allProducts.filter((prod) => {
       return (
-        prod.nameAr.toLowerCase().includes(q) ||
-        prod.nameEn.toLowerCase().includes(q) ||
-        prod.descriptionAr.toLowerCase().includes(q) ||
-        prod.descriptionEn.toLowerCase().includes(q) ||
-        prod.subtitleAr.toLowerCase().includes(q) ||
-        prod.subtitleEn.toLowerCase().includes(q)
+        (prod.nameAr || "").toLowerCase().includes(q) ||
+        (prod.nameEn || "").toLowerCase().includes(q) ||
+        (prod.descriptionAr || "").toLowerCase().includes(q) ||
+        (prod.descriptionEn || "").toLowerCase().includes(q) ||
+        (prod.subtitleAr || "").toLowerCase().includes(q) ||
+        (prod.subtitleEn || "").toLowerCase().includes(q)
       );
     });
   }, [allProducts, searchQuery]);

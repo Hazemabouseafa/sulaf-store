@@ -78,10 +78,29 @@ export function CartDrawer() {
   const currency = isArabic ? "ج.م" : "EGP";
   const ArrowIcon = isArabic ? ArrowLeft : ArrowRight;
 
-  function handleCouponSubmit(e: React.FormEvent) {
+  async function handleCouponSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!couponCode.trim()) return;
-    const res = applyCoupon(couponCode);
+    const clean = couponCode.trim();
+    if (!clean) return;
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: clean, cartSubtotal: subtotal }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        applyCoupon(clean, Number(data.discount) || 0);
+        setCouponMsg({ text: data.message, error: false });
+        setCouponCode("");
+        return;
+      }
+      if (data.message) {
+        setCouponMsg({ text: data.message, error: true });
+        return;
+      }
+    } catch {}
+    const res = applyCoupon(clean);
     setCouponMsg({ text: res.message, error: !res.success });
     if (res.success) setCouponCode("");
   }
@@ -106,7 +125,7 @@ export function CartDrawer() {
               {t.cart.title}
             </h2>
             <span className="text-xs bg-[#485c36]/10 text-[#485c36] font-semibold px-2 py-0.5 rounded-full">
-              {items.length} {t.cart.itemsCount}
+              {totalItemsCount} {t.cart.itemsCount}
             </span>
           </div>
           <button
@@ -168,10 +187,16 @@ export function CartDrawer() {
                 {/* Product Thumbnail */}
                 <div className="w-20 h-20 rounded-xl bg-[#f4f1e6] border border-[#e2e8c0] flex items-center justify-center shrink-0 p-2 relative">
                   <Image
-                    src={item.product.images[0]?.url || "/brand/sulaf-flower-symbol.png"}
-                    alt={item.product.nameAr}
+                    src={
+                      item.product.images?.find((img) => img.isPrimary)?.url ||
+                      item.product.images?.[0]?.url ||
+                      (item.product as any).imageUrl ||
+                      "/brand/sulaf-flower-symbol.png"
+                    }
+                    alt={item.product.nameAr || "Sulaf Product"}
                     width={60}
                     height={60}
+                    unoptimized
                     className="object-contain"
                   />
                 </div>

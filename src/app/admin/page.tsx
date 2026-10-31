@@ -3,13 +3,13 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { OrderRecord } from "@/lib/orders/order-store";
+import { OrderRecord, setCachedOrders } from "@/lib/orders/order-store";
 import { ProductData, ProductPageBuilderData } from "@/lib/data/mock-data";
 import { ProductPageBuilderModal } from "@/components/admin/ProductPageBuilderModal";
 import { PageContentEditor } from "@/components/admin/PageContentEditor";
 import { HomepageSectionBuilder } from "@/components/admin/HomepageSectionBuilder";
 import { ShippingCarrierSettings } from "@/components/admin/ShippingCarrierSettings";
-import { CouponData } from "@/lib/coupons/coupon-store";
+import { CouponData, saveCoupons } from "@/lib/coupons/coupon-store";
 import { ReviewItem } from "@/lib/reviews/review-store";
 import { saveProducts } from "@/lib/products/product-store";
 import { useStoreSettings } from "@/lib/settings/store-settings-context";
@@ -1206,7 +1206,10 @@ export default function AdminPage() {
 
       if (resOrders.ok) {
         const d = await resOrders.json();
-        if (d.orders) setOrders(d.orders);
+        if (d.orders) {
+          setOrders(d.orders);
+          setCachedOrders(d.orders);
+        }
       }
       if (resProducts.ok) {
         const d = await resProducts.json();
@@ -1217,7 +1220,10 @@ export default function AdminPage() {
       }
       if (resCoupons.ok) {
         const d = await resCoupons.json();
-        if (d.coupons) setCoupons(d.coupons);
+        if (d.coupons) {
+          setCoupons(d.coupons);
+          saveCoupons(d.coupons);
+        }
       }
       if (resAnalytics.ok) {
         const d = await resAnalytics.json();
@@ -2904,19 +2910,41 @@ export default function AdminPage() {
                     <tbody className="divide-y divide-gray-100">
                       {orders.slice(0, 5).map((order) => (
                         <tr key={order.id} className="hover:bg-gray-50/80 transition-colors font-medium">
-                          <td className="py-4 px-6 font-mono font-bold text-[#3d502d]">{order.orderNumber}</td>
-                          <td className="py-4 px-6">
+                          <td className="py-4 px-4 font-mono font-bold text-[#3d502d]">
+                            <div>{order.orderNumber}</div>
+                            <div className="text-[11px] text-gray-500 font-normal mt-0.5">
+                              {order.createdAt ? new Date(order.createdAt).toLocaleDateString("ar-EG") : ""}
+                            </div>
+                          </td>
+                          <td className="py-4 px-4">
                             <div className="font-bold text-gray-900">{order.customerName}</div>
                             <div className="text-xs text-gray-500 font-mono">{order.customerPhone}</div>
+                            <div className="text-[11px] text-gray-600 mt-0.5">
+                              {order.governorate}{order.city ? ` - ${order.city}` : ""}
+                            </div>
                           </td>
-                          <td className="py-4 px-6 font-semibold text-gray-800">{order.governorate}</td>
-                          <td className="py-4 px-6 font-black text-gray-900">{order.total} ج.م</td>
-                          <td className="py-4 px-6">{getPaymentBadge(order.paymentStatus, order.paymentMethod)}</td>
-                          <td className="py-4 px-6">{getStatusBadge(order.orderStatus)}</td>
-                          <td className="py-4 px-6 text-center">
+                          <td className="py-4 px-4 text-xs text-gray-800">
+                            {(order.items || []).map((it, idx) => (
+                              <div key={idx} className="truncate max-w-[180px]">
+                                <span className="font-bold">{it.productName}</span>{" "}
+                                <span className="text-gray-500 font-mono">×{it.quantity}</span>
+                              </div>
+                            ))}
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="font-black text-gray-900">{order.total} ج.م</div>
+                            {order.remainingCodAmount > 0 && (
+                              <div className="text-[11px] font-bold text-amber-800">
+                                متبقي: {order.remainingCodAmount} ج.م
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-4 px-4">{getPaymentBadge(order.paymentStatus, order.paymentMethod)}</td>
+                          <td className="py-4 px-4">{getStatusBadge(order.orderStatus)}</td>
+                          <td className="py-4 px-4 text-center">
                             <button
                               onClick={() => setOrderDetailsModal(order)}
-                              className="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-[#3d502d] hover:text-white text-gray-700 text-xs font-bold transition-colors inline-flex items-center gap-1"
+                              className="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-[#3d502d] hover:text-white text-gray-700 text-xs font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
                             >
                               <Eye className="w-3.5 h-3.5" />
                               <span>فحص</span>
@@ -6344,7 +6372,7 @@ export default function AdminPage() {
           {/* TAB 6: DETAILED ANALYTICS & FINANCIAL REPORTS             */}
           {/* ========================================================= */}
           {activeTab === "overview" && (
-            <div className="space-y-8">
+            <div className="space-y-8 mt-8">
               <div className="bg-white p-6 rounded-3xl border border-[#dbe2bd] shadow-sm">
                 <h2 className="font-bold text-2xl text-gray-900">لوحة التحليلات والمبيعات السريرية</h2>
                 <p className="text-xs text-gray-600 mt-1 font-semibold">

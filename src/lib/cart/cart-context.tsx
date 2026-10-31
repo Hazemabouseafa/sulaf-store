@@ -29,7 +29,7 @@ interface CartContextType {
   depositAmount: number;
   appliedCoupon: string | null;
   discountAmount: number;
-  applyCoupon: (code: string) => { success: boolean; message: string };
+  applyCoupon: (code: string, verifiedDiscount?: number) => { success: boolean; message: string };
   removeCoupon: () => void;
 }
 
@@ -72,12 +72,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [items, isHydrated]);
 
   const { settings } = useStoreSettings();
-  const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  const subtotal = items.reduce((sum, item) => {
+    const unitPrice =
+      typeof item.unitPrice === "number" && !isNaN(item.unitPrice)
+        ? item.unitPrice
+        : item.variant
+        ? item.variant.price
+        : item.product.price;
+    return sum + (Number(unitPrice) || 0) * (Number(item.quantity) || 1);
+  }, 0);
+  const totalItems = items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
   const depositAmount = settings.payment?.depositAmount ?? SULAF_SETTINGS.depositAmountEgp;
 
   // Keep discountAmount dynamically synced with subtotal changes
   useEffect(() => {
+    if (!isHydrated) return;
+    if (items.length === 0) {
+      setAppliedCoupon(null);
+      setDiscountAmount(0);
+      return;
+    }
     if (!appliedCoupon) {
       setDiscountAmount(0);
       return;
@@ -85,11 +99,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const res = validateCouponCode(appliedCoupon, subtotal);
     if (res.valid) {
       setDiscountAmount(res.discount);
-    } else {
+    } else if (subtotal > 0 && res.message.includes("الحد الأدنى")) {
       setAppliedCoupon(null);
       setDiscountAmount(0);
     }
-  }, [subtotal, appliedCoupon]);
+  }, [subtotal, appliedCoupon, items.length, isHydrated]);
 
   function openCart() {
     setIsOpen(true);
@@ -101,16 +115,42 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   function addItem(product: ProductData, variant?: ProductVariantData, quantity = 1) {
     setItems((prev) => {
-      const itemId = variant ? `${product.id}-${variant.id}` : product.id;
-      const existing = prev.find((i) => i.id === itemId);
-      const unitPrice = variant ? variant.price : product.price;
+      const resolvedVariant = variant || product.variants?.[0];
+      const itemId = resolvedVariant ? `${product.id}-${resolvedVariant.id}` : product.id;
+      const existing = prev.find((i) => i.id === itemId || i.id === product.id);
+      const isSingleVariant = (product.variants?.length || 0) <= 1;
+      const unitPrice = isSingleVariant
+        ? Number(product.price) || (resolvedVariant ? resolvedVariant.price : 0)
+        : resolvedVariant
+        ? resolvedVariant.price
+        : product.price;
+      const maxStock =
+        typeof product.stock === "number" && product.stock > 0 ? product.stock : 999;
 
       if (existing) {
         return prev.map((i) =>
-          i.id === itemId ? { ...i, quantity: i.quantity + quantity, unitPrice } : i
+          i.id === existing.id
+            ? {
+                ...i,
+                id: itemId,
+                product,
+                variant: resolvedVariant,
+                quantity: Math.min(maxStock, i.quantity + quantity),
+                unitPrice,
+              }
+            : i
         );
       }
-      return [...prev, { id: itemId, product, variant, quantity, unitPrice }];
+      return [
+        ...prev,
+        {
+          id: itemId,
+          product,
+          variant: resolvedVariant,
+          quantity: Math.min(maxStock, Math.max(1, quantity)),
+          unitPrice,
+        },
+      ];
     });
     setIsOpen(true);
   }
@@ -125,7 +165,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     setItems((prev) =>
-      prev.map((i) => (i.id === itemId ? { ...i, quantity } : i))
+      prev.map((i) => {
+        if (i.id !== itemId) return i;
+        const maxStock =
+          typeof i.product.stock === "number" && i.product.stock > 0
+            ? i.product.stock
+            : 999;
+        return { ...i, quantity: Math.min(maxStock, quantity) };
+      })
     );
   }
 
@@ -135,8 +182,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setDiscountAmount(0);
   }
 
-  function applyCoupon(code: string) {
+  function applyCoupon(code: string, verifiedDiscount?: number) {
     const clean = code.trim().toUpperCase();
+    if (typeof verifiedDiscount === "number" && verifiedDiscount > 0) {
+      setAppliedCoupon(clean);
+      setDiscountAmount(verifiedDiscount);
+      return { success: true, message: `تم تطبيق خصم بقيمة ${verifiedDiscount} ج.م!` };
+    }
     const result = validateCouponCode(clean, subtotal);
     if (result.valid) {
       setAppliedCoupon(clean);

@@ -30,6 +30,7 @@ import {
   X,
   RotateCw,
   AlertTriangle,
+  Tag,
 } from "lucide-react";
 import { SulafRosette } from "@/components/home/HeroSection";
 
@@ -43,6 +44,8 @@ export default function CheckoutPage() {
     depositAmount,
     discountAmount,
     appliedCoupon,
+    applyCoupon,
+    removeCoupon,
     clearCart,
   } = useCart();
   const { settings } = useStoreSettings();
@@ -123,9 +126,22 @@ export default function CheckoutPage() {
   const [receiptImage, setReceiptImage] = useState<string | null>(null);
   const [receiptFileName, setReceiptFileName] = useState<string>("");
 
+  // Coupon state on Checkout
+  const [checkoutCouponInput, setCheckoutCouponInput] = useState("");
+  const [checkoutCouponMsg, setCheckoutCouponMsg] = useState<{ text: string; error: boolean } | null>(null);
+
   // Order state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdOrderNumber, setCreatedOrderNumber] = useState<string | null>(null);
+  const [completedOrderSummary, setCompletedOrderSummary] = useState<{
+    orderNumber: string;
+    payNow: number;
+    remainingCod: number;
+    isDepositMode: boolean;
+    governorate: string;
+    city: string;
+    carrierName: string;
+  } | null>(null);
 
   // 1. Multi-product Promo & Volume Discount
   const totalItemsCount = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -166,6 +182,40 @@ export default function CheckoutPage() {
   const payNow = isDepositMode ? Math.min(finalTotal, depositAmount) : finalTotal;
   const remainingCod = isDepositMode ? Math.max(0, finalTotal - depositAmount) : 0;
 
+  const activeProviderKey = settings.shipping?.activeProvider || "stox";
+  const activeCarrierObj = settings.shipping?.providers?.[activeProviderKey];
+  const activeCarrierName =
+    (isArabic ? activeCarrierObj?.nameAr : activeCarrierObj?.nameEn) ||
+    activeCarrierObj?.nameEn ||
+    "Stox Egypt Express";
+
+  async function handleApplyCheckoutCoupon(e: React.FormEvent) {
+    e.preventDefault();
+    const clean = checkoutCouponInput.trim();
+    if (!clean) return;
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: clean, cartSubtotal: subtotal }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        applyCoupon(clean, Number(data.discount) || 0);
+        setCheckoutCouponMsg({ text: data.message, error: false });
+        setCheckoutCouponInput("");
+        return;
+      }
+      if (data.message) {
+        setCheckoutCouponMsg({ text: data.message, error: true });
+        return;
+      }
+    } catch {}
+    const localRes = applyCoupon(clean);
+    setCheckoutCouponMsg({ text: localRes.message, error: !localRes.success });
+    if (localRes.success) setCheckoutCouponInput("");
+  }
+
   // Handle Mock Receipt Upload
   function handleReceiptChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -203,44 +253,59 @@ export default function CheckoutPage() {
         ? "SHA7NAWY_WALLET"
         : (paymentMethod === "PAYMOB" ? "PAYMOB_CARD" : "MANUAL_INSTAPAY");
 
-      // Create Order Record
-      const newOrder = createOrder({
-        customerName: fullName,
-        customerPhone: phone,
-        customerEmail: email,
+      // Reuse pendingOrder on retry so we do not create duplicate orders or double-deduct stock
+      const newOrder =
+        pendingOrder ||
+        createOrder({
+          customerName: fullName,
+          customerPhone: phone,
+          customerEmail: email,
+          governorate,
+          city,
+          street,
+          building,
+          notes,
+          items: items.map((i) => ({
+            productId: i.product.id,
+            productName: isArabic ? i.product.nameAr : i.product.nameEn,
+            variantId: i.variant?.id,
+            variantTitle: isArabic ? i.variant?.titleAr : i.variant?.titleEn,
+            quantity: i.quantity,
+            unitPrice: i.unitPrice,
+            total: i.unitPrice * i.quantity,
+          })),
+          subtotal,
+          discount: combinedDiscount,
+          couponCode: appliedCoupon || undefined,
+          shippingFee: rawShipping,
+          total: finalTotal,
+          isDepositMode,
+          depositAmount: isDepositMode ? depositAmount : 0,
+          remainingCodAmount: remainingCod,
+          paymentMethod: orderPaymentMethod,
+          paymentStatus: paymentMethod === "PAYMOB" ? (isDepositMode ? "DEPOSIT_PAID" : "FULLY_PAID") : "PENDING",
+          orderStatus: paymentMethod === "PAYMOB" ? "PROCESSING" : "PENDING_CONFIRMATION",
+          receiptUrl: receiptImage || undefined,
+          birthdate: birthdate || undefined,
+          closePersonName: closePersonName || undefined,
+          stoxTrackingNumber: `STX-EG-${Math.floor(100000 + Math.random() * 900000)}`,
+          stoxStatus: "CREATED",
+        });
+
+      const orderSummarySnapshot = {
+        orderNumber: newOrder.orderNumber,
+        payNow,
+        remainingCod,
+        isDepositMode,
         governorate,
         city,
-        street,
-        building,
-        notes,
-        items: items.map((i) => ({
-          productId: i.product.id,
-          productName: isArabic ? i.product.nameAr : i.product.nameEn,
-          variantTitle: isArabic ? i.variant?.titleAr : i.variant?.titleEn,
-          quantity: i.quantity,
-          unitPrice: i.unitPrice,
-          total: i.unitPrice * i.quantity,
-        })),
-        subtotal,
-        discount: combinedDiscount,
-        shippingFee: rawShipping,
-        total: finalTotal,
-        isDepositMode,
-        depositAmount: isDepositMode ? depositAmount : 0,
-        remainingCodAmount: remainingCod,
-        paymentMethod: orderPaymentMethod,
-        paymentStatus: paymentMethod === "PAYMOB" ? (isDepositMode ? "DEPOSIT_PAID" : "FULLY_PAID") : "PENDING",
-        orderStatus: paymentMethod === "PAYMOB" ? "PROCESSING" : "PENDING_CONFIRMATION",
-        receiptUrl: receiptImage || undefined,
-        birthdate: birthdate || undefined,
-        closePersonName: closePersonName || undefined,
-        stoxTrackingNumber: `STX-EG-${Math.floor(100000 + Math.random() * 900000)}`,
-        stoxStatus: "CREATED",
-      });
+        carrierName: activeCarrierName,
+      };
 
       // Special Flow for Sha7nawy Wallet
       if (paymentMethod === "SHA7NAWY") {
         setPendingOrder(newOrder);
+        setCompletedOrderSummary(orderSummarySnapshot);
         const cleanWalletNum = (walletPhone.trim() || phone.trim()).replace(/\D/g, "");
 
         const res = await fetch("/api/payments/sha7nawy/create", {
@@ -270,6 +335,7 @@ export default function CheckoutPage() {
         return;
       }
 
+      setCompletedOrderSummary(orderSummarySnapshot);
       setCreatedOrderNumber(newOrder.orderNumber);
       clearCart();
 
@@ -365,27 +431,36 @@ export default function CheckoutPage() {
           <div className="p-4 rounded-2xl bg-[#f4f1e6] border border-[#e2e8c0] text-start font-cairo text-xs space-y-2">
             <div className="flex justify-between">
               <span className="text-gray-600">{t.checkout.paidAmount}</span>
-              <strong className="text-[#485c36]">{payNow} {currency}</strong>
+              <strong className="text-[#485c36]">
+                {completedOrderSummary ? completedOrderSummary.payNow : payNow} {currency}
+              </strong>
             </div>
-            {isDepositMode && (
+            {(completedOrderSummary ? completedOrderSummary.isDepositMode : isDepositMode) && (
               <div className="flex justify-between text-[#610b0d] font-bold">
                 <span>{t.checkout.remainingOnDelivery}</span>
-                <span>{remainingCod} {currency}</span>
+                <span>
+                  {completedOrderSummary ? completedOrderSummary.remainingCod : remainingCod} {currency}
+                </span>
               </div>
             )}
             <div className="flex justify-between">
               <span className="text-gray-600">{t.checkout.shippingAddress}</span>
-              <span>{governorate}، {city}</span>
+              <span>
+                {completedOrderSummary ? completedOrderSummary.governorate : governorate}،{" "}
+                {completedOrderSummary ? completedOrderSummary.city : city}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">{t.checkout.carrierPartner}</span>
-              <span className="text-[#485c36] font-semibold">Stox Egypt Express</span>
+              <span className="text-[#485c36] font-semibold">
+                {completedOrderSummary?.carrierName || activeCarrierName}
+              </span>
             </div>
           </div>
 
           <div className="pt-2 flex flex-col sm:flex-row gap-3">
             <Link
-              href="/track"
+              href={`/track?id=${encodeURIComponent(createdOrderNumber)}`}
               className="flex-1 py-3.5 rounded-2xl bg-[#485c36] text-[#f6f9e6] font-cairo font-bold text-xs hover:bg-[#3a4a2b] transition-colors flex items-center justify-center gap-1.5 shadow-md"
             >
               <Truck className="w-4 h-4" />
@@ -852,7 +927,7 @@ export default function CheckoutPage() {
           <div className="lg:col-span-5 space-y-5 sticky top-28">
             <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#fdfef8] border border-[#e2e8c0] shadow-sm space-y-4">
               <h3 className="font-amiri text-xl font-bold text-[#485c36] border-b border-[#e2e8c0] pb-3">
-                {t.checkout.orderSummary.replace('{count}', items.length.toString())}
+                {t.checkout.orderSummary.replace('{count}', totalItemsCount.toString())}
               </h3>
 
               {/* Items summary */}
@@ -872,6 +947,62 @@ export default function CheckoutPage() {
                     </span>
                   </div>
                 ))}
+              </div>
+
+              {/* Coupon Input inside Checkout Summary */}
+              <div className="pt-3 border-t border-[#e2e8c0]">
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-green-50 border border-green-200 text-xs text-green-800 font-cairo">
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
+                      <span>
+                        {isArabic ? "كود الخصم المطبق:" : "Coupon Applied:"}{" "}
+                        <strong className="font-mono">{appliedCoupon}</strong> (-{discountAmount} {currency})
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        removeCoupon();
+                        setCheckoutCouponMsg(null);
+                      }}
+                      className="text-red-600 hover:underline font-bold cursor-pointer"
+                    >
+                      {isArabic ? "إلغاء" : "Remove"}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={checkoutCouponInput}
+                        onChange={(e) => setCheckoutCouponInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleApplyCheckoutCoupon(e as any);
+                          }
+                        }}
+                        placeholder={t.cart.couponPlaceholder}
+                        className="w-full py-2 px-3 text-xs rounded-xl bg-[#fafcf3] border border-[#e2e8c0] focus:outline-none focus:ring-1 focus:ring-[#610b0d]"
+                      />
+                      <Tag className={`w-3.5 h-3.5 absolute ${isArabic ? "left-2.5" : "right-2.5"} top-1/2 -translate-y-1/2 text-gray-400`} />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => handleApplyCheckoutCoupon(e as any)}
+                      className="px-4 py-2 bg-[#610b0d] text-[#f6f9e6] rounded-xl text-xs font-bold hover:bg-[#470708] transition-colors cursor-pointer"
+                    >
+                      {t.cart.applyCoupon}
+                    </button>
+                  </div>
+                )}
+                {checkoutCouponMsg && !appliedCoupon && (
+                  <p className={`mt-1 text-[11px] font-cairo ${checkoutCouponMsg.error ? "text-red-600" : "text-green-600"}`}>
+                    {checkoutCouponMsg.text}
+                  </p>
+                )}
               </div>
 
               {/* Financial Math */}

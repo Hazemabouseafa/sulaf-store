@@ -182,7 +182,7 @@ export function addProduct(product: Omit<ProductData, "id"> & { id?: string }): 
 
   const updated = [newProduct, ...current];
   saveProducts(updated);
-  addProductApi(product).catch(() => {});
+  addProductApi(newProduct).catch(() => {});
   return newProduct;
 }
 
@@ -191,9 +191,24 @@ export function updateProduct(id: string, updates: Partial<ProductData>): Produc
   const index = current.findIndex((p) => p.id === id);
   if (index === -1) return null;
 
+  const updatedVariants =
+    updates.variants && updates.variants.length > 0
+      ? updates.variants
+      : current[index].variants?.map((v, i) =>
+          i === 0
+            ? {
+                ...v,
+                price: updates.price !== undefined ? Number(updates.price) : v.price,
+                stock: updates.stock !== undefined ? Number(updates.stock) : v.stock,
+                sku: updates.sku !== undefined ? updates.sku : v.sku,
+              }
+            : v
+        ) || [];
+
   const updatedProduct = {
     ...current[index],
     ...updates,
+    variants: updatedVariants,
   };
 
   current[index] = updatedProduct;

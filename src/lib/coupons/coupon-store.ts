@@ -107,6 +107,16 @@ export function toggleCoupon(id: string): boolean {
   return true;
 }
 
+function isCouponExpired(expiryDate?: string): boolean {
+  if (!expiryDate) return false;
+  const trimmed = expiryDate.trim();
+  if (!trimmed) return false;
+  const target = /^\d{4}-\d{2}-\d{2}$/.test(trimmed)
+    ? new Date(`${trimmed}T23:59:59.999`)
+    : new Date(trimmed);
+  return !isNaN(target.getTime()) && target < new Date();
+}
+
 export function validateCouponCode(
   code: string,
   subtotal: number
@@ -122,6 +132,8 @@ export function validateCouponCode(
     discountType: "PERCENTAGE" | "FIXED";
     discountValue: number;
     minOrderAmount: number;
+    maxUsageCount?: number;
+    usedCount?: number;
     isActive: boolean;
     expiryDate?: string;
   } | undefined = coupons.find((c) => c.code === clean && c.isActive);
@@ -145,8 +157,12 @@ export function validateCouponCode(
     return { valid: false, discount: 0, message: "كود الخصم غير صالح أو منتهي الصلاحية" };
   }
 
-  if (found.expiryDate && new Date(found.expiryDate) < new Date()) {
+  if (isCouponExpired(found.expiryDate)) {
     return { valid: false, discount: 0, message: "عذراً، انتهت صلاحية هذا الكوبون" };
+  }
+
+  if (found.maxUsageCount && (found.usedCount || 0) >= found.maxUsageCount) {
+    return { valid: false, discount: 0, message: "عذراً، تم استنفاد الحد الأقصى لاستخدام هذا الكوبون" };
   }
 
   if (subtotal < (found.minOrderAmount || 0)) {

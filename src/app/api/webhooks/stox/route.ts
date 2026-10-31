@@ -1,7 +1,8 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { updateOrderStatus, getOrderByTracking } from "@/lib/orders/order-store";
+import { readJsonFile, writeJsonFile } from "@/lib/db/json-db";
+import { OrderRecord } from "@/lib/orders/order-store";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,12 +13,21 @@ export async function POST(req: NextRequest) {
     console.log(`[Stox Webhook] Received update for AWB ${trackingNo}: ${status}`);
 
     if (trackingNo && status) {
-      const order = getOrderByTracking(trackingNo);
-      if (order) {
-        updateOrderStatus(order.id, {
-          stoxStatus: status,
-          orderStatus: status === "DELIVERED" ? "DELIVERED" : order.orderStatus,
-        });
+      const orders = readJsonFile<OrderRecord[]>("orders.json", []);
+      const cleanTrack = String(trackingNo).trim().toLowerCase();
+      const idx = orders.findIndex(
+        (o) =>
+          o.stoxTrackingNumber?.toLowerCase() === cleanTrack ||
+          (o.orderNumber || "").toLowerCase() === cleanTrack
+      );
+      if (idx !== -1) {
+        orders[idx].stoxStatus = status;
+        if (status === "DELIVERED") {
+          orders[idx].orderStatus = "DELIVERED";
+          orders[idx].paymentStatus = "FULLY_PAID";
+          orders[idx].remainingCodAmount = 0;
+        }
+        writeJsonFile("orders.json", orders);
       }
     }
 

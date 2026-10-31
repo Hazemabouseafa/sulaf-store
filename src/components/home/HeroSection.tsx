@@ -13,8 +13,6 @@ import {
   ArrowRight,
   ShoppingBag,
   Check,
-  Volume2,
-  VolumeX,
 } from "lucide-react";
 
 /**
@@ -79,18 +77,70 @@ export function HeroSection() {
   const { settings } = useStoreSettings();
   const { isArabic, t } = useLanguage();
   const products = useProducts();
-  const roughAway = products[0] || MOCK_PRODUCTS[0];
+  const heroProduct =
+    (settings?.featuredProductId &&
+      products.find(
+        (p) =>
+          p.id === settings.featuredProductId ||
+          p.slug === settings.featuredProductId
+      )) ||
+    products.find((p) => (p as any).isFeatured === true) ||
+    products[0] ||
+    MOCK_PRODUCTS[0];
   const [addedHero, setAddedHero] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isMuted, setIsMuted] = useState(true);
 
-  const toggleSound = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !videoRef.current.muted;
-      setIsMuted(videoRef.current.muted);
-    }
-  };
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.defaultMuted = true;
+    video.muted = true;
+    video.playsInline = true;
+    video.controls = false;
+    video.setAttribute("muted", "");
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
+    video.removeAttribute("controls");
+
+    const ensurePlaying = () => {
+      const el = videoRef.current;
+      if (!el) return;
+      el.muted = true;
+      if (el.paused) {
+        const playPromise = el.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {});
+        }
+      }
+    };
+
+    ensurePlaying();
+    video.addEventListener("loadedmetadata", ensurePlaying);
+    video.addEventListener("loadeddata", ensurePlaying);
+    video.addEventListener("canplay", ensurePlaying);
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") ensurePlaying();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    const onFirstInteraction = () => ensurePlaying();
+    window.addEventListener("touchstart", onFirstInteraction, { passive: true, once: true });
+    window.addEventListener("scroll", onFirstInteraction, { passive: true, once: true });
+    window.addEventListener("click", onFirstInteraction, { passive: true, once: true });
+
+    return () => {
+      video.removeEventListener("loadedmetadata", ensurePlaying);
+      video.removeEventListener("loadeddata", ensurePlaying);
+      video.removeEventListener("canplay", ensurePlaying);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("touchstart", onFirstInteraction);
+      window.removeEventListener("scroll", onFirstInteraction);
+      window.removeEventListener("click", onFirstInteraction);
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined" && (window as any).__SULAF_LOADED__) {
@@ -129,7 +179,8 @@ export function HeroSection() {
   const ArrowIcon = isArabic ? ArrowLeft : ArrowRight;
 
   function handleQuickOrder() {
-    addItem(roughAway);
+    if (!heroProduct) return;
+    addItem(heroProduct, heroProduct.variants?.[0], 1);
     setAddedHero(true);
     setTimeout(() => setAddedHero(false), 1800);
   }
@@ -141,15 +192,21 @@ export function HeroSection() {
       {/* ===================================================================== */}
       <section className="relative w-full min-h-[82vh] sm:min-h-[88vh] lg:min-h-[92vh] flex items-center overflow-hidden bg-black text-[#f6f9e6]">
         
-        {/* Full-bleed background video filled completely */}
+        {/* Full-bleed background video filled completely — 100% automatic with zero controls */}
         <video
           ref={videoRef}
           src="/videos/SULAF.mp4"
           autoPlay
           loop
-          muted={isMuted}
+          muted
           playsInline
-          className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
+          preload="auto"
+          controls={false}
+          disablePictureInPicture
+          disableRemotePlayback
+          tabIndex={-1}
+          aria-hidden="true"
+          className="sulaf-bg-video absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none"
         />
 
         {/* Cinematic dark gradients for pristine legibility and zero contrast clash */}
@@ -306,20 +363,6 @@ export function HeroSection() {
 
           </div>
         </div>
-
-        {/* Minimal Audio Toggle Button */}
-        <button
-          type="button"
-          onClick={toggleSound}
-          aria-label={isMuted ? "Unmute video" : "Mute video"}
-          className="absolute bottom-14 sm:bottom-20 start-6 sm:start-10 z-30 w-11 h-11 rounded-full bg-black/60 hover:bg-black/85 backdrop-blur-md text-[#f6f9e6] border border-white/20 flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-xl cursor-pointer"
-        >
-          {isMuted ? (
-            <VolumeX className="w-5 h-5 text-[#f6f9e6]/80" />
-          ) : (
-            <Volume2 className="w-5 h-5 text-[#f3a5a1]" />
-          )}
-        </button>
 
         {/* Bottom Wavy Curve Shape Divider (التعريجة) transitioning into Royal Burgundy Section */}
         <div className="absolute bottom-0 inset-x-0 w-full overflow-hidden leading-none pointer-events-none z-20">

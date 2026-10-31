@@ -44,13 +44,44 @@ export async function PATCH(
           ? [{ url: body.imageUrl, alt: body.nameAr || products[index].nameAr, isPrimary: true }]
           : products[index].images;
 
+    const nextPrice = body.price !== undefined ? Number(body.price) : products[index].price;
+    const nextStock = body.stock !== undefined ? Number(body.stock) : products[index].stock;
+    const nextCompareAtPrice =
+      body.compareAtPrice !== undefined ? Number(body.compareAtPrice) : products[index].compareAtPrice;
+    const nextSku = body.sku !== undefined ? body.sku : products[index].sku;
+
+    const existingVariants =
+      Array.isArray(body.variants) && body.variants.length > 0
+        ? [...body.variants]
+        : Array.isArray(products[index].variants) && products[index].variants.length > 0
+        ? products[index].variants.map((v) => ({ ...v }))
+        : [
+            {
+              id: `var-${products[index].id}`,
+              titleAr: "العبوة الأساسية (200 مل)",
+              titleEn: "Standard Jar 200ml",
+              sku: nextSku || "SLF-001",
+              price: nextPrice,
+              stock: nextStock,
+              volumeMl: 200,
+            },
+          ];
+
+    if (!body.variants && existingVariants[0]) {
+      if (body.price !== undefined) existingVariants[0].price = nextPrice;
+      if (body.stock !== undefined) existingVariants[0].stock = nextStock;
+      if (body.sku !== undefined) existingVariants[0].sku = nextSku;
+    }
+
     products[index] = {
       ...products[index],
       ...body,
       images: updatedImages,
-      price: body.price !== undefined ? Number(body.price) : products[index].price,
-      stock: body.stock !== undefined ? Number(body.stock) : products[index].stock,
-      compareAtPrice: body.compareAtPrice !== undefined ? Number(body.compareAtPrice) : products[index].compareAtPrice,
+      variants: existingVariants,
+      price: nextPrice,
+      stock: nextStock,
+      compareAtPrice: nextCompareAtPrice,
+      sku: nextSku,
     };
 
     if (body.isFeatured !== undefined) {

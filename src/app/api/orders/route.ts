@@ -22,11 +22,11 @@ export async function GET(req: NextRequest) {
       const q = search.toLowerCase().trim();
       filtered = filtered.filter(
         (o) =>
-          o.orderNumber.toLowerCase().includes(q) ||
-          o.customerName.toLowerCase().includes(q) ||
-          o.customerPhone.includes(q) ||
-          o.city.toLowerCase().includes(q) ||
-          o.governorate.toLowerCase().includes(q)
+          (o.orderNumber || "").toLowerCase().includes(q) ||
+          (o.customerName || "").toLowerCase().includes(q) ||
+          (o.customerPhone || "").includes(q) ||
+          (o.city || "").toLowerCase().includes(q) ||
+          (o.governorate || "").toLowerCase().includes(q)
       );
     }
 
@@ -59,14 +59,26 @@ export async function POST(req: NextRequest) {
       createdAt: body.createdAt || new Date().toISOString(),
     };
 
-    // Auto-deduct stock from purchased products
+    // Auto-deduct stock from purchased products and matching variants
     let productsUpdated = false;
     for (const item of body.items) {
-      const prodIndex = products.findIndex((p) => p.id === item.productId);
+      const qty = Math.max(1, Number(item.quantity) || 1);
+      const prodIndex = products.findIndex((p) => p.id === item.productId || p.slug === item.productId);
       if (prodIndex !== -1) {
-        products[prodIndex].stock = Math.max(0, products[prodIndex].stock - (item.quantity || 1));
-        if (products[prodIndex].variants?.[0]) {
-          products[prodIndex].variants[0].stock = products[prodIndex].stock;
+        const prod = products[prodIndex];
+        prod.stock = Math.max(0, (Number(prod.stock) || 0) - qty);
+        if (Array.isArray(prod.variants) && prod.variants.length > 0) {
+          const varIdx = item.variantId
+            ? prod.variants.findIndex((v) => v.id === item.variantId)
+            : item.variantTitle
+            ? prod.variants.findIndex((v) => v.titleAr === item.variantTitle || v.titleEn === item.variantTitle)
+            : 0;
+          const targetIdx = varIdx !== -1 ? varIdx : 0;
+          if (prod.variants.length === 1) {
+            prod.variants[0].stock = prod.stock;
+          } else if (prod.variants[targetIdx]) {
+            prod.variants[targetIdx].stock = Math.max(0, (Number(prod.variants[targetIdx].stock) || 0) - qty);
+          }
         }
         productsUpdated = true;
       }

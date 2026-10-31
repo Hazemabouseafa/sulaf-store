@@ -18,6 +18,7 @@ export interface OrderRecord {
   items: {
     productId: string;
     productName: string;
+    variantId?: string;
     variantTitle?: string;
     quantity: number;
     unitPrice: number;
@@ -25,6 +26,7 @@ export interface OrderRecord {
   }[];
   subtotal: number;
   discount: number;
+  couponCode?: string;
   shippingFee: number;
   total: number;
   isDepositMode: boolean;

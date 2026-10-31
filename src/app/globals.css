@@ -453,3 +453,20 @@ html.lenis, html.lenis body {
   animation: sulafAmbientDrift 14s ease-in-out infinite;
   will-change: transform, opacity;
 }
+
+/* Suppress all native browser play/control overlays on background videos (iOS Safari, Android, Low Power Mode) */
+.sulaf-bg-video::-webkit-media-controls,
+.sulaf-bg-video::-webkit-media-controls-panel,
+.sulaf-bg-video::-webkit-media-controls-play-button,
+.sulaf-bg-video::-webkit-media-controls-start-playback-button,
+.sulaf-bg-video::-webkit-media-controls-overlay-play-button,
+.sulaf-bg-video::-webkit-media-controls-enclosure,
+.sulaf-bg-video::-internal-media-controls-overlay-cast-button {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  -webkit-appearance: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}

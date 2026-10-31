@@ -2,7 +2,8 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { paymobService } from "@/lib/payments/paymob";
-import { updateOrderStatus, getOrderById } from "@/lib/orders/order-store";
+import { readJsonFile, writeJsonFile } from "@/lib/db/json-db";
+import { OrderRecord } from "@/lib/orders/order-store";
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,13 +23,22 @@ export async function POST(req: NextRequest) {
 
     console.log(`[Paymob Webhook] Received status for order ${orderNumber}: success=${success}`);
 
-    if (orderNumber && success) {
-      const order = getOrderById(orderNumber);
-      if (order) {
-        updateOrderStatus(order.id, {
-          paymentStatus: order.isDepositMode ? "DEPOSIT_PAID" : "FULLY_PAID",
-          orderStatus: "PROCESSING",
-        });
+    if (orderNumber) {
+      const orders = readJsonFile<OrderRecord[]>("orders.json", []);
+      const cleanRef = String(orderNumber).trim().toLowerCase();
+      const idx = orders.findIndex(
+        (o) =>
+          (o.orderNumber || "").toLowerCase() === cleanRef ||
+          (o.id || "").toLowerCase() === cleanRef
+      );
+      if (idx !== -1) {
+        if (success) {
+          orders[idx].paymentStatus = orders[idx].isDepositMode ? "DEPOSIT_PAID" : "FULLY_PAID";
+          orders[idx].orderStatus = "PROCESSING";
+        } else {
+          orders[idx].paymentStatus = "FAILED";
+        }
+        writeJsonFile("orders.json", orders);
       }
     }
 

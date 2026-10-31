@@ -10,22 +10,27 @@ export async function GET() {
     const orders = readJsonFile<OrderRecord[]>("orders.json", []);
     const products = readJsonFile<ProductData[]>("products.json", []);
 
-    // 1. Financial summary
+    // 1. Financial summary (exclude CANCELLED orders from revenue & AOV)
     const totalOrdersCount = orders.length;
-    const grossRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
-    const collectedRevenue = orders.reduce((sum, o) => {
-      if (o.paymentStatus === "FULLY_PAID") return sum + (o.total || 0);
-      if (o.paymentStatus === "DEPOSIT_PAID") return sum + (o.depositAmount || 0);
+    const validOrders = orders.filter((o) => o.orderStatus !== "CANCELLED");
+    const grossRevenue = validOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+    const collectedRevenue = validOrders.reduce((sum, o) => {
+      if (o.paymentStatus === "FULLY_PAID" || o.orderStatus === "DELIVERED") {
+        return sum + (Number(o.total) || 0);
+      }
+      if (o.paymentStatus === "DEPOSIT_PAID") {
+        return sum + (Number(o.depositAmount) || 0);
+      }
       return sum;
     }, 0);
-    const pendingCodRevenue = orders.reduce((sum, o) => {
-      if (o.orderStatus !== "CANCELLED" && o.paymentStatus !== "FULLY_PAID") {
-        return sum + (o.remainingCodAmount || 0);
+    const pendingCodRevenue = validOrders.reduce((sum, o) => {
+      if (o.orderStatus !== "DELIVERED" && o.paymentStatus !== "FULLY_PAID") {
+        return sum + (Number(o.remainingCodAmount) || 0);
       }
       return sum;
     }, 0);
 
-    const aov = totalOrdersCount > 0 ? Math.round(grossRevenue / totalOrdersCount) : 0;
+    const aov = validOrders.length > 0 ? Math.round(grossRevenue / validOrders.length) : 0;
 
     // 2. Status counts
     const statusCounts = {
@@ -53,14 +58,16 @@ export async function GET() {
       }))
       .sort((a, b) => b.count - a.count);
 
-    // 5. 7-Day sales trend
+    // 5. 7-Day sales trend (excluding cancelled orders)
     const days = ["السبت", "الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"];
     const salesTrend = days.map((day, idx) => {
-      const dayOrders = orders.filter((o) => {
-        const d = new Date(o.createdAt).getDay();
-        return (d + 1) % 7 === idx; // Approximate mapping
+      const dayOrders = validOrders.filter((o) => {
+        const parsed = new Date(o.createdAt);
+        if (isNaN(parsed.getTime())) return false;
+        const d = parsed.getDay();
+        return (d + 1) % 7 === idx;
       });
-      const dayAmount = dayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+      const dayAmount = dayOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
       return {
         day,
         amount: dayAmount,

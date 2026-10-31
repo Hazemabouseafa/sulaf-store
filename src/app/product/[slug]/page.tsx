@@ -59,13 +59,25 @@ export default function ProductStoryPage() {
   });
 
   const [inciOpen, setInciOpen] = useState(false);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(() => {
+    const all = getStoredProducts();
+    const initial = all.find((p) => p.slug === slug || p.id === slug) || MOCK_PRODUCTS[0];
+    const primaryIdx = (initial.images || []).findIndex((img) => img.isPrimary);
+    return primaryIdx >= 0 ? primaryIdx : 0;
+  });
 
   useEffect(() => {
-    fetch(`/api/products/${encodeURIComponent(slug)}`)
+    fetch(`/api/products/${encodeURIComponent(slug)}`, { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((d) => {
-        if (d && d.product) setProduct(d.product);
+        if (d && d.product) {
+          setProduct(d.product);
+          const primaryIdx = (d.product.images || []).findIndex((img: any) => img.isPrimary);
+          setSelectedImageIndex(primaryIdx >= 0 ? primaryIdx : 0);
+          if (d.product.variants?.[0]?.id) {
+            setSelectedVariantId(d.product.variants[0].id);
+          }
+        }
       })
       .catch(() => {});
   }, [slug]);
@@ -159,13 +171,17 @@ export default function ProductStoryPage() {
   };
 
   const selectedVariant =
-    product.variants.find((v) => v.id === selectedVariantId) || product.variants[0];
-  const unitPrice = selectedVariant ? selectedVariant.price : product.price;
+    product.variants?.find((v) => v.id === selectedVariantId) || product.variants?.[0];
+  const isSingleVariant = (product.variants?.length || 0) <= 1;
+  const unitPrice = isSingleVariant
+    ? Number(product.price) || selectedVariant?.price || 0
+    : selectedVariant
+    ? selectedVariant.price
+    : product.price;
 
-  // Exact English strings as mandated by specification across both languages
-  const isAbsolutes = product.slug === "absolutes-smoothing-body-cream" || product.id === "prod-absolutes-cream";
-  
-  const productName = isAbsolutes ? "Absolutes Smoothing Body Cream" : (isArabic ? product.nameAr : product.nameEn);
+  const productName = isArabic
+    ? product.nameAr || product.nameEn || "Absolutes Smoothing Body Cream"
+    : product.nameEn || product.nameAr || "Absolutes Smoothing Body Cream";
   const productSubtitle = isArabic
     ? (product.subtitleAr || "الترميم الكيراتيني الهيكلي | 30% يوريا نقية • 10% أمونيوم لاكتات • 2% ساليسيليك")
     : (product.subtitleEn || "Architectural Keratolytic Reset | 30% Pure Urea • 10% Ammonium Lactate • 2% Salicylic Acid");
@@ -405,7 +421,9 @@ export default function ProductStoryPage() {
                     {added
                       ? (isArabic ? "تمت الإضافة لحقيبتك بنجاح!" : "Added to Bag!")
                       : depositChoice
-                      ? (isArabic ? "أضيفي للحقيبة — عربون 100 ج.م" : "Add to Bag — 100 EGP Deposit")
+                      ? (isArabic
+                          ? `أضيفي للحقيبة — عربون ${settings.payment?.depositAmount ?? 100} ج.م`
+                          : `Add to Bag — ${settings.payment?.depositAmount ?? 100} EGP Deposit`)
                       : (isArabic ? `أضيفي للحقيبة — ${unitPrice * quantity} ج.م` : `Add to Bag — ${unitPrice * quantity} EGP`)}
                   </span>
                 </button>
