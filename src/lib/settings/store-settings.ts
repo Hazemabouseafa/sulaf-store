@@ -737,6 +737,7 @@ export interface LiveTextOverride {
   fontSize?: string;
   fontWeight?: string;
   fontFamily?: string;
+  textAlign?: string;
   isHidden?: boolean;
   isDeleted?: boolean;
 }
@@ -1168,6 +1169,8 @@ export function getClientSettings(): StoreSettings {
       elementsVisibility: { ...DEFAULT_ELEMENT_VISIBILITY, ...(parsed.elementsVisibility || {}) },
       customContent: { ...(parsed.customContent || {}) },
       customContentEn: { ...(parsed.customContentEn || {}) },
+      customLinks: { ...(parsed.customLinks || {}) },
+      liveTextOverrides: { ...(parsed.liveTextOverrides || {}) },
       shipping: {
         ...DEFAULT_STORE_SETTINGS.shipping,
         ...(parsed.shipping || {}),

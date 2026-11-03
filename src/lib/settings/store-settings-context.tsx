@@ -64,21 +64,77 @@ export function StoreSettingsProvider({
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // Initial load from storage / API
-    const loaded = getClientSettings();
-    setSettings(loaded);
+    // Initial load: prefer SSR initialSettings over potentially stale localStorage,
+    // while keeping any keys not yet synced.
+    const localLoaded = getClientSettings();
+    const mergedInitial: StoreSettings = initialSettings
+      ? {
+          ...localLoaded,
+          ...initialSettings,
+          sectionsVisibility: {
+            ...DEFAULT_STORE_SETTINGS.sectionsVisibility,
+            ...(localLoaded.sectionsVisibility || {}),
+            ...(initialSettings.sectionsVisibility || {}),
+          },
+          elementsVisibility: {
+            ...DEFAULT_STORE_SETTINGS.elementsVisibility,
+            ...(localLoaded.elementsVisibility || {}),
+            ...(initialSettings.elementsVisibility || {}),
+          },
+          customContent: {
+            ...(localLoaded.customContent || {}),
+            ...(initialSettings.customContent || {}),
+          },
+          customContentEn: {
+            ...(localLoaded.customContentEn || {}),
+            ...(initialSettings.customContentEn || {}),
+          },
+          customLinks: {
+            ...(localLoaded.customLinks || {}),
+            ...(initialSettings.customLinks || {}),
+          },
+          liveTextOverrides: {
+            ...(localLoaded.liveTextOverrides || {}),
+            ...(initialSettings.liveTextOverrides || {}),
+          },
+          socialMedia: {
+            ...DEFAULT_STORE_SETTINGS.socialMedia,
+            ...(localLoaded.socialMedia || {}),
+            ...(initialSettings.socialMedia || {}),
+          },
+          contacts: {
+            ...DEFAULT_STORE_SETTINGS.contacts,
+            ...(localLoaded.contacts || {}),
+            ...(initialSettings.contacts || {}),
+          },
+        }
+      : localLoaded;
+
+    setSettings(mergedInitial);
     setIsLoaded(true);
 
-    // Sync with API route if available
-    fetch("/api/settings")
+    // Sync with API route (always bypass browser cache)
+    fetch("/api/settings", { cache: "no-store" })
       .then((res) => {
         if (res.ok) return res.json();
         return null;
       })
       .then((serverData) => {
         if (serverData && serverData.settings) {
-          setSettings((prev) => ({ ...prev, ...serverData.settings }));
-          saveClientSettings({ ...loaded, ...serverData.settings });
+          setSettings((prev) => {
+            const next = {
+              ...prev,
+              ...serverData.settings,
+              liveTextOverrides: {
+                ...(serverData.settings.liveTextOverrides || {}),
+              },
+              customLinks: {
+                ...(serverData.settings.customLinks || {}),
+              },
+            };
+            saveClientSettings(next);
+            return next;
+          });
         }
       })
       .catch(() => {

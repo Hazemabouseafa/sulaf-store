@@ -105,6 +105,10 @@ function getElementKey(el: HTMLElement, pathname: string): string {
   if (el.dataset.liveKey) {
     return `live::${el.dataset.liveKey}`;
   }
+  const closestLiveKeyEl = el.closest("[data-live-key]") as HTMLElement | null;
+  if (closestLiveKeyEl && closestLiveKeyEl.dataset.liveKey) {
+    return `live::${closestLiveKeyEl.dataset.liveKey}`;
+  }
   if (el.dataset.liveSection) {
     return `section::${el.dataset.liveSection}`;
   }
@@ -112,20 +116,28 @@ function getElementKey(el: HTMLElement, pathname: string): string {
     return `id::${el.id}`;
   }
 
-  // Look for the closest section container for scoped selector
+  // Look for the closest section container or semantic landmark for scoped selector
   const section = el.closest("[data-live-section]") as HTMLElement | null;
   const sectionId = section?.getAttribute("data-live-section");
+  const landmark = !section
+    ? (el.closest("main, header, footer, nav") as HTMLElement | null)
+    : null;
 
   const pathParts: string[] = [];
   let curr: HTMLElement | null = el;
-  const stopAt = section || document.body;
+  const stopAt = section || landmark || document.body;
 
   while (curr && curr !== stopAt && curr.parentElement) {
     const parentEl: HTMLElement = curr.parentElement;
     const tag = curr.tagName.toLowerCase();
-    const sameTagSiblings = Array.from(parentEl.children).filter((c: Element) => c.tagName.toLowerCase() === tag);
+    // Ignore dynamic LiveVisualEditor UI nodes when computing sibling indices
+    const sameTagSiblings = Array.from(parentEl.children).filter(
+      (c: Element) =>
+        c.tagName.toLowerCase() === tag &&
+        !c.hasAttribute("data-live-editor-ui")
+    );
     const index = sameTagSiblings.indexOf(curr);
-    pathParts.unshift(`${tag}:nth-of-type(${index + 1})`);
+    pathParts.unshift(`${tag}:nth-of-type(${Math.max(1, index + 1)})`);
     curr = parentEl;
   }
 
@@ -134,9 +146,28 @@ function getElementKey(el: HTMLElement, pathname: string): string {
 
   if (sectionId) {
     return `secPath::${sectionId}::${pathStr}::${snippet}`;
+  } else if (landmark) {
+    const landmarkTag = landmark.tagName.toLowerCase();
+    return `landmarkPath::${pathname}::${landmarkTag}::${pathStr}::${snippet}`;
   } else {
     return `pagePath::${pathname}::${pathStr}::${snippet}`;
   }
+}
+
+/**
+ * Helper to query a relative path from a container element, trying :scope > first.
+ */
+function queryRelativePath(container: Element, path: string): HTMLElement | null {
+  if (!path) return null;
+  try {
+    const direct = container.querySelector(`:scope > ${path}`) as HTMLElement | null;
+    if (direct) return direct;
+  } catch {}
+  try {
+    const descendant = container.querySelector(path) as HTMLElement | null;
+    if (descendant) return descendant;
+  } catch {}
+  return null;
 }
 
 /**
@@ -164,7 +195,20 @@ function resolveElementByKey(key: string, pathname: string): HTMLElement | null 
       const path = parts[2];
       const secEl = document.querySelector(`[data-live-section="${secId}"]`);
       if (secEl && path) {
-        return (secEl.querySelector(path) as HTMLElement) || null;
+        return queryRelativePath(secEl, path);
+      }
+      return null;
+    }
+    if (key.startsWith("landmarkPath::")) {
+      const parts = key.split("::");
+      const page = parts[1];
+      const landmarkTag = parts[2];
+      const path = parts[3];
+      if (page === pathname && landmarkTag && path) {
+        const landmarkEl = document.querySelector(landmarkTag);
+        if (landmarkEl) {
+          return queryRelativePath(landmarkEl, path);
+        }
       }
       return null;
     }
@@ -173,17 +217,28 @@ function resolveElementByKey(key: string, pathname: string): HTMLElement | null 
       const page = parts[1];
       const path = parts[2];
       if (page === pathname && path) {
-        return (document.body.querySelector(path) as HTMLElement) || null;
+        const fromBody = queryRelativePath(document.body, path);
+        if (fromBody && !fromBody.closest("[data-live-editor-ui='true']")) {
+          return fromBody;
+        }
+        // Fallback if top-level div index shifted due to Preloader or LiveEditor UI mount/unmount
+        const subPath = path.replace(/^div:nth-of-type\(\d+\)\s*>\s*/, "");
+        if (subPath && subPath !== path) {
+          const mainEl = document.querySelector("main") || document.body;
+          const fallbackEl = queryRelativePath(mainEl, subPath);
+          if (fallbackEl && !fallbackEl.closest("[data-live-editor-ui='true']")) {
+            return fallbackEl;
+          }
+        }
       }
       return null;
     }
 
-    // Backwards compatibility for legacy keys, but with strict leaf-tag & text-match validation
+    // Backwards compatibility for legacy keys, with strict leaf-tag & text-match validation
     if (key.startsWith(`${pathname}::`)) {
       const parts = key.split("::");
       const tag = parts[1];
       const cleanSnippet = parts[3];
-      // Only match leaf text tags to avoid touching root containers
       if (
         tag &&
         cleanSnippet &&
@@ -208,8 +263,8 @@ function resolveElementByKey(key: string, pathname: string): HTMLElement | null 
  * Safely applies text without using innerText which destroys child JSX/HTML elements.
  */
 function applyTextSafely(element: HTMLElement, newText: string) {
-  // If element has no child elements, textContent is 100% safe
-  if (element.children.length === 0) {
+  // If element explicitly has a data-live-key (e.g. hero-poem-line-1 with word spans) or no child elements
+  if (element.dataset.liveKey || element.children.length === 0) {
     element.textContent = newText;
     return;
   }
@@ -224,7 +279,13 @@ function applyTextSafely(element: HTMLElement, newText: string) {
     return;
   }
 
-  // If there's an inner leaf text element (like a single <span> or <p>), update it
+  // If there's an inner [data-live-key] or leaf text element (like a single <span> inside a button with SVG icons), update it
+  const liveKeyChild = element.querySelector("[data-live-key]") as HTMLElement | null;
+  if (liveKeyChild) {
+    liveKeyChild.textContent = newText;
+    return;
+  }
+
   const leaf = element.querySelector("span, p, strong, b, em, label, h1, h2, h3, h4, h5, h6");
   if (leaf && leaf.children.length === 0) {
     leaf.textContent = newText;
@@ -242,8 +303,8 @@ export function LiveVisualEditor() {
   const pathname = usePathname();
   const { settings, updateSettings } = useStoreSettings();
 
-  // Mode States - Default to true if sulaf_admin_auth or param exists, else always allow admin bar
-  const [isAdminDetected, setIsAdminDetected] = useState(true);
+  // Mode States - Strictly false by default so non-admin visitors NEVER see the Live Editor UI
+  const [isAdminDetected, setIsAdminDetected] = useState(false);
   const [isLiveEdit, setIsLiveEdit] = useState(false);
   const [isVisitorPreview, setIsVisitorPreview] = useState(false);
   const [sectionsDrawerOpen, setSectionsDrawerOpen] = useState(false);
@@ -298,30 +359,45 @@ export function LiveVisualEditor() {
     return () => clearTimeout(timer);
   }, [pathname, isLiveEdit]);
 
-  // Check if admin is logged in or URL has ?live_edit=true
+  // Strictly check if admin is logged in (`sulaf_admin_auth === "true"`).
+  // Non-admins NEVER see the Live Editor launcher or toolbar, even if URL params are passed.
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const hasParam =
-      window.location.search.includes("live_edit=1") ||
-      window.location.search.includes("live_edit=true") ||
-      window.location.search.includes("edit=true");
+    const checkAdminAccess = () => {
+      const isAdmin = localStorage.getItem("sulaf_admin_auth") === "true";
+      setIsAdminDetected(isAdmin);
 
-    const hasAdminSession =
-      localStorage.getItem("sulaf_admin_auth") === "true" ||
-      sessionStorage.getItem("sulaf_live_edit_mode") === "true";
+      if (!isAdmin) {
+        setIsLiveEdit(false);
+        setActiveTarget(null);
+        setSectionsDrawerOpen(false);
+        return;
+      }
 
-    if (hasParam || hasAdminSession) {
-      setIsAdminDetected(true);
-    }
+      const hasParam =
+        window.location.search.includes("live_edit=1") ||
+        window.location.search.includes("live_edit=true") ||
+        window.location.search.includes("edit=true");
 
-    if (hasParam || sessionStorage.getItem("sulaf_live_edit_mode") === "true") {
-      setIsLiveEdit(true);
-    }
-  }, []);
+      if (hasParam || sessionStorage.getItem("sulaf_live_edit_mode") === "true") {
+        setIsLiveEdit(true);
+        sessionStorage.setItem("sulaf_live_edit_mode", "true");
+      }
+    };
+
+    checkAdminAccess();
+    window.addEventListener("storage", checkAdminAccess);
+    window.addEventListener("sulaf_admin_auth_changed", checkAdminAccess);
+    return () => {
+      window.removeEventListener("storage", checkAdminAccess);
+      window.removeEventListener("sulaf_admin_auth_changed", checkAdminAccess);
+    };
+  }, [pathname]);
 
   // Sync session storage when live edit mode changes
   const toggleLiveEdit = (val: boolean) => {
+    if (!isAdminDetected) return;
     setIsLiveEdit(val);
     if (typeof window !== "undefined") {
       if (val) {
@@ -341,7 +417,31 @@ export function LiveVisualEditor() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // Apply saved overrides to DOM safely
+  // Helper to immediately persist updated overrides to context, localStorage, and /api/settings
+  const persistOverridesImmediately = useCallback(
+    async (nextPending: Record<string, LiveTextOverride>) => {
+      const mergedOverrides: Record<string, LiveTextOverride> = {
+        ...(settings.liveTextOverrides || {}),
+        ...nextPending,
+      };
+      const updatedCustomLinks: Record<string, string> = {
+        ...(settings.customLinks || {}),
+      };
+      Object.entries(mergedOverrides).forEach(([k, o]) => {
+        if (o.href) {
+          updatedCustomLinks[k] = o.href;
+        }
+      });
+
+      updateSettings({
+        liveTextOverrides: mergedOverrides,
+        customLinks: updatedCustomLinks,
+      });
+    },
+    [settings.liveTextOverrides, settings.customLinks, updateSettings]
+  );
+
+  // Apply saved overrides to DOM safely for ALL visitors and admins
   const applyOverrides = useCallback(() => {
     if (typeof document === "undefined") return;
 
@@ -355,7 +455,11 @@ export function LiveVisualEditor() {
       if (!el) return;
 
       const isSec = key.startsWith("section::") || !!el.getAttribute("data-live-section");
-      const isContainer = el.children.length > 1;
+      const hasLiveKey = !!el.dataset.liveKey;
+      const nonSvgChildElements = Array.from(el.children).filter(
+        (c) => !["svg", "path", "g", "circle"].includes(c.tagName.toLowerCase())
+      );
+      const isContainer = !hasLiveKey && nonSvgChildElements.length > 1;
 
       // Handle Hide / Delete
       if (override.isHidden || override.isDeleted) {
@@ -365,41 +469,53 @@ export function LiveVisualEditor() {
         el.style.removeProperty("display");
       }
 
-      // Never apply text to a whole section or multi-child container!
-      if (!isSec && !isContainer && override.text !== undefined && override.text !== null) {
-        applyTextSafely(el, override.text);
-      } else if (!isSec && override.text !== undefined && override.text !== null) {
-        // Safe leaf update for simple wrappers
+      // Apply text override safely
+      if (!isSec && override.text !== undefined && override.text !== null) {
         applyTextSafely(el, override.text);
       }
 
       // Handle link destination
-      if (override.href !== undefined) {
+      if (override.href !== undefined && override.href !== "") {
         if (el.tagName.toLowerCase() === "a") {
           (el as HTMLAnchorElement).href = override.href;
         } else {
           const anchor = el.closest("a");
-          if (anchor) anchor.href = override.href;
+          if (anchor) (anchor as HTMLAnchorElement).href = override.href;
         }
       }
-      if (override.target !== undefined && el.tagName.toLowerCase() === "a") {
-        (el as HTMLAnchorElement).target = override.target;
+      if (override.target !== undefined) {
+        if (el.tagName.toLowerCase() === "a") {
+          (el as HTMLAnchorElement).target = override.target;
+        } else {
+          const anchor = el.closest("a");
+          if (anchor) (anchor as HTMLAnchorElement).target = override.target;
+        }
       }
 
-      // Typography styling: ONLY apply to leaf elements, NEVER to sections or large containers
+      // Typography styling: apply to leaf/text elements, never to whole sections
       if (!isSec && !isContainer) {
         if (override.color) el.style.color = override.color;
         if (override.fontSize) el.style.fontSize = override.fontSize;
         if (override.fontWeight) el.style.fontWeight = override.fontWeight;
         if (override.fontFamily) el.style.fontFamily = override.fontFamily;
+        if (override.textAlign) el.style.textAlign = override.textAlign;
       }
     });
   }, [pathname, settings.liveTextOverrides, pendingOverrides]);
 
   useEffect(() => {
     applyOverrides();
-    const timer = setTimeout(applyOverrides, 300);
-    return () => clearTimeout(timer);
+    const t1 = setTimeout(applyOverrides, 150);
+    const t2 = setTimeout(applyOverrides, 450);
+    const t3 = setTimeout(applyOverrides, 900);
+    const handleReady = () => applyOverrides();
+    window.addEventListener("sulaf:ready", handleReady);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      window.removeEventListener("sulaf:ready", handleReady);
+    };
   }, [applyOverrides]);
 
   // Open Section Editor Specifically
@@ -528,24 +644,43 @@ export function LiveVisualEditor() {
         if (parentInteractive) leafElement = parentInteractive as HTMLElement;
       }
 
+      // If the clicked target is inside an element with an explicit [data-live-key] (e.g. Hero poem word span),
+      // select the [data-live-key] element directly so the whole text line/element is edited cleanly
+      const closestLiveKeyEl = leafElement.closest("[data-live-key]") as HTMLElement | null;
+      if (closestLiveKeyEl) {
+        leafElement = closestLiveKeyEl;
+      } else {
+        // If user clicked a button or anchor that wraps SVG icons + a single [data-live-key] or <span>, select that text element
+        const innerLiveKey = leafElement.querySelector("[data-live-key]") as HTMLElement | null;
+        if (innerLiveKey) {
+          leafElement = innerLiveKey;
+        }
+      }
+
       // Find enclosing link if any
       const enclosingLink =
         leafElement.tagName.toLowerCase() === "a" ? (leafElement as HTMLAnchorElement) : leafElement.closest("a");
 
-      const hasMultipleChildElements = leafElement.children.length > 1;
+      const nonSvgChildElements = Array.from(leafElement.children).filter(
+        (c) => !["svg", "path", "g", "circle"].includes(c.tagName.toLowerCase())
+      );
+      const hasLiveKey = !!leafElement.dataset.liveKey;
+      const hasMultipleChildElements = !hasLiveKey && nonSvgChildElements.length > 1;
       const directText = Array.from(leafElement.childNodes)
         .filter((n) => n.nodeType === Node.TEXT_NODE && (n.textContent || "").trim().length > 0)
         .map((n) => n.textContent?.trim())
         .join(" ");
 
-      const canEditText = (leafElement.children.length === 0 || directText.length > 0) && !hasMultipleChildElements;
+      const canEditText =
+        hasLiveKey ||
+        ((nonSvgChildElements.length <= 1 || directText.length > 0) && !hasMultipleChildElements);
       const isContainer = !canEditText && leafElement.children.length > 0;
 
       // Extract text safely without concatenating child elements destructively
       let currentText = "";
       if (canEditText) {
-        if (leafElement.children.length === 0) {
-          currentText = (leafElement.textContent || "").trim();
+        if (hasLiveKey || leafElement.children.length === 0) {
+          currentText = (leafElement.textContent || "").trim().replace(/\s+/g, " ");
         } else {
           currentText = directText;
           if (!currentText) {
@@ -602,7 +737,7 @@ export function LiveVisualEditor() {
       setEditColor(existingOv.color || "");
       setEditFontSize(existingOv.fontSize || "");
       setEditFontWeight(existingOv.fontWeight || "");
-      setEditTextAlign("");
+      setEditTextAlign(existingOv.textAlign || "");
       setEditFontFamily(existingOv.fontFamily || "");
       setEditIsHidden(existingOv.isHidden || false);
     };
@@ -622,7 +757,7 @@ export function LiveVisualEditor() {
     };
   }, [isLiveEdit, isVisitorPreview, pathname, activeTarget, settings.liveTextOverrides, pendingOverrides]);
 
-  // Apply Changes from Popover safely
+  // Apply Changes from Popover safely and persist immediately to server
   const handleApplyChanges = () => {
     if (!activeTarget) return;
 
@@ -645,8 +780,8 @@ export function LiveVisualEditor() {
         } else {
           const anchor = element.closest("a");
           if (anchor) {
-            anchor.href = editHref;
-            anchor.target = editTarget;
+            (anchor as HTMLAnchorElement).href = editHref;
+            (anchor as HTMLAnchorElement).target = editTarget;
           }
         }
       }
@@ -664,22 +799,26 @@ export function LiveVisualEditor() {
     }
 
     const newOverride: LiveTextOverride = {
+      ...((settings.liveTextOverrides || {})[key] || {}),
       ...(pendingOverrides[key] || {}),
       ...(canEditText && editText && !isSection ? { text: editText } : {}),
       ...(isLink ? { href: editHref, target: editTarget } : {}),
       ...(!isSection && !isContainer && editColor ? { color: editColor } : {}),
       ...(!isSection && !isContainer && editFontSize ? { fontSize: editFontSize } : {}),
       ...(!isSection && !isContainer && editFontWeight ? { fontWeight: editFontWeight } : {}),
+      ...(!isSection && !isContainer && editTextAlign ? { textAlign: editTextAlign } : {}),
       ...(!isSection && !isContainer && editFontFamily ? { fontFamily: editFontFamily } : {}),
       isHidden: editIsHidden,
     };
 
-    setPendingOverrides((prev) => ({
-      ...prev,
+    const nextPending = {
+      ...pendingOverrides,
       [key]: newOverride,
-    }));
+    };
+    setPendingOverrides(nextPending);
+    persistOverridesImmediately(nextPending);
 
-    showToast(`✓ تم تطبيق التعديل بنجاح`);
+    showToast(`✓ تم تطبيق وحفظ التعديل مباشرة على الموقع`);
     setActiveTarget(null);
   };
 
@@ -691,16 +830,19 @@ export function LiveVisualEditor() {
     element.style.setProperty("display", "none", "important");
 
     const newOverride: LiveTextOverride = {
+      ...((settings.liveTextOverrides || {})[key] || {}),
       ...(pendingOverrides[key] || {}),
       isHidden: true,
     };
 
-    setPendingOverrides((prev) => ({
-      ...prev,
+    const nextPending = {
+      ...pendingOverrides,
       [key]: newOverride,
-    }));
+    };
+    setPendingOverrides(nextPending);
+    persistOverridesImmediately(nextPending);
 
-    showToast(`👁️ تم إخفاء العنصر! يمكنك حفظ التغييرات الآن.`);
+    showToast(`👁️ تم إخفاء العنصر وحفظ التغيير مباشرة.`);
     setActiveTarget(null);
   };
 
@@ -713,17 +855,20 @@ export function LiveVisualEditor() {
     element.style.setProperty("display", "none", "important");
 
     const newOverride: LiveTextOverride = {
+      ...((settings.liveTextOverrides || {})[key] || {}),
       ...(pendingOverrides[key] || {}),
       isDeleted: true,
       isHidden: true,
     };
 
-    setPendingOverrides((prev) => ({
-      ...prev,
+    const nextPending = {
+      ...pendingOverrides,
       [key]: newOverride,
-    }));
+    };
+    setPendingOverrides(nextPending);
+    persistOverridesImmediately(nextPending);
 
-    showToast(`🗑️ تم حذف العنصر من الواجهة! اضغط "حفظ التغييرات" لتثبيته.`);
+    showToast(`🗑️ تم حذف العنصر من الواجهة وحفظ التغيير مباشرة.`);
     setActiveTarget(null);
   };
 
@@ -748,12 +893,14 @@ export function LiveVisualEditor() {
       isDeleted: false,
     };
 
-    setPendingOverrides((prev) => ({
-      ...prev,
+    const nextPending = {
+      ...pendingOverrides,
       [key]: newOverride,
-    }));
+    };
+    setPendingOverrides(nextPending);
+    persistOverridesImmediately(nextPending);
 
-    showToast(willHide ? `تم إخفاء القسم "${secKey}"` : `تم إظهار القسم "${secKey}"`);
+    showToast(willHide ? `تم إخفاء القسم "${secKey}" وحفظ التغيير` : `تم إظهار القسم "${secKey}" وحفظ التغيير`);
   };
 
   // Save All Changes to Server & Store Settings
@@ -769,7 +916,7 @@ export function LiveVisualEditor() {
         ...(settings.customLinks || {}),
       };
 
-      Object.entries(pendingOverrides).forEach(([k, o]) => {
+      Object.entries(mergedOverrides).forEach(([k, o]) => {
         if (o.href) {
           updatedCustomLinks[k] = o.href;
         }
@@ -836,6 +983,13 @@ export function LiveVisualEditor() {
 
   const pendingCount = Object.keys(pendingOverrides).length;
   const pageSections = discoveredSections;
+
+  // CRITICAL SECURITY & UX GUARD:
+  // Regular visitors (!isAdminDetected) must NEVER see the Live Editor launcher pill, toolbar, or popovers.
+  // Note: applyOverrides() useEffect above still runs for all visitors so saved edits apply to everyone.
+  if (!isAdminDetected) {
+    return null;
+  }
 
   return (
     <>

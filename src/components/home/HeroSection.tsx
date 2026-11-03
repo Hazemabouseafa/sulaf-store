@@ -169,9 +169,13 @@ export function HeroSection() {
 
   // Authentic Sulaf Hero Texts from Settings & Translations
   const poemLine1 =
-    custom.heroPoemLine1 || (isArabic ? settings.hero.poemLine1 || t.brand.poemLine1 : t.brand.poemLine1);
+    settings.liveTextOverrides?.["live::hero-poem-line-1"]?.text ||
+    custom.heroPoemLine1 ||
+    (isArabic ? settings.hero.poemLine1 || t.brand.poemLine1 : t.brand.poemLine1);
   const poemLine2 =
-    custom.heroPoemLine2 || (isArabic ? settings.hero.poemLine2 || t.brand.poemLine2 : t.brand.poemLine2);
+    settings.liveTextOverrides?.["live::hero-poem-line-2"]?.text ||
+    custom.heroPoemLine2 ||
+    (isArabic ? settings.hero.poemLine2 || t.brand.poemLine2 : t.brand.poemLine2);
 
   const wordsLine1 = poemLine1.split(" ");
   const wordsLine2 = poemLine2.split(" ");
@@ -190,7 +194,11 @@ export function HeroSection() {
       {/* ===================================================================== */}
       {/* HERO SECTION: FULL-BLEED VIDEO BACKGROUND WITH HIGH-CONTRAST TEXT    */}
       {/* ===================================================================== */}
-      <section className="relative w-full min-h-[82vh] sm:min-h-[88vh] lg:min-h-[92vh] flex items-center overflow-hidden bg-black text-[#f6f9e6]">
+      <section
+        data-live-section="heroSection"
+        data-section-name="القسم الرئيسي (Hero)"
+        className="relative w-full min-h-[82vh] sm:min-h-[88vh] lg:min-h-[92vh] flex items-center overflow-hidden bg-black text-[#f6f9e6]"
+      >
         
         {/* Full-bleed background video filled completely — 100% automatic with zero controls */}
         <video
@@ -230,11 +238,17 @@ export function HeroSection() {
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                 className="space-y-1.5"
               >
-                <span className="font-mono text-[10px] sm:text-[11px] tracking-[0.25em] uppercase text-[#f3a5a1] block font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+                <span
+                  data-live-key="hero-heritage"
+                  className="font-mono text-[10px] sm:text-[11px] tracking-[0.25em] uppercase text-[#f3a5a1] block font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"
+                >
                   {custom.heroHeritageText || t.hero.clinicalHeritage}
                 </span>
                 <div className="flex items-center gap-3">
-                  <span className="font-mono text-xs sm:text-sm tracking-[0.2em] uppercase text-white font-bold drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+                  <span
+                    data-live-key="hero-badge"
+                    className="font-mono text-xs sm:text-sm tracking-[0.2em] uppercase text-white font-bold drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"
+                  >
                     {custom.heroBadgeText || (isArabic ? settings.hero.badge || t.hero.badge : t.hero.badge)}
                   </span>
                   <motion.span
@@ -256,7 +270,7 @@ export function HeroSection() {
                     : "font-cinzel text-[clamp(2.4rem,4.8vw,4.2rem)] leading-[1.15]"
                 } font-normal text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.9)]`}
               >
-                <span className="block">
+                <span data-live-key="hero-poem-line-1" className="block">
                   {wordsLine1.map((word, i) => (
                     <motion.span
                       key={`l1-${i}`}
@@ -274,7 +288,10 @@ export function HeroSection() {
                   ))}
                 </span>
 
-                <span className="block italic text-[#f3a5a1] mt-2 drop-shadow-[0_4px_22px_rgba(202,56,74,0.45)]">
+                <span
+                  data-live-key="hero-poem-line-2"
+                  className="block italic text-[#f3a5a1] mt-2 drop-shadow-[0_4px_22px_rgba(202,56,74,0.45)]"
+                >
                   {wordsLine2.map((word, i) => (
                     <motion.span
                       key={`l2-${i}`}
@@ -297,6 +314,7 @@ export function HeroSection() {
             {/* Authentic Sulaf Clinical Subheading */}
             {vis.heroSubheading !== false && (
               <motion.p
+                data-live-key="hero-subheading"
                 initial={{ opacity: 0, y: 16 }}
                 animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
                 transition={{ duration: 0.8, delay: isReady ? 0.65 : 0, ease: [0.16, 1, 0.3, 1] }}
@@ -335,7 +353,7 @@ export function HeroSection() {
                     ) : (
                       <>
                         <ShoppingBag className="w-4 h-4 text-[#f3e5ab]" />
-                        <span>
+                        <span data-live-key="hero-primary-cta-text">
                           {custom.heroPrimaryCtaText ||
                             (isArabic
                               ? settings.hero.ctaText || t.hero.ctaOrder
@@ -353,7 +371,9 @@ export function HeroSection() {
                       href="/shop"
                       className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full border border-white/35 hover:border-white/70 bg-white/10 hover:bg-white/20 text-[#f6f9e6] backdrop-blur-md text-xs sm:text-sm font-bold transition-all shadow-lg"
                     >
-                      <span>{custom.heroSecondaryCtaText || t.hero.ctaExplore}</span>
+                      <span data-live-key="hero-secondary-cta-text">
+                        {custom.heroSecondaryCtaText || t.hero.ctaExplore}
+                      </span>
                       <ArrowIcon className="w-4 h-4" />
                     </Link>
                   </motion.div>

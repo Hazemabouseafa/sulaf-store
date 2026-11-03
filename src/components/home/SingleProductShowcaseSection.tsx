@@ -121,7 +121,7 @@ export function SingleProductShowcaseSection() {
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#ca384a]/40 border border-[#f3a5a1]/30 hover:border-[#f3a5a1]/70 text-[#f3e5ab] hover:text-white text-xs font-bold tracking-wide shadow-sm transition-all cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#f3a5a1]" />
-                <span>
+                <span data-live-key="showcase-badge">
                   {heroProduct.badgeAr || (isArabic ? "مستحضر سُـلاف الأيقوني" : "Sulaf Flagship Formulation")}
                 </span>
               </Link>
@@ -135,6 +135,7 @@ export function SingleProductShowcaseSection() {
             >
               <Link
                 href={productHref}
+                data-live-key="showcase-title"
                 className="hover:text-[#f3a5a1] transition-colors cursor-pointer block"
               >
                 {isArabic ? (heroProduct.nameAr || "Absolutes Smoothing Body Cream") : (heroProduct.nameEn || heroProduct.nameAr)}
@@ -146,6 +147,7 @@ export function SingleProductShowcaseSection() {
               <p className="text-xs sm:text-sm font-semibold text-[#f3a5a1] font-mono tracking-wide drop-shadow-sm">
                 <Link
                   href={productHref}
+                  data-live-key="showcase-subtitle"
                   className="hover:text-white transition-colors cursor-pointer inline-block"
                 >
                   {isArabic
@@ -163,6 +165,7 @@ export function SingleProductShowcaseSection() {
             >
               <Link
                 href={productHref}
+                data-live-key="showcase-description"
                 className="hover:text-white transition-colors cursor-pointer block"
               >
                 {isArabic
@@ -177,7 +180,7 @@ export function SingleProductShowcaseSection() {
                 href={productHref}
                 className="flex items-baseline gap-1.5 cursor-pointer hover:opacity-90 transition-opacity"
               >
-                <span className="text-2xl sm:text-3xl font-bold font-mono text-white drop-shadow-sm">
+                <span data-live-key="showcase-price" className="text-2xl sm:text-3xl font-bold font-mono text-white drop-shadow-sm">
                   {heroProduct.price}
                 </span>
                 <span className="text-xs font-bold text-[#f3a5a1]">{currency}</span>
@@ -209,7 +212,7 @@ export function SingleProductShowcaseSection() {
                   ) : (
                     <>
                       <ShoppingBag className="w-3.5 h-3.5 text-[#f3e5ab]" />
-                      <span>{isArabic ? "أضيفي للحقيبة" : "Add to Bag"}</span>
+                      <span data-live-key="showcase-cta-order">{isArabic ? "أضيفي للحقيبة" : "Add to Bag"}</span>
                     </>
                   )}
                 </motion.button>
@@ -218,7 +221,7 @@ export function SingleProductShowcaseSection() {
                   href={productHref}
                   className="inline-flex items-center gap-1.5 px-5 py-3 rounded-full border border-white/30 hover:border-white/60 text-white hover:bg-white/10 backdrop-blur-sm text-xs font-bold transition-all"
                 >
-                  <span>{isArabic ? "استكشفي المستحضر" : "Explore Product"}</span>
+                  <span data-live-key="showcase-cta-details">{isArabic ? "استكشفي المستحضر" : "Explore Product"}</span>
                   <ArrowIcon className="w-3.5 h-3.5" />
                 </Link>
               </div>

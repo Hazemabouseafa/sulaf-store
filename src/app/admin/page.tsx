@@ -1514,6 +1514,7 @@ export default function AdminPage() {
       if (res.ok && data.success) {
         setIsAuthenticated(true);
         localStorage.setItem("sulaf_admin_auth", "true");
+        window.dispatchEvent(new Event("sulaf_admin_auth_changed"));
         loadLiveBackendData();
         showToast("مرحباً بك في لوحة تحكم سلاف!");
       } else {
@@ -1524,6 +1525,7 @@ export default function AdminPage() {
       if (username === "admin" && password === "sulaf2026") {
         setIsAuthenticated(true);
         localStorage.setItem("sulaf_admin_auth", "true");
+        window.dispatchEvent(new Event("sulaf_admin_auth_changed"));
         loadLiveBackendData();
       } else {
         setLoginError("اسم المستخدم أو كلمة المرور غير صحيحة.");
@@ -1536,6 +1538,8 @@ export default function AdminPage() {
   function handleLogout() {
     setIsAuthenticated(false);
     localStorage.removeItem("sulaf_admin_auth");
+    sessionStorage.removeItem("sulaf_live_edit_mode");
+    window.dispatchEvent(new Event("sulaf_admin_auth_changed"));
     showToast("تم تسجيل الخروج بنجاح.");
   }
 

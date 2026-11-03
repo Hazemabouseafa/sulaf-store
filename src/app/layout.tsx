@@ -12,6 +12,8 @@ import { getDataFilePath } from "@/lib/db/json-db";
 import fs from "fs";
 import path from "path";
 
+export const dynamic = "force-dynamic";
+
 function getServerSettings() {
   try {
     const file = getDataFilePath("store-settings.json");
