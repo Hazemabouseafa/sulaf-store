@@ -43,6 +43,7 @@ export interface PaymobConfig {
   publicKey: string;
   hmacSecret: string;
   cardIntegrationId: string;
+  applePayIntegrationId: string;
   walletIntegrationId: string;
   iframeId: string;
 }
@@ -86,6 +87,7 @@ export class PaymobService {
     const envPublicKey = cleanValue(process.env.PAYMOB_PUBLIC_KEY);
     const envHmac = cleanValue(process.env.PAYMOB_HMAC_SECRET);
     const envCardId = cleanNumericId(process.env.PAYMOB_INTEGRATION_CARD_ID);
+    const envApplePayId = cleanNumericId(process.env.PAYMOB_INTEGRATION_APPLE_PAY_ID);
     const envWalletId = cleanNumericId(process.env.PAYMOB_INTEGRATION_WALLET_ID);
     const envIframeId = cleanNumericId(process.env.PAYMOB_IFRAME_ID);
 
@@ -99,13 +101,20 @@ export class PaymobService {
       cardIntegrationId:
         cleanNumericId(overrides?.cardIntegrationId) ||
         cleanNumericId(storedPaymob.cardIntegrationId) ||
-        envCardId,
+        envCardId ||
+        "6061385",
+      applePayIntegrationId:
+        cleanNumericId(overrides?.applePayIntegrationId) ||
+        cleanNumericId(storedPaymob.applePayIntegrationId) ||
+        envApplePayId ||
+        "6061713",
       walletIntegrationId:
         cleanNumericId(overrides?.walletIntegrationId) ||
         cleanNumericId(storedPaymob.walletIntegrationId) ||
-        envWalletId,
+        envWalletId ||
+        "6057158",
       iframeId:
-        cleanNumericId(overrides?.iframeId) || cleanNumericId(storedPaymob.iframeId) || envIframeId,
+        cleanNumericId(overrides?.iframeId) || cleanNumericId(storedPaymob.iframeId) || envIframeId || "6061385",
     };
   }
 
@@ -294,17 +303,15 @@ export class PaymobService {
     };
 
     const wantsWallet = params.paymentMethods?.includes("wallet");
-    const integrationIds: number[] = [];
-    if (wantsWallet && Number(config.walletIntegrationId) > 0) {
-      integrationIds.push(Number(config.walletIntegrationId));
-    }
-    if (!wantsWallet && Number(config.cardIntegrationId) > 0) {
-      integrationIds.push(Number(config.cardIntegrationId));
-    }
-    if (integrationIds.length === 0) {
-      if (Number(config.cardIntegrationId) > 0) integrationIds.push(Number(config.cardIntegrationId));
-      if (Number(config.walletIntegrationId) > 0) integrationIds.push(Number(config.walletIntegrationId));
-    }
+    const cardIdNum = Number(config.cardIntegrationId) || 0;
+    const applePayIdNum = Number(config.applePayIntegrationId) || 0;
+    const walletIdNum = Number(config.walletIntegrationId) || 0;
+
+    const orderedIds = wantsWallet
+      ? [walletIdNum, cardIdNum, applePayIdNum]
+      : [cardIdNum, applePayIdNum, walletIdNum];
+
+    const integrationIds: number[] = Array.from(new Set(orderedIds.filter((n) => n > 0)));
 
     // Determine whether we have an Intention Secret Key (`egy_sk_...`) or a Classic API Key
     const intentionSecret = this.isIntentionSecretKey(config.secretKey)
@@ -367,13 +374,25 @@ export class PaymobService {
             Authorization: `Token ${intentionSecret}`,
           },
           body: JSON.stringify(
-            buildIntentionPayload(integrationIds.length > 0 ? [integrationIds[0]] : [6061385])
+            buildIntentionPayload(integrationIds.length > 0 ? integrationIds : [6061385, 6061713, 6057158])
           ),
         });
 
         let data = await response.json().catch(() => ({}));
 
-        // If 404 (Integration ID does not exist) and we have classicApiKey, auto-discover the merchant's exact Integration ID and retry!
+        // If 404 (one of the Integration IDs does not exist), retry with primary ID or auto-discover
+        if (response.status === 404 && integrationIds.length > 1) {
+          response = await fetch("https://accept.paymob.com/v1/intention/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Token ${intentionSecret}`,
+            },
+            body: JSON.stringify(buildIntentionPayload([integrationIds[0]])),
+          });
+          data = await response.json().catch(() => ({}));
+        }
+
         if (response.status === 404 && classicApiKey) {
           const discovered = await this.discoverIntegrationIds(
             classicApiKey,

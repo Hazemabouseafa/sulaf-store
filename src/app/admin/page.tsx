@@ -1083,8 +1083,9 @@ export default function AdminPage() {
     paymobApiKey: "",
     paymobSecretKey: "",
     paymobPublicKey: "",
-    paymobCardId: "",
-    paymobWalletId: "",
+    paymobCardId: "6061385",
+    paymobApplePayId: "6061713",
+    paymobWalletId: "6057158",
     paymobIframeId: "",
     paymobHmac: "",
     // Payment Gateways Selection & Sha7nawy Config
@@ -1183,11 +1184,17 @@ export default function AdminPage() {
         paymobCardId:
           settings.paymob?.cardIntegrationId && settings.paymob.cardIntegrationId !== "482019"
             ? settings.paymob.cardIntegrationId
-            : "",
+            : "6061385",
+        paymobApplePayId:
+          settings.paymob?.applePayIntegrationId
+            ? settings.paymob.applePayIntegrationId
+            : "6061713",
         paymobWalletId:
-          settings.paymob?.walletIntegrationId && settings.paymob.walletIntegrationId !== "482020"
+          settings.paymob?.walletIntegrationId &&
+          settings.paymob.walletIntegrationId !== "482020" &&
+          settings.paymob.walletIntegrationId !== "6061385"
             ? settings.paymob.walletIntegrationId
-            : "",
+            : "6057158",
         paymobIframeId:
           settings.paymob?.iframeId && settings.paymob.iframeId !== "847291"
             ? settings.paymob.iframeId
@@ -2141,6 +2148,7 @@ export default function AdminPage() {
           secretKey: settingsForm.paymobSecretKey,
           publicKey: settingsForm.paymobPublicKey,
           cardIntegrationId: settingsForm.paymobCardId,
+          applePayIntegrationId: settingsForm.paymobApplePayId,
           walletIntegrationId: settingsForm.paymobWalletId,
           iframeId: settingsForm.paymobIframeId,
           hmacSecret: settingsForm.paymobHmac,
@@ -2224,6 +2232,7 @@ export default function AdminPage() {
           secretKey: settingsForm.paymobSecretKey,
           publicKey: settingsForm.paymobPublicKey,
           cardIntegrationId: settingsForm.paymobCardId,
+          applePayIntegrationId: settingsForm.paymobApplePayId,
           walletIntegrationId: settingsForm.paymobWalletId,
           iframeId: settingsForm.paymobIframeId,
           hmacSecret: settingsForm.paymobHmac,
@@ -8730,7 +8739,18 @@ export default function AdminPage() {
                         type="text"
                         value={settingsForm.paymobCardId}
                         onChange={(e) => setSettingsForm({ ...settingsForm, paymobCardId: e.target.value })}
-                        placeholder="مثال: 4829103"
+                        placeholder="6061385"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm font-mono text-gray-900 focus:border-[#3d502d] focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-800 mb-2">معرف Apple Pay (Apple Pay Live ID)</label>
+                      <input
+                        type="text"
+                        value={settingsForm.paymobApplePayId}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, paymobApplePayId: e.target.value })}
+                        placeholder="6061713"
                         className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm font-mono text-gray-900 focus:border-[#3d502d] focus:outline-none"
                       />
                     </div>
@@ -8741,13 +8761,13 @@ export default function AdminPage() {
                         type="text"
                         value={settingsForm.paymobWalletId}
                         onChange={(e) => setSettingsForm({ ...settingsForm, paymobWalletId: e.target.value })}
-                        placeholder="مثال: 4829104"
+                        placeholder="6057158"
                         className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm font-mono text-gray-900 focus:border-[#3d502d] focus:outline-none"
                       />
                     </div>
 
-                    <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-gray-800 mb-2">معرف شاشة الدفع (Paymob Iframe ID - عند استخدام API الكلاسيكي بدون Public Key)</label>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-800 mb-2">معرف شاشة الدفع (Paymob Iframe ID - اختياري)</label>
                       <input
                         type="text"
                         value={settingsForm.paymobIframeId}

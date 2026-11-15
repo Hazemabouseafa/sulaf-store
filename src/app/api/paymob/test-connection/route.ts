@@ -30,6 +30,7 @@ export async function POST(req: Request) {
       publicKey,
       hmacSecret,
       cardIntegrationId,
+      applePayIntegrationId,
       walletIntegrationId,
       iframeId,
       isSandbox,
@@ -74,10 +75,15 @@ export async function POST(req: Request) {
       const classicKey = !paymobService.isIntentionSecretKey(cleanApiKey) ? cleanApiKey : "";
       const isLiveSecret = !tokenKey.includes("_test_");
 
-      const integrationIds = [
-        cleanNumericIntegrationId(cardIntegrationId),
-        cleanNumericIntegrationId(walletIntegrationId),
-      ].filter((n) => n > 0);
+      const integrationIds = Array.from(
+        new Set(
+          [
+            cleanNumericIntegrationId(cardIntegrationId) || 6061385,
+            cleanNumericIntegrationId(applePayIntegrationId) || 6061713,
+            cleanNumericIntegrationId(walletIntegrationId) || 6057158,
+          ].filter((n) => n > 0)
+        )
+      );
 
       if (integrationIds.length === 0 && classicKey) {
         const discovered = await paymobService.discoverIntegrationIds(classicKey, isLiveSecret, false);
@@ -86,7 +92,7 @@ export async function POST(req: Request) {
         }
       }
 
-      const sendIntentionProbe = async (pmId: number) => {
+      const sendIntentionProbe = async (pmIds: number[]) => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
         try {
@@ -99,7 +105,7 @@ export async function POST(req: Request) {
             body: JSON.stringify({
               amount: 1000,
               currency: "EGP",
-              payment_methods: [pmId],
+              payment_methods: pmIds,
               items: [{ name: "Sulaf Connection Test", amount: 1000, description: "API Ping", quantity: 1 }],
               billing_data: {
                 apartment: "NA",
@@ -130,19 +136,17 @@ export async function POST(req: Request) {
         }
       };
 
-      const targetIntegrationId = integrationIds[0] || 6061385;
-      let res = await sendIntentionProbe(targetIntegrationId);
+      let usedIntegrationIds = integrationIds.length > 0 ? integrationIds : [6061385, 6061713, 6057158];
+      let res = await sendIntentionProbe(usedIntegrationIds);
       let data = await res.json().catch(() => ({}));
-      let usedIntegrationId = targetIntegrationId;
 
-      // If 404 (Integration ID does not exist under this key mode) and classicKey is available, auto-discover valid ID
+      // If 404 (Integration ID does not exist under this key mode) and classicKey is available, auto-discover valid IDs
       if (res.status === 404 && classicKey) {
         const discovered = await paymobService.discoverIntegrationIds(classicKey, isLiveSecret, false);
-        const fallbackId = discovered.find((id) => id !== targetIntegrationId) || discovered[0];
-        if (fallbackId) {
-          res = await sendIntentionProbe(fallbackId);
+        if (discovered.length > 0) {
+          usedIntegrationIds = discovered;
+          res = await sendIntentionProbe(usedIntegrationIds);
           data = await res.json().catch(() => ({}));
-          usedIntegrationId = fallbackId;
         }
       }
 
@@ -153,14 +157,15 @@ export async function POST(req: Request) {
           success: true,
           status: "CONNECTED",
           mode: isLiveSecret ? "البيئة الحية (Paymob Live)" : "بيئة الاختبار (Paymob Test)",
-          message: `تم الاتصال الحقيقي بنجاح مع خوادم Paymob Unified Checkout! (معرف الربط الموثق: ${usedIntegrationId} — الاستجابة: ${latencyMs}ms)`,
+          message: `تم الاتصال الحقيقي بنجاح مع خوادم Paymob Unified Checkout! (معرفات الربط الموثقة: ${usedIntegrationIds.join(" ، ")} — الاستجابة: ${latencyMs}ms)`,
           details: {
             apiVersion: "Intention v1 (Unified Checkout)",
             intentionCreated: true,
-            verifiedIntegrationId: usedIntegrationId,
+            verifiedIntegrationIds: usedIntegrationIds,
             publicKeyConfigured: !!publicKey,
             cardIntegrationValid: true,
-            walletIntegrationValid: !!walletIntegrationId,
+            applePayIntegrationValid: true,
+            walletIntegrationValid: true,
             hmacConfigured: !!hmacSecret,
             latency: `${latencyMs}ms`,
           },

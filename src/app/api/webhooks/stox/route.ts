@@ -19,6 +19,8 @@ export async function POST(req: NextRequest) {
     const source = payload.data || payload.order || payload;
 
     const candidates = [
+      source.awb_number,
+      source.reference_number,
       source.tracking_number,
       source.trackingNumber,
       source.awb,
@@ -27,6 +29,8 @@ export async function POST(req: NextRequest) {
       source.order_reference,
       source.order_id,
       source.id,
+      payload.awb_number,
+      payload.reference_number,
       payload.tracking_number,
       payload.reference_id,
       payload.id,

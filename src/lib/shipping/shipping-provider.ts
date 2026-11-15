@@ -553,6 +553,9 @@ export class UniversalShippingService {
     const codAmount = Math.max(0, Math.round(Number(params.codAmount) || 0));
     const paymentType: "COD" | "CC" = codAmount > 0 ? "COD" : "CC";
     const cleanPhone = normalizeEgyptianMobile(params.recipient.phone);
+    const noteText = `${descriptionText}${
+      params.recipient.notes ? ` | ${params.recipient.notes}` : ""
+    } | رقم الطلب: ${params.orderNumber}`;
 
     const stoxOrderObj: Record<string, any> = {
       customer_name: (params.recipient.fullName || "عميل سلاف").trim(),
@@ -560,11 +563,12 @@ export class UniversalShippingService {
       address: fullAddress,
       area_id: areaId,
       payment_type: paymentType,
-      ...(paymentType === "COD" ? { cod_amount: codAmount } : {}),
-      notes: `${descriptionText}${
-        params.recipient.notes ? ` | ${params.recipient.notes}` : ""
-      } | رقم الطلب: ${params.orderNumber}`,
+      cod_amount: paymentType === "COD" ? codAmount : 0,
+      note: noteText,
+      notes: noteText,
+      reference_number: params.orderNumber,
       reference_id: params.orderNumber,
+      can_open: true,
       products: stoxProducts,
     };
 
@@ -594,6 +598,7 @@ export class UniversalShippingService {
           data;
 
         let tracking =
+          createdOrder?.awb_number ||
           createdOrder?.tracking_number ||
           createdOrder?.trackingNumber ||
           createdOrder?.awb ||
@@ -613,6 +618,7 @@ export class UniversalShippingService {
               const latest = Array.isArray(listJson.data) ? listJson.data[0] : null;
               if (latest) {
                 tracking =
+                  latest.awb_number ||
                   latest.tracking_number ||
                   latest.awb ||
                   latest.code ||
@@ -792,6 +798,8 @@ export class UniversalShippingService {
           const cleanTrack = trackingNumber.trim().toLowerCase();
           const matched = list.find(
             (o) =>
+              String(o.awb_number || "").toLowerCase() === cleanTrack ||
+              String(o.reference_number || "").toLowerCase() === cleanTrack ||
               String(o.id || "").toLowerCase() === cleanTrack ||
               String(o.code || "").toLowerCase() === cleanTrack ||
               String(o.awb || "").toLowerCase() === cleanTrack ||

@@ -820,6 +820,7 @@ export interface StoreSettings {
     publicKey: string;
     hmacSecret: string;
     cardIntegrationId: string;
+    applePayIntegrationId?: string;
     walletIntegrationId: string;
     iframeId: string;
   };
@@ -1050,14 +1051,15 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
 
   paymob: {
     enabled: true,
-    isSandbox: true,
+    isSandbox: false,
     apiKey: "ENV_OR_TEST_API_KEY",
     secretKey: "sec_test_sulaf_gateway_accept_2026",
     publicKey: "pub_test_sulaf_gateway_accept_2026",
     hmacSecret: "hmac_secret_sulaf_paymob_hash_2026",
-    cardIntegrationId: "482019",
-    walletIntegrationId: "482020",
-    iframeId: "847291",
+    cardIntegrationId: "6061385",
+    applePayIntegrationId: "6061713",
+    walletIntegrationId: "6057158",
+    iframeId: "6061385",
   },
 
   gatewaysMode: "both",
