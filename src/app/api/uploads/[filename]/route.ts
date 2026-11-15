@@ -25,13 +25,16 @@ export async function GET(
     // Sanitize filename to prevent directory traversal
     const safeFilename = path.basename(filename);
 
-    const uploadsDirData = path.join(getDataDir(), "uploads", safeFilename);
-    const uploadsDirPublic = path.join(process.cwd(), "public", "uploads", safeFilename);
+    const uploadsDirData = path.join(/*turbopackIgnore: true*/ getDataDir(), "uploads", safeFilename);
+    const uploadsDirSeed = path.join(/*turbopackIgnore: true*/ process.cwd(), "data-seed", "uploads", safeFilename);
+    const uploadsDirPublic = path.join(/*turbopackIgnore: true*/ process.cwd(), "public", "uploads", safeFilename);
 
     let filePath = "";
-    if (fs.existsSync(uploadsDirData)) {
+    if (fs.existsSync(/*turbopackIgnore: true*/ uploadsDirData)) {
       filePath = uploadsDirData;
-    } else if (fs.existsSync(uploadsDirPublic)) {
+    } else if (fs.existsSync(/*turbopackIgnore: true*/ uploadsDirSeed)) {
+      filePath = uploadsDirSeed;
+    } else if (fs.existsSync(/*turbopackIgnore: true*/ uploadsDirPublic)) {
       filePath = uploadsDirPublic;
     } else {
       return NextResponse.json({ error: "File not found" }, { status: 404 });

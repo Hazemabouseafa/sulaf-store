@@ -6,7 +6,7 @@
     "dev": "next dev",
     "prebuild": "node scripts/preserve-live-data.mjs",
     "build": "next build",
-    "start": "node scripts/start-production.mjs",
+    "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate"
   },

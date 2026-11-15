@@ -124,16 +124,19 @@ function initializePersistentData() {
   }
 }
 
-initializePersistentData();
+try {
+  initializePersistentData();
+} catch (err) {
+  console.warn("[Sulaf Boot] Non-fatal init warning:", err);
+}
 
-// Start Next.js production server
+// Start Next.js production server (Always bind 0.0.0.0, never container HOSTNAME)
 const port = process.env.PORT || "3000";
-const hostname = process.env.HOSTNAME || "0.0.0.0";
 const nextBin = path.join(cwd, "node_modules", "next", "dist", "bin", "next");
 
-const child = spawn(process.execPath, [nextBin, "start", "-H", hostname, "-p", String(port)], {
+const child = spawn(process.execPath, [nextBin, "start", "-H", "0.0.0.0", "-p", String(port)], {
   stdio: "inherit",
-  env: process.env,
+  env: { ...process.env, HOSTNAME: "0.0.0.0" },
 });
 
 child.on("exit", (code) => {
