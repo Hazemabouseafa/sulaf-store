@@ -234,6 +234,12 @@ async function main() {
       await downloadUploadFile(baseUrl, uploadPath);
     }
 
+    fs.writeFileSync(
+      path.join(seedDir, ".live-snapshot.json"),
+      JSON.stringify({ capturedAt: new Date().toISOString(), baseUrl }, null, 2),
+      "utf-8"
+    );
+
     console.log(`[PreserveLiveData] Live data snapshot complete!`);
     break;
   }

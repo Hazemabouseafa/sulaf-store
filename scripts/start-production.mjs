@@ -13,11 +13,18 @@ import path from "path";
 import { spawn } from "child_process";
 
 const cwd = process.cwd();
-const dataDir = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(cwd, "data");
+const hasUpperAppData = process.platform !== "win32" && fs.existsSync("/APP/DATA");
+const dataDir =
+  hasUpperAppData && fs.existsSync("/APP/DATA/products.json")
+    ? "/APP/DATA"
+    : process.env.DATA_DIR
+    ? path.resolve(process.env.DATA_DIR)
+    : path.join(cwd, "data");
 const seedDir = path.join(cwd, "data-seed");
 const uploadsDataDir = path.join(dataDir, "uploads");
 const uploadsSeedDir = path.join(seedDir, "uploads");
 const uploadsPublicDir = path.join(cwd, "public", "uploads");
+const hasLiveSnapshot = fs.existsSync(path.join(seedDir, ".live-snapshot.json"));
 
 for (const dir of [dataDir, uploadsDataDir, uploadsPublicDir]) {
   if (!fs.existsSync(dir)) {
@@ -66,13 +73,12 @@ function initializePersistentData() {
     }
 
     // If both are arrays (products, orders, coupons, reviews, pages, customers),
-    // NEVER delete existing items in targetPath! If existingData is empty (or only has the 1 default product)
-    // and seedData has more items (e.g. from pre-build live snapshot), merge missing items by id.
+    // NEVER delete or overwrite existing items in targetPath!
     if (Array.isArray(existingData) && Array.isArray(seedData)) {
       if (existingData.length === 0 && seedData.length > 0) {
         fs.writeFileSync(targetPath, JSON.stringify(seedData, null, 2), "utf-8");
         console.log(`[Sulaf Boot] Restored ${seedData.length} records into empty ${filename}`);
-      } else if (seedData.length > existingData.length) {
+      } else if (hasLiveSnapshot && seedData.length > existingData.length) {
         const existingIds = new Set(existingData.map((item) => item?.id || item?.code || item?.orderNumber).filter(Boolean));
         let added = 0;
         const merged = [...existingData];
@@ -86,7 +92,7 @@ function initializePersistentData() {
         }
         if (added > 0) {
           fs.writeFileSync(targetPath, JSON.stringify(merged, null, 2), "utf-8");
-          console.log(`[Sulaf Boot] Merged ${added} additional records into ${filename}`);
+          console.log(`[Sulaf Boot] Merged ${added} live snapshot records into ${filename}`);
         }
       }
     }

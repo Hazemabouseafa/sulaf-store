@@ -8,6 +8,10 @@ import path from "path";
  */
 export function getDataDir(): string {
   const envDir = process.env.DATA_DIR;
+  // Also support case where user mounted /APP/DATA in uppercase in Coolify on Linux
+  if (process.platform !== "win32" && fs.existsSync("/APP/DATA") && fs.existsSync("/APP/DATA/products.json")) {
+    return "/APP/DATA";
+  }
   const targetDir = envDir ? path.resolve(envDir) : path.join(process.cwd(), "data");
   if (!fs.existsSync(targetDir)) {
     fs.mkdirSync(targetDir, { recursive: true });
@@ -73,9 +77,21 @@ export function writeJsonFile<T>(filename: string, data: T): void {
       `.${filename}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}.tmp`
     );
 
+    const payload = JSON.stringify(data, null, 2);
     // Atomic write: write to temp file then atomic rename to prevent corruption
-    fs.writeFileSync(tempPath, JSON.stringify(data, null, 2), "utf-8");
+    fs.writeFileSync(tempPath, payload, "utf-8");
     fs.renameSync(tempPath, filePath);
+
+    // Mirror to alternate case path if mounted on Linux (/APP/DATA <-> /app/data)
+    if (process.platform !== "win32") {
+      for (const altDir of ["/app/data", "/APP/DATA"]) {
+        if (altDir !== dir && fs.existsSync(altDir)) {
+          try {
+            fs.writeFileSync(path.join(altDir, filename), payload, "utf-8");
+          } catch {}
+        }
+      }
+    }
   } catch (err) {
     console.error(`[jsonDb] Error atomic writing ${filename}:`, err);
   }

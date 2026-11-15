@@ -69,8 +69,12 @@ export const metadata: Metadata = {
     type: "website",
   },
   icons: {
-    icon: "/brand/sulaf-flower-symbol.png",
-    apple: "/brand/sulaf-flower-symbol.png",
+    icon: [
+      { url: "/brand/sulaf-favicon.png?v=2", type: "image/png", sizes: "512x512" },
+      { url: "/favicon.ico?v=2", type: "image/x-icon", sizes: "64x64" },
+    ],
+    shortcut: "/brand/sulaf-favicon.png?v=2",
+    apple: "/brand/sulaf-favicon.png?v=2",
   },
 };
 
