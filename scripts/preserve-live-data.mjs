@@ -57,6 +57,7 @@ function getCandidateLiveUrls() {
     process.env.COOLIFY_FQDN,
     process.env.NEXT_PUBLIC_SITE_URL,
     process.env.NEXT_PUBLIC_APP_URL,
+    process.platform !== "win32" ? "http://wykuolicna5eycqzsayj44xj.187.126.13.178.sslip.io" : null,
   ].filter(Boolean);
 
   const urls = new Set();

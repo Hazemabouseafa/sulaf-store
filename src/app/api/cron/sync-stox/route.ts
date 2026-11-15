@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { readJsonFile, writeJsonFile } from "@/lib/db/json-db";
 import { OrderRecord } from "@/lib/orders/order-store";
-import { stoxService } from "@/lib/shipping/stox";
+import { universalShippingService } from "@/lib/shipping/shipping-provider";
 
 export async function GET(req: NextRequest) {
   try {
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 
     for (const order of shippedOrders) {
       if (order.stoxTrackingNumber) {
-        const tracking = await stoxService.trackShipment(order.stoxTrackingNumber);
+        const tracking = await universalShippingService.trackShipment(order.stoxTrackingNumber);
         if (tracking && tracking.currentStatus === "DELIVERED") {
           order.orderStatus = "DELIVERED";
           order.stoxStatus = "DELIVERED";

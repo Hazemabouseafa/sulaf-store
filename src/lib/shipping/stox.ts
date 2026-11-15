@@ -1,10 +1,7 @@
 /**
- * Sulaf Store - Stox Egypt Shipping Service Layer
+ * Sulaf Store - Stox Egypt Shipping Service Layer (Isomorphic Types & Rates)
  * Official Merchant Portal: https://merchants.stox-eg.com
- * Delegates live API calls to UniversalShippingService (reading credentials from store-settings.json / .env)
  */
-
-import { universalShippingService } from "./shipping-provider";
 
 export interface StoxAddress {
   fullName: string;
@@ -89,31 +86,28 @@ export const EGYPT_GOVERNORATES_RATES: Record<string, { fee: number; region: str
 
 export class StoxShippingService {
   public calculateShippingFee(governorate: string, orderSubtotal: number): number {
-    return universalShippingService.calculateShippingFee(governorate, orderSubtotal);
+    if (orderSubtotal >= 850) return 0;
+    const govData = EGYPT_GOVERNORATES_RATES[governorate];
+    return govData ? govData.fee : 65;
   }
 
   public async createShipment(params: StoxCreateShipmentParams): Promise<StoxShipmentResult> {
-    const res = await universalShippingService.createShipment(params);
     return {
-      success: res.success,
-      trackingNumber: res.trackingNumber,
-      stoxOrderId: res.carrierOrderId,
-      waybillUrl: res.waybillUrl,
-      status: res.status,
-      rawResponse: res.rawResponse,
-      error: res.error,
+      success: false,
+      trackingNumber: "",
+      status: "FAILED",
+      error: `Use universalShippingService.createShipment on the server for order ${params.orderNumber}`,
     };
   }
 
   public async trackShipment(trackingNumber: string): Promise<StoxTrackingResult> {
-    const res = await universalShippingService.trackShipment(trackingNumber);
     return {
-      trackingNumber: res.trackingNumber,
-      currentStatus: res.currentStatus,
-      statusTextAr: res.statusTextAr,
-      lastUpdated: res.lastUpdated,
-      carrierHub: res.carrierHub,
-      events: res.events,
+      trackingNumber,
+      currentStatus: "CREATED",
+      statusTextAr: "تم استلام الطلب",
+      lastUpdated: new Date().toISOString(),
+      carrierHub: "مركز تجهيز سُـلاف الرئيسي",
+      events: [],
     };
   }
 }
