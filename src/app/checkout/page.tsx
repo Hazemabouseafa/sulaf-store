@@ -651,7 +651,7 @@ export default function CheckoutPage() {
                       const fee = customMatch ? customMatch.rate : defaultUnifiedRate;
                       return (
                         <option key={gov} value={gov}>
-                          {gov} ({fee} {currency}{customMatch ? (isArabic ? " - سعر خاص" : " - Special") : ""})
+                          {gov} ({fee} {currency})
                         </option>
                       );
                     })}
