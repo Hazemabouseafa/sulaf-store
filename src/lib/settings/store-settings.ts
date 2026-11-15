@@ -428,10 +428,10 @@ export const DEFAULT_SHIPPING_PROVIDERS: Record<ShippingProviderType, ShippingPr
     nameEn: "STOX Express (Egypt)",
     enabled: true,
     apiKey: "",
-    baseUrl: "https://merchants.stox-eg.com/api/v1",
-    trackingEndpoint: "/shipments/track/{tracking}",
+    baseUrl: "https://merchants.stox-eg.com/api",
+    trackingEndpoint: "/orders/{tracking}",
     trackingUrlTemplate: "https://merchants.stox-eg.com/track/{tracking}",
-    isSandbox: true,
+    isSandbox: false,
     notes: "شركة الشحن الافتراضية الرسمية لتغطية كافة محافظات جمهورية مصر العربية.",
   },
   bosta: {

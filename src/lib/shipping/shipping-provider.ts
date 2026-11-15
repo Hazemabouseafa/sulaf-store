@@ -1,6 +1,6 @@
 /**
  * Sulaf Unified Universal Shipping & Tracking Engine
- * Supports STOX Egypt, Bosta, Aramex, Mylerz, and any Custom Shipping API
+ * Supports STOX Egypt (Official Merchant API), Bosta, Aramex, Mylerz, and Custom Shipping APIs
  */
 
 import { readJsonFile } from "@/lib/db/json-db";
@@ -70,6 +70,61 @@ export interface ShippingTrackingResult {
   events: ShippingTrackingEvent[];
 }
 
+interface StoxAreaRecord {
+  id: number;
+  name?: string;
+  ar_name?: string;
+  en_name?: string;
+  child_name_ar?: string;
+  child_name_en?: string;
+  active?: boolean;
+}
+
+interface StoxProductRecord {
+  id: number;
+  name?: string;
+  sku?: string;
+  sku_aliases?: string[];
+  inventories?: number;
+  price?: string | number;
+}
+
+/**
+ * Verified fallback STOX Egypt area_id per Governorate (from https://merchants.stox-eg.com/api/areas)
+ */
+const STOX_GOVERNORATE_DEFAULT_AREA_ID: Record<string, number> = {
+  "القاهره": 320,
+  "الجيزه": 290,
+  "الاسكندريه": 38,
+  "القليوبيه": 372,
+  "الدقهليه": 83,
+  "البحيره": 66,
+  "الغربيه": 149,
+  "الشرقيه": 111,
+  "المنوفيه": 101,
+  "كفر الشيخ": 142,
+  "دمياط": 232,
+  "بورسعيد": 226,
+  "الاسماعيليه": 242,
+  "السويس": 220,
+  "الفيوم": 214,
+  "بني سويف": 208,
+  "المنيا": 191,
+  "اسيوط": 200,
+  "سوهاج": 18,
+  "قنا": 12,
+  "الاقصر": 184,
+  "اسوان": 4,
+  "البحر الاحمر": 133,
+  "مطروح": 175,
+  "جنوب سيناء": 162,
+  "شمال سيناء": 157,
+  "الوادي الجديد": 247,
+};
+
+let cachedStoxAreas: { fetchedAt: number; data: StoxAreaRecord[] } | null = null;
+let cachedStoxProducts: { fetchedAt: number; tokenKey: string; data: StoxProductRecord[] } | null = null;
+
 function isPlaceholderKey(key?: string): boolean {
   if (!key) return true;
   const clean = key.trim();
@@ -79,6 +134,36 @@ function isPlaceholderKey(key?: string): boolean {
     clean === "ENV_OR_TEST_API_KEY" ||
     clean.includes("sample")
   );
+}
+
+function normalizeArabicText(input?: string): string {
+  if (!input) return "";
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/[\u064B-\u065F\u0670]/g, "")
+    .replace(/[أإآٱ]/g, "ا")
+    .replace(/ة/g, "ه")
+    .replace(/ى/g, "ي")
+    .replace(/\s+/g, " ");
+}
+
+function normalizeEgyptianMobile(phone?: string): string {
+  const digits = String(phone || "").replace(/\D/g, "");
+  if (!digits) return "01000000000";
+  if (digits.startsWith("0020") && digits.length >= 14) {
+    return "0" + digits.slice(4, 14);
+  }
+  if (digits.startsWith("20") && digits.length === 12) {
+    return "0" + digits.slice(2);
+  }
+  if (digits.startsWith("1") && digits.length === 10) {
+    return "0" + digits;
+  }
+  if (digits.startsWith("01") && digits.length >= 11) {
+    return digits.slice(0, 11);
+  }
+  return digits;
 }
 
 export class UniversalShippingService {
@@ -115,6 +200,31 @@ export class UniversalShippingService {
     }
 
     return baseConfig;
+  }
+
+  /**
+   * Normalizes any STOX URL (`https://merchants.stox-eg.com/api/orders`, `/api/v1`, etc.)
+   * into the clean official STOX API root: `https://merchants.stox-eg.com/api`
+   */
+  public resolveStoxApiRoot(baseUrl?: string): string {
+    const raw = (baseUrl || "https://merchants.stox-eg.com/api").trim().replace(/\/+$/, "");
+    const cleaned = raw
+      .replace(/\/api\/v1(\/.*)?$/i, "/api")
+      .replace(/\/api\/(orders|shipments|areas|products|user)(\/.*)?$/i, "/api");
+    if (cleaned.endsWith("/api")) return cleaned;
+    if (
+      cleaned === "https://merchants.stox-eg.com" ||
+      cleaned === "http://merchants.stox-eg.com" ||
+      cleaned.includes("stox-eg.com")
+    ) {
+      try {
+        const parsed = new URL(cleaned);
+        return `${parsed.origin}/api`;
+      } catch {
+        return "https://merchants.stox-eg.com/api";
+      }
+    }
+    return cleaned;
   }
 
   /**
@@ -164,7 +274,9 @@ export class UniversalShippingService {
 
     if (!cleanKey) return headers;
 
-    if (provider.id === "bosta") {
+    if (provider.id === "stox") {
+      headers["Authorization"] = `Bearer ${cleanKey}`;
+    } else if (provider.id === "bosta") {
       headers["Authorization"] = cleanKey;
     } else if (provider.authHeaderType === "ApiKey") {
       headers[provider.authHeaderName || "X-API-Key"] = cleanKey;
@@ -178,6 +290,185 @@ export class UniversalShippingService {
     }
 
     return headers;
+  }
+
+  /**
+   * Fetches STOX Egypt areas (`GET /api/areas`) and resolves the best matching `area_id`
+   * for the customer's governorate and city/street.
+   */
+  private async resolveStoxAreaId(
+    apiRoot: string,
+    headers: Record<string, string>,
+    governorate: string,
+    city: string,
+    street: string
+  ): Promise<number> {
+    const normGov = normalizeArabicText(governorate);
+    const normCity = normalizeArabicText(city);
+    const normStreet = normalizeArabicText(street);
+
+    // 1. Fetch live areas list (cached for 60 minutes)
+    let areas: StoxAreaRecord[] = [];
+    if (cachedStoxAreas && Date.now() - cachedStoxAreas.fetchedAt < 60 * 60 * 1000) {
+      areas = cachedStoxAreas.data;
+    } else {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 7000);
+        const res = await fetch(`${apiRoot}/areas`, {
+          method: "GET",
+          headers,
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        if (res.ok) {
+          const json = await res.json().catch(() => ({}));
+          if (Array.isArray(json.data) && json.data.length > 0) {
+            areas = json.data;
+            cachedStoxAreas = { fetchedAt: Date.now(), data: areas };
+          }
+        }
+      } catch {}
+    }
+
+    if (areas.length > 0) {
+      const activeAreas = areas.filter((a) => a.active !== false);
+
+      // Filter by governorate first
+      const govMatches = activeAreas.filter((a) => {
+        const arFull = normalizeArabicText(a.ar_name || a.name || "");
+        const enFull = normalizeArabicText(a.en_name || "");
+        const govPartAr = arFull.split("-")[0]?.trim() || "";
+        return (
+          (normGov && govPartAr === normGov) ||
+          (normGov && arFull.startsWith(normGov)) ||
+          (normGov && enFull.startsWith(normGov))
+        );
+      });
+
+      const pool = govMatches.length > 0 ? govMatches : activeAreas;
+
+      // Try matching city or district (`child_name_ar` / `child_name_en`)
+      if (normCity || normStreet) {
+        const exactDistrict = pool.find((a) => {
+          const childAr = normalizeArabicText(a.child_name_ar || "");
+          const childEn = normalizeArabicText(a.child_name_en || "");
+          return (
+            (childAr && normCity && (childAr === normCity || normCity.includes(childAr) || childAr.includes(normCity))) ||
+            (childEn && normCity && (childEn === normCity || normCity.includes(childEn) || childEn.includes(normCity))) ||
+            (childAr && normStreet && normStreet.includes(childAr))
+          );
+        });
+        if (exactDistrict) {
+          return Number(exactDistrict.id);
+        }
+      }
+
+      if (govMatches.length > 0) {
+        return Number(govMatches[0].id);
+      }
+    }
+
+    // 2. Fallback to verified Governorate Area ID dictionary
+    if (normGov && STOX_GOVERNORATE_DEFAULT_AREA_ID[normGov]) {
+      return STOX_GOVERNORATE_DEFAULT_AREA_ID[normGov];
+    }
+    for (const [govKey, defaultId] of Object.entries(STOX_GOVERNORATE_DEFAULT_AREA_ID)) {
+      if (normGov.includes(govKey) || govKey.includes(normGov)) {
+        return defaultId;
+      }
+    }
+
+    return 320; // Default Cairo area_id
+  }
+
+  /**
+   * Fetches the merchant's catalog products in STOX (`GET /api/products`)
+   * and maps order items to STOX's required `products: [{ id: number, qty: number }]` format.
+   */
+  private async resolveStoxProducts(
+    apiRoot: string,
+    headers: Record<string, string>,
+    items: ShippingCreateShipmentParams["items"]
+  ): Promise<{ id: number; qty: number }[]> {
+    let catalog: StoxProductRecord[] = [];
+    const authHeader = headers["Authorization"] || "";
+
+    if (
+      cachedStoxProducts &&
+      cachedStoxProducts.tokenKey === authHeader &&
+      Date.now() - cachedStoxProducts.fetchedAt < 10 * 60 * 1000
+    ) {
+      catalog = cachedStoxProducts.data;
+    } else {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 7000);
+        const res = await fetch(`${apiRoot}/products`, {
+          method: "GET",
+          headers,
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        if (res.ok) {
+          const json = await res.json().catch(() => ({}));
+          if (Array.isArray(json.data) && json.data.length > 0) {
+            catalog = json.data;
+            cachedStoxProducts = { fetchedAt: Date.now(), tokenKey: authHeader, data: catalog };
+          }
+        }
+      } catch {}
+    }
+
+    const defaultStoxProductId = catalog[0]?.id ? Number(catalog[0].id) : 21174;
+    const qtyByProductId = new Map<number, number>();
+
+    const sourceItems =
+      Array.isArray(items) && items.length > 0
+        ? items
+        : [{ sku: "Urea", name: "Absolute Smoothing", quantity: 1, price: 0 }];
+
+    for (const item of sourceItems) {
+      const qty = Math.max(1, Math.round(Number(item.quantity) || 1));
+      let matchedId: number | null = null;
+
+      if (catalog.length > 0) {
+        const cleanSku = String(item.sku || "").trim().toLowerCase();
+        const cleanName = normalizeArabicText(item.name || "");
+
+        // 1. Direct numeric ID match
+        const numericSku = Number(cleanSku);
+        if (numericSku > 0) {
+          const byId = catalog.find((p) => Number(p.id) === numericSku);
+          if (byId) matchedId = Number(byId.id);
+        }
+
+        // 2. Match by SKU or SKU aliases
+        if (!matchedId && cleanSku) {
+          const bySku = catalog.find(
+            (p) =>
+              String(p.sku || "").trim().toLowerCase() === cleanSku ||
+              (Array.isArray(p.sku_aliases) &&
+                p.sku_aliases.some((alias) => String(alias).trim().toLowerCase() === cleanSku))
+          );
+          if (bySku) matchedId = Number(bySku.id);
+        }
+
+        // 3. Match by product name substring
+        if (!matchedId && cleanName) {
+          const byName = catalog.find((p) => {
+            const pName = normalizeArabicText(p.name || "");
+            return pName && (cleanName.includes(pName) || pName.includes(cleanName));
+          });
+          if (byName) matchedId = Number(byName.id);
+        }
+      }
+
+      const finalId = matchedId || defaultStoxProductId;
+      qtyByProductId.set(finalId, (qtyByProductId.get(finalId) || 0) + qty);
+    }
+
+    return Array.from(qtyByProductId.entries()).map(([id, qty]) => ({ id, qty }));
   }
 
   /**
@@ -224,140 +515,143 @@ export class UniversalShippingService {
   }
 
   /**
-   * Live dispatch to Stox Egypt API
+   * Live dispatch to Official STOX Egypt Merchant API (`POST https://merchants.stox-eg.com/api/orders/store`)
    */
   private async dispatchStox(
     params: ShippingCreateShipmentParams,
     provider: ShippingProviderConfig
   ): Promise<ShippingShipmentResult> {
-    const cleanBase = (provider.baseUrl || "https://merchants.stox-eg.com/api/v1").replace(/\/+$/, "");
-    const cleanKey = provider.apiKey.trim().replace(/^Bearer\s+/i, "");
-    const fullAddress = `${params.recipient.street}${
-      params.recipient.building ? `، ${params.recipient.building}` : ""
-    }`;
-    const totalQty = params.items.reduce((sum, i) => sum + (Number(i.quantity) || 1), 0);
+    const apiRoot = this.resolveStoxApiRoot(provider.baseUrl);
+    const headers = this.buildAuthHeaders(provider);
+
+    // 1. Resolve STOX area_id & STOX warehouse products in parallel
+    const [areaId, stoxProducts] = await Promise.all([
+      this.resolveStoxAreaId(
+        apiRoot,
+        headers,
+        params.recipient.governorate || "القاهرة",
+        params.recipient.city || "",
+        params.recipient.street || ""
+      ),
+      this.resolveStoxProducts(apiRoot, headers, params.items),
+    ]);
+
+    const addressParts = [
+      params.recipient.governorate,
+      params.recipient.city,
+      params.recipient.street,
+      params.recipient.building ? `مبنى/شقة: ${params.recipient.building}` : "",
+    ]
+      .map((s) => (s || "").trim())
+      .filter(Boolean);
+    const fullAddress = addressParts.join(" - ") || "القاهرة";
+
     const descriptionText =
       params.packageDescription ||
       params.items.map((i) => `${i.name} (x${i.quantity})`).join(" + ");
 
-    const payload = {
-      api_token: cleanKey,
-      reference_id: params.orderNumber,
-      order_reference: params.orderNumber,
-      business_reference: params.orderNumber,
-      order_number: params.orderNumber,
-      customer_name: params.recipient.fullName,
-      receiver_name: params.recipient.fullName,
-      name: params.recipient.fullName,
-      customer_phone: params.recipient.phone,
-      receiver_phone: params.recipient.phone,
-      phone: params.recipient.phone,
-      governorate: params.recipient.governorate,
-      city: params.recipient.city,
-      area: params.recipient.city,
+    const codAmount = Math.max(0, Math.round(Number(params.codAmount) || 0));
+    const paymentType: "COD" | "CC" = codAmount > 0 ? "COD" : "CC";
+    const cleanPhone = normalizeEgyptianMobile(params.recipient.phone);
+
+    const stoxOrderObj: Record<string, any> = {
+      customer_name: (params.recipient.fullName || "عميل سلاف").trim(),
+      mobile_1: cleanPhone,
       address: fullAddress,
-      street: params.recipient.street,
-      building: params.recipient.building || "",
-      notes: params.recipient.notes || "مستحضرات علاجية حساسة - يرجى التعامل برفق",
-      cod_amount: Number(params.codAmount) || 0,
-      cod: Number(params.codAmount) || 0,
-      total_amount: Number(params.codAmount) || 0,
-      items_count: totalQty,
-      pieces: totalQty,
-      description: descriptionText,
-      package_description: descriptionText,
-      allow_open: true,
-      items: params.items.map((i) => ({
-        sku: i.sku || "SLF-001",
-        name: i.name,
-        description: i.name,
-        quantity: Number(i.quantity) || 1,
-        price: Number(i.price) || 0,
-      })),
+      area_id: areaId,
+      payment_type: paymentType,
+      ...(paymentType === "COD" ? { cod_amount: codAmount } : {}),
+      notes: `${descriptionText}${
+        params.recipient.notes ? ` | ${params.recipient.notes}` : ""
+      } | رقم الطلب: ${params.orderNumber}`,
+      reference_id: params.orderNumber,
+      products: stoxProducts,
     };
 
-    const headers = this.buildAuthHeaders(provider);
+    const storeEndpoint = `${apiRoot}/orders/store`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-    // Candidate endpoints if baseUrl doesn't already specify the action path
-    const endpoints =
-      cleanBase.endsWith("/orders/create") ||
-      cleanBase.endsWith("/shipments/create") ||
-      cleanBase.endsWith("/orders") ||
-      cleanBase.endsWith("/shipments")
-        ? [cleanBase]
-        : [`${cleanBase}/orders/create`, `${cleanBase}/orders`, `${cleanBase}/shipments`];
+    try {
+      const res = await fetch(storeEndpoint, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ orders: [stoxOrderObj] }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
 
-    let lastStatus = 0;
-    let lastErrorText = "";
+      const contentType = res.headers.get("content-type") || "";
+      const data: any = contentType.includes("application/json")
+        ? await res.json().catch(() => ({}))
+        : { rawText: (await res.text().catch(() => "")).slice(0, 300) };
 
-    for (const endpoint of endpoints) {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000);
-      try {
-        const res = await fetch(endpoint, {
-          method: "POST",
-          headers,
-          body: JSON.stringify(payload),
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-        lastStatus = res.status;
+      if (res.ok && data.success !== false) {
+        // Extract order/tracking identifier from response or query latest order from GET /api/orders
+        const createdOrder =
+          (Array.isArray(data.data) ? data.data[0] : data.data) ||
+          (Array.isArray(data.orders) ? data.orders[0] : data.order) ||
+          data;
 
-        const contentType = res.headers.get("content-type") || "";
-        const data: any = contentType.includes("application/json")
-          ? await res.json().catch(() => ({}))
-          : { rawText: (await res.text().catch(() => "")).slice(0, 200) };
+        let tracking =
+          createdOrder?.tracking_number ||
+          createdOrder?.trackingNumber ||
+          createdOrder?.awb ||
+          createdOrder?.code ||
+          createdOrder?.order_number ||
+          createdOrder?.id;
 
-        const tracking =
-          data.tracking_number ||
-          data.trackingNumber ||
-          data.awb ||
-          data.waybill ||
-          data.barcode ||
-          data.data?.tracking_number ||
-          data.data?.trackingNumber ||
-          data.data?.awb ||
-          data.order?.tracking_number ||
-          data.shipment?.tracking_number ||
-          (res.ok && (data.order_id || data.id || data.data?.id));
-
-        if (res.ok && tracking) {
-          const trackingStr = String(tracking);
-          return {
-            success: true,
-            provider: "stox",
-            providerName: provider.nameAr,
-            trackingNumber: trackingStr,
-            carrierOrderId: String(data.order_id || data.id || data.data?.id || trackingStr),
-            waybillUrl:
-              data.waybill_url ||
-              data.waybillUrl ||
-              data.data?.waybill_url ||
-              `${cleanBase}/waybill/${encodeURIComponent(trackingStr)}.pdf`,
-            trackingUrl: this.getTrackingUrl(trackingStr, provider),
-            status: "CREATED",
-            rawResponse: data,
-          };
+        if (!tracking) {
+          // Query GET /api/orders?page=1 to fetch the newly created order ID/code
+          try {
+            const listRes = await fetch(`${apiRoot}/orders?page=1`, {
+              method: "GET",
+              headers,
+            });
+            if (listRes.ok) {
+              const listJson = await listRes.json().catch(() => ({}));
+              const latest = Array.isArray(listJson.data) ? listJson.data[0] : null;
+              if (latest) {
+                tracking =
+                  latest.tracking_number ||
+                  latest.awb ||
+                  latest.code ||
+                  latest.order_number ||
+                  latest.id;
+              }
+            }
+          } catch {}
         }
 
-        lastErrorText =
-          data.message ||
-          data.error ||
-          data.detail ||
-          (data.errors ? JSON.stringify(data.errors) : "") ||
-          `HTTP ${res.status}`;
-
-        // If 401/403/422, don't try fallback paths because the endpoint exists and rejected auth/validation
-        if (res.status === 401 || res.status === 403 || res.status === 422 || res.status === 400) {
-          break;
-        }
-      } catch (err: any) {
-        clearTimeout(timeoutId);
-        lastErrorText = err.message || "Network error";
+        const trackingStr = String(tracking || `STX-${params.orderNumber}`);
+        return {
+          success: true,
+          provider: "stox",
+          providerName: provider.nameAr,
+          trackingNumber: trackingStr,
+          carrierOrderId: String(createdOrder?.id || trackingStr),
+          waybillUrl:
+            createdOrder?.waybill_url ||
+            createdOrder?.awb_url ||
+            `https://merchants.stox-eg.com/orders`,
+          trackingUrl: this.getTrackingUrl(trackingStr, provider),
+          status: "CREATED",
+          rawResponse: data,
+        };
       }
-    }
 
-    throw new Error(`رفض خادم STOX إنشاء الشحنة (${lastStatus || "Network"}): ${lastErrorText}`);
+      const errorMsg =
+        data.message ||
+        data.error ||
+        data.detail ||
+        (data.errors ? JSON.stringify(data.errors) : "") ||
+        `HTTP ${res.status}`;
+
+      throw new Error(`رفض خادم STOX إنشاء الشحنة (HTTP ${res.status}): ${errorMsg}`);
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      throw new Error(err.message || "تعذر الاتصال بخادم STOX لإنشاء الشحنة");
+    }
   }
 
   /**
@@ -486,15 +780,55 @@ export class UniversalShippingService {
     }
 
     try {
+      const headers = this.buildAuthHeaders(provider);
+
+      // Official STOX live order status lookup via GET /api/orders
+      if (provider.id === "stox") {
+        const apiRoot = this.resolveStoxApiRoot(provider.baseUrl);
+        const res = await fetch(`${apiRoot}/orders?page=1`, { headers });
+        if (res.ok) {
+          const json = await res.json().catch(() => ({}));
+          const list: any[] = Array.isArray(json.data) ? json.data : [];
+          const cleanTrack = trackingNumber.trim().toLowerCase();
+          const matched = list.find(
+            (o) =>
+              String(o.id || "").toLowerCase() === cleanTrack ||
+              String(o.code || "").toLowerCase() === cleanTrack ||
+              String(o.awb || "").toLowerCase() === cleanTrack ||
+              String(o.tracking_number || "").toLowerCase() === cleanTrack ||
+              String(o.reference_id || "").toLowerCase() === cleanTrack
+          );
+          if (matched) {
+            const rawStatus = String(matched.status || matched.order_status || "CREATED").toUpperCase();
+            let mappedStatus: ShippingTrackingResult["currentStatus"] = "CREATED";
+            if (rawStatus.includes("DELIVER")) mappedStatus = "DELIVERED";
+            else if (rawStatus.includes("OUT") || rawStatus.includes("SHIP") || rawStatus.includes("DISPATCH"))
+              mappedStatus = "OUT_FOR_DELIVERY";
+            else if (rawStatus.includes("PICK") || rawStatus.includes("PREPAR")) mappedStatus = "PICKED_UP";
+            else if (rawStatus.includes("RETURN") || rawStatus.includes("CANCEL")) mappedStatus = "RETURNED";
+
+            return {
+              trackingNumber,
+              provider: "stox",
+              providerName: provider.nameAr,
+              currentStatus: mappedStatus,
+              statusTextAr: matched.status_ar || matched.status || "مسجل لدى STOX جاري التجهيز والشحن",
+              statusTextEn: matched.status || "Registered with STOX",
+              lastUpdated: matched.updated_at || matched.created_at || new Date().toISOString(),
+              carrierHub: "مخازن STOX الرئيسية",
+              trackingUrl,
+              events: [],
+            };
+          }
+        }
+      }
+
       const endpoint = `${provider.baseUrl.replace(/\/+$/, "")}${
         provider.trackingEndpoint?.replace(/\{tracking\}/g, encodeURIComponent(trackingNumber)) ||
         `/shipments/track/${encodeURIComponent(trackingNumber)}`
       }`;
 
-      const res = await fetch(endpoint, {
-        headers: this.buildAuthHeaders(provider),
-      });
-
+      const res = await fetch(endpoint, { headers });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 
@@ -528,7 +862,7 @@ export class UniversalShippingService {
   }
 
   /**
-   * Tests REAL API connection for STOX or any shipping provider
+   * Tests REAL API connection for STOX Egypt or any shipping provider
    */
   public async testProviderConnection(provider: ShippingProviderConfig): Promise<{
     success: boolean;
@@ -564,6 +898,89 @@ export class UniversalShippingService {
     }
 
     const headers = this.buildAuthHeaders(provider);
+
+    // Dedicated Official STOX Egypt Verification (/api/user + /api/products + /api/orders)
+    if (provider.id === "stox") {
+      const apiRoot = this.resolveStoxApiRoot(cleanBase);
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+        const [userRes, prodRes, ordersRes] = await Promise.all([
+          fetch(`${apiRoot}/user`, { method: "GET", headers, redirect: "manual", signal: controller.signal }),
+          fetch(`${apiRoot}/products`, { method: "GET", headers, redirect: "manual", signal: controller.signal }).catch(
+            () => null
+          ),
+          fetch(`${apiRoot}/orders`, { method: "GET", headers, redirect: "manual", signal: controller.signal }).catch(
+            () => null
+          ),
+        ]);
+        clearTimeout(timeoutId);
+        const latencyMs = Date.now() - startTime;
+
+        if (userRes.status === 401 || userRes.status === 403 || (userRes.status >= 300 && userRes.status < 400)) {
+          return {
+            success: false,
+            provider: "stox",
+            messageAr: `رفض خادم STOX مفتاح الـ API Token (HTTP ${userRes.status}). تأكد من نسخ الـ Bearer Token الصحيح من حساب التاجر في STOX.`,
+            messageEn: `STOX rejected the API Token (HTTP ${userRes.status}). Please verify your STOX Merchant Bearer Token.`,
+            latencyMs,
+          };
+        }
+
+        if (userRes.ok) {
+          const userData = await userRes.json().catch(() => ({}));
+          const prodData = prodRes && prodRes.ok ? await prodRes.json().catch(() => ({})) : {};
+          const ordersData = ordersRes && ordersRes.ok ? await ordersRes.json().catch(() => ({})) : {};
+
+          const productsList: StoxProductRecord[] = Array.isArray(prodData.data) ? prodData.data : [];
+          if (productsList.length > 0) {
+            cachedStoxProducts = {
+              fetchedAt: Date.now(),
+              tokenKey: headers["Authorization"] || "",
+              data: productsList,
+            };
+          }
+
+          const merchantName = userData.name || userData.email || "تاجر معتمد";
+          const firstProd = productsList[0];
+          const prodSummaryAr = firstProd
+            ? `المنتج المربوط بالمخزن: ${firstProd.name} (المخزون في STOX: ${firstProd.inventories ?? "متاح"})`
+            : `عدد المنتجات في مخزن STOX: ${productsList.length}`;
+
+          return {
+            success: true,
+            provider: "stox",
+            messageAr: `تم الاتصال والمصادقة الحقيقية بنجاح مع خوادم STOX Egypt! الحساب: ${merchantName} — ${prodSummaryAr} — (الاستجابة: ${latencyMs}ms)`,
+            messageEn: `Successfully connected & authenticated with STOX Egypt! Account: ${merchantName} (${latencyMs}ms)`,
+            latencyMs,
+            details: {
+              apiRoot,
+              merchantId: userData.id,
+              merchantName: userData.name,
+              merchantEmail: userData.email,
+              warehouseProductsCount: productsList.length,
+              primaryProduct: firstProd
+                ? { id: firstProd.id, name: firstProd.name, sku: firstProd.sku, stock: firstProd.inventories }
+                : null,
+              totalSyncedOrders: ordersData.meta?.total ?? 0,
+              orderStoreEndpoint: `${apiRoot}/orders/store`,
+              status: "ONLINE_AUTHENTICATED",
+            },
+          };
+        }
+      } catch (err: any) {
+        const latencyMs = Date.now() - startTime;
+        return {
+          success: false,
+          provider: "stox",
+          messageAr: `تعذر الوصول إلى خادم STOX Egypt: ${err.message}`,
+          messageEn: `Failed to reach STOX Egypt server: ${err.message}`,
+          latencyMs,
+        };
+      }
+    }
+
     const probeUrls = [
       `${cleanBase}/orders`,
       `${cleanBase}/shipments`,
@@ -588,7 +1005,6 @@ export class UniversalShippingService {
         const latencyMs = Date.now() - startTime;
         lastStatus = res.status;
 
-        // If the server redirects to a login page (301/302/307/308), the token or endpoint is unauthenticated
         if (res.status >= 300 && res.status < 400) {
           const loc = res.headers.get("location") || "";
           if (loc.includes("login") || loc.includes("auth")) {
@@ -617,7 +1033,6 @@ export class UniversalShippingService {
           };
         }
 
-        // Check if response is JSON (or 200..299 / 405 Method Not Allowed on POST-only endpoint)
         const contentType = res.headers.get("content-type") || "";
         if ((res.ok && contentType.includes("application/json")) || res.status === 405 || res.status === 422) {
           return {

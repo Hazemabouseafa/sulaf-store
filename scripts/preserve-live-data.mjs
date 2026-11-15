@@ -86,21 +86,27 @@ function getCandidateLiveUrls() {
   return Array.from(urls);
 }
 
-async function fetchJsonWithTimeout(url, timeoutMs = 6000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, {
-      headers: { Accept: "application/json", "Cache-Control": "no-cache" },
-      signal: controller.signal,
-    });
-    clearTimeout(id);
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    clearTimeout(id);
-    return null;
+async function fetchJsonWithTimeout(url, timeoutMs = 12000, retries = 2) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, {
+        headers: { Accept: "application/json", "Cache-Control": "no-cache" },
+        signal: controller.signal,
+      });
+      clearTimeout(id);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      clearTimeout(id);
+    }
+    if (attempt < retries) {
+      await new Promise((r) => setTimeout(r, 800));
+    }
   }
+  return null;
 }
 
 async function downloadUploadFile(baseUrl, uploadPath) {

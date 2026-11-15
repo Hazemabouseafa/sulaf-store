@@ -58,38 +58,54 @@ export class PaymobService {
       storedPaymob = settings.paymob || {};
     } catch {}
 
-    const isPlaceholder = (val?: string) =>
-      !val ||
-      val.includes("sample") ||
-      val.includes("12345") ||
-      val.includes("sulaf_gateway_accept");
+    const isPlaceholder = (val?: string) => {
+      if (!val) return true;
+      const clean = val.trim();
+      return (
+        !clean ||
+        clean.includes("sample") ||
+        clean.includes("12345") ||
+        clean === "482019" ||
+        clean === "482020" ||
+        clean === "847291" ||
+        clean === "654321" ||
+        clean === "ENV_OR_TEST_API_KEY" ||
+        clean.includes("sulaf_gateway_accept") ||
+        clean.includes("hmac_secret_sulaf_paymob_hash")
+      );
+    };
 
-    const envApiKey = !isPlaceholder(process.env.PAYMOB_API_KEY) ? process.env.PAYMOB_API_KEY! : "";
-    const envSecretKey = !isPlaceholder(process.env.PAYMOB_SECRET_KEY) ? process.env.PAYMOB_SECRET_KEY! : "";
-    const envPublicKey = !isPlaceholder(process.env.PAYMOB_PUBLIC_KEY) ? process.env.PAYMOB_PUBLIC_KEY! : "";
-    const envHmac = !isPlaceholder(process.env.PAYMOB_HMAC_SECRET) ? process.env.PAYMOB_HMAC_SECRET! : "";
-    const envCardId = !isPlaceholder(process.env.PAYMOB_INTEGRATION_CARD_ID)
-      ? process.env.PAYMOB_INTEGRATION_CARD_ID!
-      : "";
-    const envWalletId = !isPlaceholder(process.env.PAYMOB_INTEGRATION_WALLET_ID)
-      ? process.env.PAYMOB_INTEGRATION_WALLET_ID!
-      : "";
-    const envIframeId = !isPlaceholder(process.env.PAYMOB_IFRAME_ID) ? process.env.PAYMOB_IFRAME_ID! : "";
+    const cleanValue = (val?: string) => (isPlaceholder(val) ? "" : val!.trim());
+    const cleanNumericId = (val?: string) => {
+      if (isPlaceholder(val)) return "";
+      return String(val || "").replace(/\D/g, "");
+    };
+
+    const envApiKey = cleanValue(process.env.PAYMOB_API_KEY);
+    const envSecretKey = cleanValue(process.env.PAYMOB_SECRET_KEY);
+    const envPublicKey = cleanValue(process.env.PAYMOB_PUBLIC_KEY);
+    const envHmac = cleanValue(process.env.PAYMOB_HMAC_SECRET);
+    const envCardId = cleanNumericId(process.env.PAYMOB_INTEGRATION_CARD_ID);
+    const envWalletId = cleanNumericId(process.env.PAYMOB_INTEGRATION_WALLET_ID);
+    const envIframeId = cleanNumericId(process.env.PAYMOB_IFRAME_ID);
 
     return {
       enabled: overrides?.enabled ?? storedPaymob.enabled ?? true,
       isSandbox: overrides?.isSandbox ?? storedPaymob.isSandbox ?? false,
-      apiKey: (overrides?.apiKey ?? storedPaymob.apiKey ?? envApiKey ?? "").trim(),
-      secretKey: (overrides?.secretKey ?? storedPaymob.secretKey ?? envSecretKey ?? "").trim(),
-      publicKey: (overrides?.publicKey ?? storedPaymob.publicKey ?? envPublicKey ?? "").trim(),
-      hmacSecret: (overrides?.hmacSecret ?? storedPaymob.hmacSecret ?? envHmac ?? "").trim(),
-      cardIntegrationId: String(
-        overrides?.cardIntegrationId ?? storedPaymob.cardIntegrationId ?? envCardId ?? ""
-      ).trim(),
-      walletIntegrationId: String(
-        overrides?.walletIntegrationId ?? storedPaymob.walletIntegrationId ?? envWalletId ?? ""
-      ).trim(),
-      iframeId: String(overrides?.iframeId ?? storedPaymob.iframeId ?? envIframeId ?? "").trim(),
+      apiKey: cleanValue(overrides?.apiKey) || cleanValue(storedPaymob.apiKey) || envApiKey,
+      secretKey: cleanValue(overrides?.secretKey) || cleanValue(storedPaymob.secretKey) || envSecretKey,
+      publicKey: cleanValue(overrides?.publicKey) || cleanValue(storedPaymob.publicKey) || envPublicKey,
+      hmacSecret: cleanValue(overrides?.hmacSecret) || cleanValue(storedPaymob.hmacSecret) || envHmac,
+      cardIntegrationId:
+        cleanNumericId(overrides?.cardIntegrationId) ||
+        cleanNumericId(storedPaymob.cardIntegrationId) ||
+        envCardId,
+      walletIntegrationId:
+        cleanNumericId(overrides?.walletIntegrationId) ||
+        cleanNumericId(storedPaymob.walletIntegrationId) ||
+        envWalletId,
+      iframeId:
+        cleanNumericId(overrides?.iframeId) || cleanNumericId(storedPaymob.iframeId) || envIframeId,
     };
   }
 
@@ -107,6 +123,53 @@ export class PaymobService {
       clean.startsWith("sau_sk_") ||
       clean.startsWith("omn_sk_")
     );
+  }
+
+  /**
+   * Automatically discovers the merchant's active Integration IDs from Paymob
+   * (`/api/auth/tokens` -> `/api/ecommerce/integrations`) if an Integration ID is missing or mismatched.
+   */
+  public async discoverIntegrationIds(
+    classicApiKey: string,
+    preferLive = true,
+    preferWallet = false
+  ): Promise<number[]> {
+    try {
+      const authRes = await fetch("https://accept.paymob.com/api/auth/tokens", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ api_key: classicApiKey.trim() }),
+      });
+      const authData = await authRes.json().catch(() => ({}));
+      if (!authRes.ok || !authData.token) return [];
+
+      const intRes = await fetch("https://accept.paymob.com/api/ecommerce/integrations", {
+        headers: { Authorization: `Bearer ${authData.token}` },
+      });
+      const intData = await intRes.json().catch(() => ({}));
+      const list: any[] = Array.isArray(intData.results) ? intData.results : [];
+      if (list.length === 0) return [];
+
+      const active = list.filter(
+        (x) => !x.is_deprecated && (x.integration_type === "online" || x.integration_type === "online_new")
+      );
+      const pool = active.length > 0 ? active : list;
+
+      const sorted = [...pool].sort((a, b) => {
+        const aModeMatch = Boolean(a.is_live) === preferLive ? 1 : 0;
+        const bModeMatch = Boolean(b.is_live) === preferLive ? 1 : 0;
+        if (aModeMatch !== bModeMatch) return bModeMatch - aModeMatch;
+
+        const targetGw = preferWallet ? "UIG" : "VPC";
+        const aGwMatch = a.gateway_type === targetGw ? 1 : 0;
+        const bGwMatch = b.gateway_type === targetGw ? 1 : 0;
+        return bGwMatch - aGwMatch;
+      });
+
+      return sorted.map((x) => Number(x.id)).filter((n) => n > 0);
+    } catch {
+      return [];
+    }
   }
 
   /**
@@ -261,10 +324,22 @@ export class PaymobService {
     // -------------------------------------------------------------------------
     if (intentionSecret) {
       try {
-        const intentionPayload: Record<string, any> = {
+        // If no integration IDs configured or if we have classicApiKey to auto-discover valid Integration IDs
+        if (integrationIds.length === 0 && classicApiKey) {
+          const discovered = await this.discoverIntegrationIds(
+            classicApiKey,
+            !intentionSecret.includes("_test_"),
+            wantsWallet
+          );
+          if (discovered.length > 0) {
+            integrationIds.push(discovered[0]);
+          }
+        }
+
+        const buildIntentionPayload = (pmList: (number | string)[]) => ({
           amount: amountCents,
           currency,
-          payment_methods: integrationIds.length > 0 ? integrationIds : ["card"],
+          payment_methods: pmList,
           items: [
             {
               name: `طلب سلاف رقم ${params.orderNumber}`,
@@ -283,18 +358,42 @@ export class PaymobService {
           special_reference: params.orderNumber,
           notification_url: notificationUrl,
           redirection_url: redirectionUrl,
-        };
+        });
 
-        const response = await fetch("https://accept.paymob.com/v1/intention/", {
+        let response = await fetch("https://accept.paymob.com/v1/intention/", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Token ${intentionSecret}`,
           },
-          body: JSON.stringify(intentionPayload),
+          body: JSON.stringify(
+            buildIntentionPayload(integrationIds.length > 0 ? [integrationIds[0]] : [6061385])
+          ),
         });
 
-        const data = await response.json().catch(() => ({}));
+        let data = await response.json().catch(() => ({}));
+
+        // If 404 (Integration ID does not exist) and we have classicApiKey, auto-discover the merchant's exact Integration ID and retry!
+        if (response.status === 404 && classicApiKey) {
+          const discovered = await this.discoverIntegrationIds(
+            classicApiKey,
+            !intentionSecret.includes("_test_"),
+            wantsWallet
+          );
+          const fallbackId = discovered.find((id) => !integrationIds.includes(id)) || discovered[0];
+          if (fallbackId) {
+            response = await fetch("https://accept.paymob.com/v1/intention/", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Token ${intentionSecret}`,
+              },
+              body: JSON.stringify(buildIntentionPayload([fallbackId])),
+            });
+            data = await response.json().catch(() => ({}));
+          }
+        }
+
         if (response.ok && data.client_secret) {
           if (!config.publicKey) {
             return {

@@ -1183,15 +1183,15 @@ export default function AdminPage() {
         paymobCardId:
           settings.paymob?.cardIntegrationId && settings.paymob.cardIntegrationId !== "482019"
             ? settings.paymob.cardIntegrationId
-            : settings.paymob?.cardIntegrationId || "",
+            : "",
         paymobWalletId:
           settings.paymob?.walletIntegrationId && settings.paymob.walletIntegrationId !== "482020"
             ? settings.paymob.walletIntegrationId
-            : settings.paymob?.walletIntegrationId || "",
+            : "",
         paymobIframeId:
           settings.paymob?.iframeId && settings.paymob.iframeId !== "847291"
             ? settings.paymob.iframeId
-            : settings.paymob?.iframeId || "",
+            : "",
         paymobHmac:
           settings.paymob?.hmacSecret && settings.paymob.hmacSecret !== "hmac_secret_sulaf_paymob_hash_2026"
             ? settings.paymob.hmacSecret
