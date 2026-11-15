@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -28,6 +28,8 @@ import {
   Plus,
   Minus,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   BookOpen,
   FlaskConical,
   Flame,
@@ -66,6 +68,55 @@ export default function ProductStoryPage() {
     return primaryIdx >= 0 ? primaryIdx : 0;
   });
 
+  const sliderTrackRef = useRef<HTMLDivElement | null>(null);
+  const scrollRafRef = useRef<number | null>(null);
+  const isProgrammaticScrollRef = useRef(false);
+  const programmaticTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const galleryImages = useMemo(() => {
+    const valid = (product.images || []).filter((img) => img && typeof img.url === "string" && img.url.trim().length > 0);
+    if (valid.length > 0) return valid;
+    const fallbackUrl = (product as any).imageUrl || "/brand/sulaf-flower-symbol.png";
+    return [{ url: fallbackUrl, alt: product.nameAr || "Sulaf Product", isPrimary: true }];
+  }, [product]);
+
+  const goToSlide = (targetIndex: number, smooth = true) => {
+    const total = galleryImages.length;
+    if (total === 0) return;
+    const normalized = ((targetIndex % total) + total) % total;
+    setSelectedImageIndex(normalized);
+
+    const track = sliderTrackRef.current;
+    if (!track) return;
+    isProgrammaticScrollRef.current = true;
+    if (programmaticTimeoutRef.current) clearTimeout(programmaticTimeoutRef.current);
+
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+    track.scrollTo({
+      left: normalized * track.clientWidth,
+      behavior: smooth && !prefersReducedMotion ? "smooth" : "auto",
+    });
+
+    programmaticTimeoutRef.current = setTimeout(() => {
+      isProgrammaticScrollRef.current = false;
+    }, 420);
+  };
+
+  const handleSliderScroll = () => {
+    if (isProgrammaticScrollRef.current) return;
+    if (scrollRafRef.current) cancelAnimationFrame(scrollRafRef.current);
+    scrollRafRef.current = requestAnimationFrame(() => {
+      const track = sliderTrackRef.current;
+      if (!track || track.clientWidth === 0) return;
+      const idx = Math.round(track.scrollLeft / track.clientWidth);
+      const clamped = Math.max(0, Math.min(galleryImages.length - 1, idx));
+      setSelectedImageIndex((prev) => (prev !== clamped ? clamped : prev));
+    });
+  };
+
   useEffect(() => {
     fetch(`/api/products/${encodeURIComponent(slug)}`, { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
@@ -73,7 +124,14 @@ export default function ProductStoryPage() {
         if (d && d.product) {
           setProduct(d.product);
           const primaryIdx = (d.product.images || []).findIndex((img: any) => img.isPrimary);
-          setSelectedImageIndex(primaryIdx >= 0 ? primaryIdx : 0);
+          const initialIdx = primaryIdx >= 0 ? primaryIdx : 0;
+          setSelectedImageIndex(initialIdx);
+          requestAnimationFrame(() => {
+            const track = sliderTrackRef.current;
+            if (track && track.clientWidth > 0) {
+              track.scrollTo({ left: initialIdx * track.clientWidth, behavior: "auto" });
+            }
+          });
           if (d.product.variants?.[0]?.id) {
             setSelectedVariantId(d.product.variants[0].id);
           }
@@ -213,50 +271,151 @@ export default function ProductStoryPage() {
           </nav>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* Visual Column: Clean, Full-Size Product Showcase */}
+            {/* Visual Column: Simple & Smooth Product Image Slider */}
             <div className="lg:col-span-6 flex flex-col items-center justify-center w-full">
-              <div className="relative w-full max-w-lg aspect-square sm:aspect-[4/5] flex items-center justify-center">
-                <Image
-                  src={
-                    product.images?.[selectedImageIndex]?.url ||
-                    product.images?.find((img) => img.isPrimary)?.url ||
-                    product.images?.[0]?.url ||
-                    (product as any).imageUrl ||
-                    "/brand/sulaf-flower-symbol.png"
-                  }
-                  alt={product.nameAr || "Sulaf Product"}
-                  fill
-                  className="object-contain object-center"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  priority
-                  unoptimized
-                />
-              </div>
-
-              {/* Thumbnails row if multiple images exist */}
-              {product.images && product.images.length > 1 && (
-                <div className="flex flex-wrap items-center justify-center gap-2 mt-4 z-20">
-                  {product.images.map((img, i) => (
+              <div
+                role="region"
+                aria-roledescription="carousel"
+                aria-label={isArabic ? `معرض صور ${productName}` : `${productName} image gallery`}
+                className="relative w-full max-w-lg group select-none"
+              >
+                {/* Previous / Next Controls */}
+                {galleryImages.length > 1 && (
+                  <div
+                    dir="ltr"
+                    className="pointer-events-none absolute inset-y-0 inset-x-2 sm:inset-x-3 z-20 flex items-center justify-between"
+                  >
                     <button
-                      key={i}
                       type="button"
-                      onClick={() => setSelectedImageIndex(i)}
-                      className={`w-14 h-14 rounded-xl p-1 bg-white border-2 transition-all cursor-pointer overflow-hidden ${
-                        selectedImageIndex === i
-                          ? "border-[#610b0d] shadow-sm scale-105"
-                          : "border-gray-200 hover:border-gray-300 opacity-70 hover:opacity-100"
-                      }`}
-                      title={img.alt || product.nameAr}
+                      onClick={() => goToSlide(selectedImageIndex - 1)}
+                      aria-label={isArabic ? "الصورة السابقة" : "Previous slide"}
+                      className="pointer-events-auto w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/90 hover:bg-white text-[#222b1a] border border-[#e2e8c0] shadow-md flex items-center justify-center transition-all hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#485c36] cursor-pointer touch-manipulation"
                     >
-                      <img
-                        src={img.url}
-                        alt={img.alt || product.nameAr}
-                        className="w-full h-full object-contain"
-                      />
+                      <ChevronLeft className="w-5 h-5" />
                     </button>
+
+                    <button
+                      type="button"
+                      onClick={() => goToSlide(selectedImageIndex + 1)}
+                      aria-label={isArabic ? "الصورة التالية" : "Next slide"}
+                      className="pointer-events-auto w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/90 hover:bg-white text-[#222b1a] border border-[#e2e8c0] shadow-md flex items-center justify-center transition-all hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#485c36] cursor-pointer touch-manipulation"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Slide Counter Pill */}
+                {galleryImages.length > 1 && (
+                  <div
+                    dir="ltr"
+                    className="absolute top-3 end-3 z-20 px-2.5 py-1 rounded-full bg-[#fdfef8]/90 backdrop-blur-xs border border-[#e2e8c0] text-[11px] font-mono font-bold text-[#485c36] shadow-2xs"
+                  >
+                    {selectedImageIndex + 1} / {galleryImages.length}
+                  </div>
+                )}
+
+                {/* Scroll-Snap Slider Track */}
+                <div
+                  ref={sliderTrackRef}
+                  dir="ltr"
+                  tabIndex={0}
+                  role="group"
+                  aria-label={isArabic ? "شرائح صور المنتج" : "Product image slides"}
+                  onScroll={handleSliderScroll}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowLeft") {
+                      e.preventDefault();
+                      goToSlide(selectedImageIndex - 1);
+                    } else if (e.key === "ArrowRight") {
+                      e.preventDefault();
+                      goToSlide(selectedImageIndex + 1);
+                    }
+                  }}
+                  className="flex w-full overflow-x-auto snap-x snap-mandatory touch-manipulation rounded-3xl bg-[#fdfef8]/60 border border-[#e2e8c0]/80 shadow-xs [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#485c36]"
+                >
+                  {galleryImages.map((img, idx) => (
+                    <div
+                      key={`${img.url}-${idx}`}
+                      role="group"
+                      aria-roledescription="slide"
+                      aria-label={
+                        isArabic
+                          ? `صورة ${idx + 1} من ${galleryImages.length}`
+                          : `${idx + 1} of ${galleryImages.length}`
+                      }
+                      className="relative flex-[0_0_100%] snap-center aspect-square sm:aspect-[4/5] flex items-center justify-center p-4 sm:p-6"
+                    >
+                      <Image
+                        src={img.url}
+                        alt={img.alt || productName || "Sulaf Product"}
+                        fill
+                        className="object-contain object-center p-3 sm:p-5"
+                        sizes="(max-width: 1024px) 100vw, 50vw"
+                        priority={idx === 0}
+                        unoptimized
+                      />
+                    </div>
                   ))}
                 </div>
-              )}
+
+                {/* Accessible polite live status */}
+                <p className="sr-only" role="status" aria-live="polite">
+                  {isArabic
+                    ? `الصورة ${selectedImageIndex + 1} من ${galleryImages.length}`
+                    : `Slide ${selectedImageIndex + 1} of ${galleryImages.length}`}
+                </p>
+
+                {/* Dots Marker Navigation */}
+                {galleryImages.length > 1 && (
+                  <nav
+                    dir="ltr"
+                    aria-label={isArabic ? "اختر صورة المنتج" : "Choose a product image"}
+                    className="flex items-center justify-center gap-2 mt-3.5"
+                  >
+                    {galleryImages.map((_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        aria-current={selectedImageIndex === i ? "true" : undefined}
+                        aria-label={isArabic ? `انتقل إلى الصورة ${i + 1}` : `Go to slide ${i + 1}`}
+                        onClick={() => goToSlide(i)}
+                        className={`h-2.5 rounded-full transition-all cursor-pointer touch-manipulation focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#485c36] ${
+                          selectedImageIndex === i
+                            ? "w-7 bg-[#610b0d]"
+                            : "w-2.5 bg-[#ccd6a3] hover:bg-[#485c36]/60"
+                        }`}
+                      />
+                    ))}
+                  </nav>
+                )}
+
+                {/* Thumbnails Strip */}
+                {galleryImages.length > 1 && (
+                  <div className="flex flex-wrap items-center justify-center gap-2.5 mt-3 z-20">
+                    {galleryImages.map((img, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => goToSlide(i)}
+                        aria-current={selectedImageIndex === i ? "true" : undefined}
+                        className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl p-1.5 bg-white border-2 transition-all cursor-pointer overflow-hidden touch-manipulation focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#485c36] ${
+                          selectedImageIndex === i
+                            ? "border-[#610b0d] shadow-sm scale-105 ring-2 ring-[#610b0d]/20"
+                            : "border-[#e2e8c0] hover:border-[#485c36]/50 opacity-70 hover:opacity-100"
+                        }`}
+                        title={img.alt || productName}
+                      >
+                        <img
+                          src={img.url}
+                          alt={img.alt || productName}
+                          className="w-full h-full object-contain"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {vis.productSignaturePoemVis !== false && (
                 <div className="mt-4 p-3.5 rounded-2xl bg-[#485c36]/10 text-center max-w-sm border border-[#485c36]/20">

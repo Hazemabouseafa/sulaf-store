@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ProductData } from "@/lib/data/mock-data";
 import { useCart } from "@/lib/cart/cart-context";
 import { useLanguage } from "@/lib/i18n/language-context";
-import { X, Check, Star, ShoppingBag, ArrowLeft, ArrowRight, Shield } from "lucide-react";
+import { X, Check, Star, ShoppingBag, ArrowLeft, ArrowRight, Shield, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface QuickViewModalProps {
   product: ProductData | null;
@@ -15,12 +15,19 @@ interface QuickViewModalProps {
 
 export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
   const { addItem } = useCart();
-  const { isArabic, t, dir } = useLanguage();
+  const { isArabic, t } = useLanguage();
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const [activeImageIdx, setActiveImageIdx] = useState(0);
 
   if (!product) return null;
+
+  const galleryImages =
+    product.images && product.images.length > 0
+      ? product.images
+      : [{ url: (product as any).imageUrl || "/brand/sulaf-flower-symbol.png", alt: product.nameAr, isPrimary: true }];
+  const safeIdx = activeImageIdx < galleryImages.length ? activeImageIdx : 0;
 
   const currency = isArabic ? "ج.م" : "EGP";
   const currentVariant = product.variants.find((v) => v.id === selectedVariant) || product.variants[0];
@@ -52,16 +59,54 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
         </button>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-          {/* Image */}
-          <div className="flex flex-col items-center justify-center p-4 sm:p-6 bg-white/70 rounded-2xl border border-[#e2e8c0]">
+          {/* Image Slider */}
+          <div className="relative flex flex-col items-center justify-center p-4 sm:p-6 bg-white/70 rounded-2xl border border-[#e2e8c0]">
+            {galleryImages.length > 1 && (
+              <div dir="ltr" className="pointer-events-none absolute inset-y-0 inset-x-2 z-10 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setActiveImageIdx((safeIdx - 1 + galleryImages.length) % galleryImages.length)}
+                  aria-label={isArabic ? "الصورة السابقة" : "Previous image"}
+                  className="pointer-events-auto w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#222b1a] border border-[#e2e8c0] shadow-xs flex items-center justify-center transition-transform active:scale-95 cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveImageIdx((safeIdx + 1) % galleryImages.length)}
+                  aria-label={isArabic ? "الصورة التالية" : "Next image"}
+                  className="pointer-events-auto w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#222b1a] border border-[#e2e8c0] shadow-xs flex items-center justify-center transition-transform active:scale-95 cursor-pointer"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
             <Image
-              src={product.images?.find((img) => img.isPrimary)?.url || product.images?.[0]?.url || (product as any).imageUrl || "/brand/sulaf-flower-symbol.png"}
+              src={galleryImages[safeIdx]?.url || "/brand/sulaf-flower-symbol.png"}
               alt={productName}
               width={220}
               height={220}
               unoptimized
               className="object-contain"
             />
+
+            {galleryImages.length > 1 && (
+              <div dir="ltr" className="flex items-center justify-center gap-1.5 mt-3">
+                {galleryImages.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setActiveImageIdx(i)}
+                    aria-label={isArabic ? `انتقل إلى الصورة ${i + 1}` : `Go to slide ${i + 1}`}
+                    aria-current={safeIdx === i ? "true" : undefined}
+                    className={`h-2 rounded-full transition-all cursor-pointer ${
+                      safeIdx === i ? "w-5 bg-[#610b0d]" : "w-2 bg-[#ccd6a3]"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Details */}
