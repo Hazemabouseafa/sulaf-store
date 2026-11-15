@@ -31,8 +31,37 @@ export async function syncProductsFromServer(): Promise<ProductData[]> {
     if (res.ok) {
       const data = await res.json();
       if (data.products && Array.isArray(data.products) && data.products.length > 0) {
-        saveProducts(data.products);
-        return data.products;
+        const serverProducts: ProductData[] = data.products;
+        // Self-healing guard: if admin has custom products in localStorage that are missing from a fresh default 1-product server DB, restore them!
+        if (typeof window !== "undefined") {
+          const isAdmin = localStorage.getItem("sulaf_admin_auth") === "true";
+          const localRaw = localStorage.getItem(STORAGE_KEY);
+          if (isAdmin && localRaw && serverProducts.length <= 1) {
+            try {
+              const localParsed: ProductData[] = JSON.parse(localRaw);
+              if (Array.isArray(localParsed) && localParsed.length > serverProducts.length) {
+                const serverIds = new Set(serverProducts.map((p) => p.id));
+                const missingLocal = localParsed.filter((p) => p && p.id && !serverIds.has(p.id));
+                if (missingLocal.length > 0) {
+                  const putRes = await fetch("/api/products", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ products: localParsed }),
+                  });
+                  if (putRes.ok) {
+                    const putData = await putRes.json();
+                    if (Array.isArray(putData.products) && putData.products.length > 0) {
+                      saveProducts(putData.products);
+                      return putData.products;
+                    }
+                  }
+                }
+              }
+            } catch {}
+          }
+        }
+        saveProducts(serverProducts);
+        return serverProducts;
       }
     }
   } catch (err) {

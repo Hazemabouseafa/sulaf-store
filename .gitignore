@@ -41,9 +41,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# uploads
+# uploads & build seed
 /public/uploads/*
 !/public/uploads/.gitkeep
 /data/uploads/*
 !/data/uploads/.gitkeep
+/data-seed/
 

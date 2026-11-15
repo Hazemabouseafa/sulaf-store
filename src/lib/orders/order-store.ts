@@ -39,6 +39,10 @@ export interface OrderRecord {
   receiptVerifiedAt?: string;
   stoxTrackingNumber?: string;
   stoxStatus?: string;
+  stoxOrderId?: string;
+  waybillUrl?: string;
+  stoxDispatchedAt?: string;
+  stoxError?: string;
   birthdate?: string;
   closePersonName?: string;
   createdAt: string;

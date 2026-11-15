@@ -194,7 +194,13 @@ export function ShippingCarrierSettings({
               type="password"
               placeholder={selectedCarrier === "stox" ? "stx_live_sk_..." : "Bearer token / API Key"}
               value={currentProvider.apiKey}
-              onChange={(e) => onChangeProviderConfig(selectedCarrier, { apiKey: e.target.value })}
+              onChange={(e) => {
+                const val = e.target.value;
+                onChangeProviderConfig(selectedCarrier, {
+                  apiKey: val,
+                  ...(val.trim().length > 0 ? { isSandbox: false } : {}),
+                });
+              }}
               className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs font-mono text-gray-900 focus:border-[#485c36] focus:outline-none"
             />
           </div>

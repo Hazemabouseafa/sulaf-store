@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
         if (idx !== -1) {
           orders[idx].paymentStatus = orders[idx].isDepositMode ? "DEPOSIT_PAID" : "FULLY_PAID";
-          orders[idx].orderStatus = "PROCESSING";
+          // Keep orderStatus as PENDING_CONFIRMATION until the Admin explicitly marks it PROCESSING
           orders[idx].notes = `${orders[idx].notes || ""}\n[شحناوي] تم تأكيد سحب الدفعة بنجاح (مرجع: ${reference} - معاملة: ${result.data.transaction_id || "N/A"})`;
           writeJsonFile("orders.json", orders);
         }

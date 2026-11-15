@@ -11,7 +11,7 @@ import { HomepageSectionBuilder } from "@/components/admin/HomepageSectionBuilde
 import { ShippingCarrierSettings } from "@/components/admin/ShippingCarrierSettings";
 import { CouponData, saveCoupons } from "@/lib/coupons/coupon-store";
 import { ReviewItem } from "@/lib/reviews/review-store";
-import { saveProducts } from "@/lib/products/product-store";
+import { saveProducts, getStoredProducts } from "@/lib/products/product-store";
 import { useStoreSettings } from "@/lib/settings/store-settings-context";
 import {
   DEFAULT_SHIPPING_PROVIDERS,
@@ -1079,11 +1079,13 @@ export default function AdminPage() {
     announcementText: "",
     announcementEnabled: true,
     paymobEnabled: true,
-    paymobSandbox: true,
+    paymobSandbox: false,
     paymobApiKey: "",
     paymobSecretKey: "",
-    paymobCardId: "482019",
-    paymobWalletId: "482020",
+    paymobPublicKey: "",
+    paymobCardId: "",
+    paymobWalletId: "",
+    paymobIframeId: "",
     paymobHmac: "",
     // Payment Gateways Selection & Sha7nawy Config
     gatewaysMode: "both" as "both" | "paymob_only" | "sha7nawy_only",
@@ -1165,12 +1167,35 @@ export default function AdminPage() {
         announcementText: settings.announcement?.text || "شحن مجاني وسريع لكافة المحافظات على الطلبات فوق 800 ج",
         announcementEnabled: settings.announcement?.enabled ?? true,
         paymobEnabled: settings.paymob?.enabled ?? true,
-        paymobSandbox: settings.paymob?.isSandbox ?? true,
-        paymobApiKey: settings.paymob?.apiKey || "",
-        paymobSecretKey: settings.paymob?.secretKey || "",
-        paymobCardId: settings.paymob?.cardIntegrationId || "482019",
-        paymobWalletId: settings.paymob?.walletIntegrationId || "482020",
-        paymobHmac: settings.paymob?.hmacSecret || "",
+        paymobSandbox: settings.paymob?.isSandbox ?? false,
+        paymobApiKey:
+          settings.paymob?.apiKey && settings.paymob.apiKey !== "ENV_OR_TEST_API_KEY"
+            ? settings.paymob.apiKey
+            : "",
+        paymobSecretKey:
+          settings.paymob?.secretKey && settings.paymob.secretKey !== "sec_test_sulaf_gateway_accept_2026"
+            ? settings.paymob.secretKey
+            : "",
+        paymobPublicKey:
+          settings.paymob?.publicKey && settings.paymob.publicKey !== "pub_test_sulaf_gateway_accept_2026"
+            ? settings.paymob.publicKey
+            : "",
+        paymobCardId:
+          settings.paymob?.cardIntegrationId && settings.paymob.cardIntegrationId !== "482019"
+            ? settings.paymob.cardIntegrationId
+            : settings.paymob?.cardIntegrationId || "",
+        paymobWalletId:
+          settings.paymob?.walletIntegrationId && settings.paymob.walletIntegrationId !== "482020"
+            ? settings.paymob.walletIntegrationId
+            : settings.paymob?.walletIntegrationId || "",
+        paymobIframeId:
+          settings.paymob?.iframeId && settings.paymob.iframeId !== "847291"
+            ? settings.paymob.iframeId
+            : settings.paymob?.iframeId || "",
+        paymobHmac:
+          settings.paymob?.hmacSecret && settings.paymob.hmacSecret !== "hmac_secret_sulaf_paymob_hash_2026"
+            ? settings.paymob.hmacSecret
+            : "",
         gatewaysMode: (settings.gatewaysMode as any) || "both",
         sha7nawyEnabled: settings.sha7nawy?.enabled ?? true,
         sha7nawySandbox: settings.sha7nawy?.isSandbox ?? true,
@@ -1213,9 +1238,29 @@ export default function AdminPage() {
       }
       if (resProducts.ok) {
         const d = await resProducts.json();
-        if (d.products) {
-          setProducts(d.products);
-          saveProducts(d.products);
+        if (d.products && Array.isArray(d.products)) {
+          const localCurrent = getStoredProducts();
+          // Non-destructive self-healing: if server only has default 1 product while admin browser has more added products, sync them back to server
+          if (d.products.length <= 1 && localCurrent.length > d.products.length) {
+            const putRes = await fetch("/api/products", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ products: localCurrent }),
+            }).catch(() => null);
+            if (putRes && putRes.ok) {
+              const putData = await putRes.json();
+              if (Array.isArray(putData.products)) {
+                setProducts(putData.products);
+                saveProducts(putData.products);
+              }
+            } else {
+              setProducts(d.products);
+              saveProducts(d.products);
+            }
+          } else {
+            setProducts(d.products);
+            saveProducts(d.products);
+          }
         }
       }
       if (resCoupons.ok) {
@@ -1624,20 +1669,38 @@ export default function AdminPage() {
   }
 
   // ----------------------------------------------------------------
-  // Order Operations (Real Backend API)
+  // Order Operations (Real Backend API + Auto STOX Dispatch on PROCESSING)
   // ----------------------------------------------------------------
-  async function handleUpdateOrderStatus(orderId: string, newStatus: OrderRecord["orderStatus"]) {
+  async function handleUpdateOrderStatus(
+    orderId: string,
+    newStatus: OrderRecord["orderStatus"],
+    extraFlags?: { dispatchToStox?: boolean; forceRedispatch?: boolean }
+  ) {
     try {
       const res = await fetch(`/api/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderStatus: newStatus }),
+        body: JSON.stringify({ orderStatus: newStatus, ...(extraFlags || {}) }),
       });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        showToast(`تم تحديث حالة الطلب إلى ${getStatusLabel(newStatus)}`);
+        if (data.stoxDispatch) {
+          if (data.stoxDispatch.success) {
+            showToast(
+              `تم تحويل الطلب إلى قيد التجهيز وإرساله لشركة الشحن (${data.stoxDispatch.providerName}) بنجاح ✓ بوليصة: ${data.stoxDispatch.trackingNumber}`
+            );
+          } else {
+            showToast(
+              `تم تحديث الحالة لقيد التجهيز، ولكن تعذر الإرسال لـ ${data.stoxDispatch.providerName}: ${data.stoxDispatch.error}`,
+              "error"
+            );
+          }
+        } else {
+          showToast(`تم تحديث حالة الطلب إلى ${getStatusLabel(newStatus)}`);
+        }
         loadLiveBackendData(true);
       } else {
-        showToast("فشل تحديث حالة الطلب على الخادم.", "error");
+        showToast(data.error || "فشل تحديث حالة الطلب على الخادم.", "error");
       }
     } catch {
       showToast("خطأ في الاتصال بالخادم.", "error");
@@ -1655,8 +1718,20 @@ export default function AdminPage() {
           receiptVerifiedAt: new Date().toISOString(),
         }),
       });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        showToast("تم اعتماد إيصال التحويل وتأكيد الدفع بنجاح ✓");
+        if (data.stoxDispatch && data.stoxDispatch.success) {
+          showToast(
+            `تم اعتماد الإيصال وإرسال الطلب لشركة الشحن (${data.stoxDispatch.providerName}) بنجاح ✓ بوليصة: ${data.stoxDispatch.trackingNumber}`
+          );
+        } else if (data.stoxDispatch && !data.stoxDispatch.success) {
+          showToast(
+            `تم اعتماد الإيصال وتأكيد الدفع، ولكن تعذر الإرسال التلقائي لشركة الشحن: ${data.stoxDispatch.error}`,
+            "error"
+          );
+        } else {
+          showToast("تم اعتماد إيصال التحويل وتأكيد الدفع بنجاح ✓");
+        }
         setReceiptModalUrl(null);
         setReceiptModalOrder(null);
         loadLiveBackendData(true);
@@ -2064,8 +2139,10 @@ export default function AdminPage() {
           isSandbox: settingsForm.paymobSandbox,
           apiKey: settingsForm.paymobApiKey,
           secretKey: settingsForm.paymobSecretKey,
+          publicKey: settingsForm.paymobPublicKey,
           cardIntegrationId: settingsForm.paymobCardId,
           walletIntegrationId: settingsForm.paymobWalletId,
+          iframeId: settingsForm.paymobIframeId,
           hmacSecret: settingsForm.paymobHmac,
         },
         gatewaysMode: settingsForm.gatewaysMode,
@@ -2145,8 +2222,10 @@ export default function AdminPage() {
         body: JSON.stringify({
           apiKey: settingsForm.paymobApiKey,
           secretKey: settingsForm.paymobSecretKey,
+          publicKey: settingsForm.paymobPublicKey,
           cardIntegrationId: settingsForm.paymobCardId,
           walletIntegrationId: settingsForm.paymobWalletId,
+          iframeId: settingsForm.paymobIframeId,
           hmacSecret: settingsForm.paymobHmac,
           isSandbox: settingsForm.paymobSandbox,
         }),
@@ -3511,11 +3590,33 @@ export default function AdminPage() {
                                 className="w-full px-2.5 py-1.5 rounded-xl border border-gray-300 bg-white font-bold text-xs focus:outline-none focus:border-[#3d502d] text-gray-900 shadow-2xs"
                               >
                                 <option value="PENDING_CONFIRMATION">{adminLang === "ar" ? "قيد المراجعة" : "Pending"}</option>
-                                <option value="PROCESSING">{adminLang === "ar" ? "قيد التجهيز" : "Processing"}</option>
+                                <option value="PROCESSING">{adminLang === "ar" ? "قيد التجهيز (إرسال لـ STOX)" : "Processing (Send to STOX)"}</option>
                                 <option value="SHIPPED">{adminLang === "ar" ? "تم الشحن" : "Shipped"}</option>
                                 <option value="DELIVERED">{adminLang === "ar" ? "تم التوصيل" : "Delivered"}</option>
                                 <option value="CANCELLED">{adminLang === "ar" ? "ملغي" : "Cancelled"}</option>
                               </select>
+                              {order.stoxTrackingNumber ? (
+                                <div className="mt-1.5 px-2 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-800 flex items-center justify-between gap-1">
+                                  <span>STOX: {order.stoxTrackingNumber}</span>
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                                </div>
+                              ) : (order.orderStatus === "PROCESSING" || order.stoxStatus === "FAILED") ? (
+                                <div className="mt-1.5 space-y-1">
+                                  {order.stoxError && (
+                                    <div className="px-2 py-1 rounded-lg bg-rose-50 border border-rose-200 text-[10px] font-bold text-rose-800 line-clamp-2" title={order.stoxError}>
+                                      ⚠️ {order.stoxError}
+                                    </div>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateOrderStatus(order.id, "PROCESSING", { dispatchToStox: true, forceRedispatch: true })}
+                                    className="w-full px-2 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                                  >
+                                    <Truck className="w-3 h-3" />
+                                    <span>{adminLang === "ar" ? "إرسال البوليصة لـ STOX الآن" : "Dispatch to STOX Now"}</span>
+                                  </button>
+                                </div>
+                              ) : null}
                             </td>
 
                             {/* Action Buttons Toolbar */}
@@ -3690,11 +3791,33 @@ export default function AdminPage() {
                           className="w-full px-3 py-2 rounded-xl border border-gray-300 bg-white font-bold text-xs text-gray-900 shadow-2xs"
                         >
                           <option value="PENDING_CONFIRMATION">قيد المراجعة</option>
-                          <option value="PROCESSING">قيد التجهيز</option>
+                          <option value="PROCESSING">قيد التجهيز (إرسال لـ STOX)</option>
                           <option value="SHIPPED">تم الشحن</option>
                           <option value="DELIVERED">تم التوصيل</option>
                           <option value="CANCELLED">ملغي</option>
                         </select>
+                        {order.stoxTrackingNumber ? (
+                          <div className="mt-2 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800 flex items-center justify-between">
+                            <span>رقم تتبع STOX: {order.stoxTrackingNumber}</span>
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          </div>
+                        ) : (order.orderStatus === "PROCESSING" || order.stoxStatus === "FAILED") ? (
+                          <div className="mt-2 space-y-1.5">
+                            {order.stoxError && (
+                              <div className="px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-[11px] font-bold text-rose-800">
+                                ⚠️ {order.stoxError}
+                              </div>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateOrderStatus(order.id, "PROCESSING", { dispatchToStox: true, forceRedispatch: true })}
+                              className="w-full py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center justify-center gap-1.5"
+                            >
+                              <Truck className="w-3.5 h-3.5" />
+                              <span>إرسال البوليصة لشركة STOX الآن</span>
+                            </button>
+                          </div>
+                        ) : null}
                       </div>
 
                       {/* Action buttons bar */}
@@ -8558,18 +8681,40 @@ export default function AdminPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-gray-800 mb-2">Paymob Secret Key / API Key</label>
+                      <label className="block text-xs font-bold text-gray-800 mb-2">Paymob Secret Key (مفتاح Intention API الحديث)</label>
                       <input
                         type="password"
                         value={settingsForm.paymobSecretKey}
                         onChange={(e) => setSettingsForm({ ...settingsForm, paymobSecretKey: e.target.value })}
-                        placeholder="sec_test_..."
+                        placeholder="egy_sk_live_... أو egy_sk_test_..."
                         className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm font-mono text-gray-900 focus:border-[#3d502d] focus:outline-none"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-gray-800 mb-2">HMAC Secret</label>
+                      <label className="block text-xs font-bold text-gray-800 mb-2">Paymob Public Key (للـ Unified Checkout)</label>
+                      <input
+                        type="text"
+                        value={settingsForm.paymobPublicKey}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, paymobPublicKey: e.target.value })}
+                        placeholder="egy_pk_live_... أو egy_pk_test_..."
+                        className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm font-mono text-gray-900 focus:border-[#3d502d] focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-800 mb-2">Paymob Classic API Key (اختياري - للربط الكلاسيكي)</label>
+                      <input
+                        type="password"
+                        value={settingsForm.paymobApiKey}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, paymobApiKey: e.target.value })}
+                        placeholder="ZXlKaGJHY2lPaUpJVXpJMU5p..."
+                        className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm font-mono text-gray-900 focus:border-[#3d502d] focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-800 mb-2">HMAC Secret (لتوثيق إشعارات الدفع)</label>
                       <input
                         type="password"
                         value={settingsForm.paymobHmac}
@@ -8585,6 +8730,7 @@ export default function AdminPage() {
                         type="text"
                         value={settingsForm.paymobCardId}
                         onChange={(e) => setSettingsForm({ ...settingsForm, paymobCardId: e.target.value })}
+                        placeholder="مثال: 4829103"
                         className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm font-mono text-gray-900 focus:border-[#3d502d] focus:outline-none"
                       />
                     </div>
@@ -8595,9 +8741,42 @@ export default function AdminPage() {
                         type="text"
                         value={settingsForm.paymobWalletId}
                         onChange={(e) => setSettingsForm({ ...settingsForm, paymobWalletId: e.target.value })}
+                        placeholder="مثال: 4829104"
                         className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm font-mono text-gray-900 focus:border-[#3d502d] focus:outline-none"
                       />
                     </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-bold text-gray-800 mb-2">معرف شاشة الدفع (Paymob Iframe ID - عند استخدام API الكلاسيكي بدون Public Key)</label>
+                      <input
+                        type="text"
+                        value={settingsForm.paymobIframeId}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, paymobIframeId: e.target.value })}
+                        placeholder="مثال: 845210"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm font-mono text-gray-900 focus:border-[#3d502d] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Paymob Webhook Info Box */}
+                  <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-200 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="space-y-0.5">
+                      <span className="font-bold text-gray-800 block">رابط الويب هوك والكول باك في لوحة Paymob (Transaction Processed & Response Callback):</span>
+                      <code className="text-gray-600 font-mono text-[11px] select-all bg-white px-2 py-0.5 rounded border border-gray-200 inline-block">
+                        {typeof window !== "undefined" ? window.location.origin : "https://sulaf.store"}/api/webhooks/paymob
+                      </code>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = `${window.location.origin}/api/webhooks/paymob`;
+                        navigator.clipboard.writeText(url);
+                        showToast("تم نسخ رابط الويب هوك الخاص بـ Paymob ✓");
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 font-bold text-[11px] shrink-0 cursor-pointer"
+                    >
+                      نسخ الرابط 📋
+                    </button>
                   </div>
 
                   {/* Paymob Live Test Button & Diagnostics Result */}

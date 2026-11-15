@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { readJsonFile, writeJsonFile } from "@/lib/db/json-db";
 import { OrderRecord } from "@/lib/orders/order-store";
 import { ProductData } from "@/lib/data/mock-data";
+import { universalShippingService, ShippingShipmentResult } from "@/lib/shipping/shipping-provider";
 
 export const dynamic = "force-dynamic";
 
@@ -90,19 +91,79 @@ export async function PATCH(
         ? { paymentStatus: "FULLY_PAID" as const, remainingCodAmount: 0 }
         : {};
 
-    // Merge updates
+    const { dispatchToStox, forceRedispatch, ...orderFields } = body;
+
+    // Merge updates first
     orders[index] = {
       ...orders[index],
       ...autoPaymentUpdates,
-      ...body,
+      ...orderFields,
     };
+
+    // CRITICAL WORKFLOW:
+    // Automatically dispatch the order to STOX (or active carrier) ONLY when Admin marks order as PROCESSING
+    // (or when Admin explicitly clicks manual dispatchToStox / forceRedispatch).
+    let stoxDispatch: ShippingShipmentResult | null = null;
+    const targetOrder = orders[index];
+    const shouldDispatchToStox =
+      dispatchToStox === true ||
+      forceRedispatch === true ||
+      (newStatus === "PROCESSING" &&
+        (!targetOrder.stoxTrackingNumber || targetOrder.stoxStatus === "FAILED"));
+
+    if (shouldDispatchToStox) {
+      const codToCollect =
+        targetOrder.paymentStatus === "FULLY_PAID"
+          ? 0
+          : typeof targetOrder.remainingCodAmount === "number"
+          ? targetOrder.remainingCodAmount
+          : targetOrder.total;
+
+      stoxDispatch = await universalShippingService.createShipment({
+        orderId: targetOrder.id,
+        orderNumber: targetOrder.orderNumber,
+        recipient: {
+          fullName: targetOrder.customerName,
+          phone: targetOrder.customerPhone,
+          governorate: targetOrder.governorate,
+          city: targetOrder.city,
+          street: targetOrder.street,
+          building: targetOrder.building,
+          notes: targetOrder.notes,
+        },
+        codAmount: codToCollect,
+        items: (targetOrder.items || []).map((item) => ({
+          sku: item.variantId || item.productId || "SLF-001",
+          name: `${item.productName}${item.variantTitle ? ` (${item.variantTitle})` : ""}`,
+          quantity: Number(item.quantity) || 1,
+          price: Number(item.unitPrice) || 0,
+        })),
+      });
+
+      if (stoxDispatch.success && stoxDispatch.trackingNumber) {
+        orders[index].stoxTrackingNumber = stoxDispatch.trackingNumber;
+        orders[index].stoxStatus = stoxDispatch.status || "CREATED";
+        orders[index].stoxOrderId = stoxDispatch.carrierOrderId;
+        orders[index].waybillUrl = stoxDispatch.waybillUrl;
+        orders[index].stoxDispatchedAt = new Date().toISOString();
+        orders[index].stoxError = undefined;
+      } else {
+        orders[index].stoxStatus = "FAILED";
+        orders[index].stoxError = stoxDispatch.error || "تعذر إرسال الشحنة لشركة الشحن";
+      }
+    }
 
     writeJsonFile("orders.json", orders);
 
     return NextResponse.json({
       success: true,
-      message: "تم تحديث بيانات الطلب بنجاح.",
+      message: stoxDispatch
+        ? stoxDispatch.success
+          ? `تم تحديث الطلب إلى قيد التجهيز وإرساله إلى ${stoxDispatch.providerName} بنجاح (بوليصة: ${stoxDispatch.trackingNumber})`
+          : `تم تحديث حالة الطلب، ولكن تعذر الإرسال لـ ${stoxDispatch.providerName}: ${stoxDispatch.error}`
+        : "تم تحديث بيانات الطلب بنجاح.",
       order: orders[index],
+      stoxDispatch,
     });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });

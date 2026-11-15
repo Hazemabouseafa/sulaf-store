@@ -3,7 +3,7 @@
  * Supports STOX Egypt, Bosta, Aramex, Mylerz, and any Custom Shipping API
  */
 
-import { readJsonFile, getDataFilePath } from "@/lib/db/json-db";
+import { readJsonFile } from "@/lib/db/json-db";
 import {
   DEFAULT_STORE_SETTINGS,
   DEFAULT_SHIPPING_PROVIDERS,
@@ -70,6 +70,17 @@ export interface ShippingTrackingResult {
   events: ShippingTrackingEvent[];
 }
 
+function isPlaceholderKey(key?: string): boolean {
+  if (!key) return true;
+  const clean = key.trim();
+  return (
+    !clean ||
+    clean === "stox_live_or_sandbox_api_token_here" ||
+    clean === "ENV_OR_TEST_API_KEY" ||
+    clean.includes("sample")
+  );
+}
+
 export class UniversalShippingService {
   /**
    * Reads dynamic settings from local JSON DB
@@ -83,13 +94,27 @@ export class UniversalShippingService {
   }
 
   /**
-   * Returns current active provider configuration
+   * Returns current active provider configuration merged with .env fallbacks
    */
   public getActiveProvider(): ShippingProviderConfig {
     const settings = this.getSettings();
     const activeKey = settings.shipping?.activeProvider || "stox";
     const providers = settings.shipping?.providers || DEFAULT_SHIPPING_PROVIDERS;
-    return providers[activeKey] || DEFAULT_SHIPPING_PROVIDERS.stox;
+    const baseConfig = {
+      ...(DEFAULT_SHIPPING_PROVIDERS[activeKey] || DEFAULT_SHIPPING_PROVIDERS.stox),
+      ...(providers[activeKey] || {}),
+    };
+
+    if (activeKey === "stox") {
+      if (isPlaceholderKey(baseConfig.apiKey) && !isPlaceholderKey(process.env.STOX_API_KEY)) {
+        baseConfig.apiKey = process.env.STOX_API_KEY!.trim();
+      }
+      if (!baseConfig.baseUrl && process.env.STOX_BASE_URL) {
+        baseConfig.baseUrl = process.env.STOX_BASE_URL.trim();
+      }
+    }
+
+    return baseConfig;
   }
 
   /**
@@ -112,7 +137,6 @@ export class UniversalShippingService {
     }
 
     const cleanGov = governorate.trim();
-    // Check custom governorate overrides in store settings
     const customRate = settings.shipping?.customGovernorateRates?.find(
       (r) => r.governorate.trim() === cleanGov
     );
@@ -120,7 +144,6 @@ export class UniversalShippingService {
       return customRate.rate;
     }
 
-    // Check predefined Egyptian rates
     const standardRate = EGYPT_GOVERNORATES_RATES[cleanGov];
     if (standardRate) {
       return standardRate.fee;
@@ -130,7 +153,35 @@ export class UniversalShippingService {
   }
 
   /**
-   * Dispatches shipment to the active provider API
+   * Build authentication headers for a provider
+   */
+  private buildAuthHeaders(provider: ShippingProviderConfig): Record<string, string> {
+    const cleanKey = (provider.apiKey || "").trim().replace(/^Bearer\s+/i, "");
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
+
+    if (!cleanKey) return headers;
+
+    if (provider.id === "bosta") {
+      headers["Authorization"] = cleanKey;
+    } else if (provider.authHeaderType === "ApiKey") {
+      headers[provider.authHeaderName || "X-API-Key"] = cleanKey;
+    } else if (provider.authHeaderType === "Basic" && provider.apiSecret) {
+      const credentials = Buffer.from(`${cleanKey}:${provider.apiSecret}`).toString("base64");
+      headers["Authorization"] = `Basic ${credentials}`;
+    } else {
+      headers["Authorization"] = `Bearer ${cleanKey}`;
+      headers["api-key"] = cleanKey;
+      headers["x-api-key"] = cleanKey;
+    }
+
+    return headers;
+  }
+
+  /**
+   * Dispatches shipment to the active provider API (Real live connection)
    */
   public async createShipment(params: ShippingCreateShipmentParams): Promise<ShippingShipmentResult> {
     const provider = this.getActiveProvider();
@@ -138,27 +189,19 @@ export class UniversalShippingService {
       `[Shipping Service] Dispatching Order ${params.orderNumber} via ${provider.nameEn} (COD: ${params.codAmount} EGP)`
     );
 
-    const isSandbox = provider.isSandbox || !provider.apiKey;
+    const hasRealApiKey = !isPlaceholderKey(provider.apiKey);
 
-    // Handle Sandbox/Mock mode
-    if (isSandbox) {
-      const prefix = provider.id === "stox" ? "STX-EG" : provider.id.toUpperCase();
-      const mockTracking = `${prefix}-${Date.now().toString().slice(-7)}`;
-      const trackingUrl = this.getTrackingUrl(mockTracking, provider);
+    if (!hasRealApiKey) {
       return {
-        success: true,
+        success: false,
         provider: provider.id,
         providerName: provider.nameAr,
-        trackingNumber: mockTracking,
-        carrierOrderId: `${provider.id.toUpperCase()}_ORD_${params.orderNumber}`,
-        waybillUrl: `${provider.baseUrl}/waybill/${mockTracking}.pdf`,
-        trackingUrl,
-        status: "CREATED",
-        rawResponse: { mode: "sandbox", provider: provider.id, timestamp: new Date().toISOString() },
+        trackingNumber: "",
+        status: "FAILED",
+        error: `يرجى إدخال مفتاح الربط الحقيقي (API Key / Token) الخاص بشركة الشحن (${provider.nameAr}) في إعدادات المتجر لإرسال الطلبات تلقائياً.`,
       };
     }
 
-    // Live API integration based on provider type
     try {
       if (provider.id === "stox") {
         return await this.dispatchStox(params, provider);
@@ -175,63 +218,146 @@ export class UniversalShippingService {
         providerName: provider.nameAr,
         trackingNumber: "",
         status: "FAILED",
-        error: err.message || `Failed to dispatch order to ${provider.nameEn}`,
+        error: err.message || `تعذر إرسال الطلب إلى ${provider.nameAr}`,
       };
     }
   }
 
   /**
-   * Live dispatch to Stox Egypt
+   * Live dispatch to Stox Egypt API
    */
   private async dispatchStox(
     params: ShippingCreateShipmentParams,
     provider: ShippingProviderConfig
   ): Promise<ShippingShipmentResult> {
-    const endpoint = `${provider.baseUrl.replace(/\/+$/, "")}/orders/create`;
+    const cleanBase = (provider.baseUrl || "https://merchants.stox-eg.com/api/v1").replace(/\/+$/, "");
+    const cleanKey = provider.apiKey.trim().replace(/^Bearer\s+/i, "");
+    const fullAddress = `${params.recipient.street}${
+      params.recipient.building ? `، ${params.recipient.building}` : ""
+    }`;
+    const totalQty = params.items.reduce((sum, i) => sum + (Number(i.quantity) || 1), 0);
+    const descriptionText =
+      params.packageDescription ||
+      params.items.map((i) => `${i.name} (x${i.quantity})`).join(" + ");
+
     const payload = {
+      api_token: cleanKey,
       reference_id: params.orderNumber,
+      order_reference: params.orderNumber,
+      business_reference: params.orderNumber,
+      order_number: params.orderNumber,
       customer_name: params.recipient.fullName,
+      receiver_name: params.recipient.fullName,
+      name: params.recipient.fullName,
       customer_phone: params.recipient.phone,
+      receiver_phone: params.recipient.phone,
+      phone: params.recipient.phone,
       governorate: params.recipient.governorate,
       city: params.recipient.city,
-      address: `${params.recipient.street}${params.recipient.building ? `، ${params.recipient.building}` : ""}`,
+      area: params.recipient.city,
+      address: fullAddress,
+      street: params.recipient.street,
+      building: params.recipient.building || "",
       notes: params.recipient.notes || "مستحضرات علاجية حساسة - يرجى التعامل برفق",
-      cod_amount: params.codAmount,
+      cod_amount: Number(params.codAmount) || 0,
+      cod: Number(params.codAmount) || 0,
+      total_amount: Number(params.codAmount) || 0,
+      items_count: totalQty,
+      pieces: totalQty,
+      description: descriptionText,
+      package_description: descriptionText,
+      allow_open: true,
       items: params.items.map((i) => ({
-        sku: i.sku,
+        sku: i.sku || "SLF-001",
+        name: i.name,
         description: i.name,
-        quantity: i.quantity,
-        price: i.price,
+        quantity: Number(i.quantity) || 1,
+        price: Number(i.price) || 0,
       })),
     };
 
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${provider.apiKey}`,
-        Accept: "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+    const headers = this.buildAuthHeaders(provider);
 
-    const data = await res.json();
-    if (res.ok && (data.tracking_number || data.trackingNumber)) {
-      const tracking = data.tracking_number || data.trackingNumber;
-      return {
-        success: true,
-        provider: "stox",
-        providerName: provider.nameAr,
-        trackingNumber: tracking,
-        carrierOrderId: data.order_id || data.id,
-        waybillUrl: data.waybill_url || `${provider.baseUrl}/waybill/${tracking}.pdf`,
-        trackingUrl: this.getTrackingUrl(tracking, provider),
-        status: "CREATED",
-        rawResponse: data,
-      };
+    // Candidate endpoints if baseUrl doesn't already specify the action path
+    const endpoints =
+      cleanBase.endsWith("/orders/create") ||
+      cleanBase.endsWith("/shipments/create") ||
+      cleanBase.endsWith("/orders") ||
+      cleanBase.endsWith("/shipments")
+        ? [cleanBase]
+        : [`${cleanBase}/orders/create`, `${cleanBase}/orders`, `${cleanBase}/shipments`];
+
+    let lastStatus = 0;
+    let lastErrorText = "";
+
+    for (const endpoint of endpoints) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
+      try {
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        lastStatus = res.status;
+
+        const contentType = res.headers.get("content-type") || "";
+        const data: any = contentType.includes("application/json")
+          ? await res.json().catch(() => ({}))
+          : { rawText: (await res.text().catch(() => "")).slice(0, 200) };
+
+        const tracking =
+          data.tracking_number ||
+          data.trackingNumber ||
+          data.awb ||
+          data.waybill ||
+          data.barcode ||
+          data.data?.tracking_number ||
+          data.data?.trackingNumber ||
+          data.data?.awb ||
+          data.order?.tracking_number ||
+          data.shipment?.tracking_number ||
+          (res.ok && (data.order_id || data.id || data.data?.id));
+
+        if (res.ok && tracking) {
+          const trackingStr = String(tracking);
+          return {
+            success: true,
+            provider: "stox",
+            providerName: provider.nameAr,
+            trackingNumber: trackingStr,
+            carrierOrderId: String(data.order_id || data.id || data.data?.id || trackingStr),
+            waybillUrl:
+              data.waybill_url ||
+              data.waybillUrl ||
+              data.data?.waybill_url ||
+              `${cleanBase}/waybill/${encodeURIComponent(trackingStr)}.pdf`,
+            trackingUrl: this.getTrackingUrl(trackingStr, provider),
+            status: "CREATED",
+            rawResponse: data,
+          };
+        }
+
+        lastErrorText =
+          data.message ||
+          data.error ||
+          data.detail ||
+          (data.errors ? JSON.stringify(data.errors) : "") ||
+          `HTTP ${res.status}`;
+
+        // If 401/403/422, don't try fallback paths because the endpoint exists and rejected auth/validation
+        if (res.status === 401 || res.status === 403 || res.status === 422 || res.status === 400) {
+          break;
+        }
+      } catch (err: any) {
+        clearTimeout(timeoutId);
+        lastErrorText = err.message || "Network error";
+      }
     }
 
-    throw new Error(data.message || `Stox returned HTTP ${res.status}`);
+    throw new Error(`رفض خادم STOX إنشاء الشحنة (${lastStatus || "Network"}): ${lastErrorText}`);
   }
 
   /**
@@ -243,6 +369,13 @@ export class UniversalShippingService {
   ): Promise<ShippingShipmentResult> {
     const endpoint = `${provider.baseUrl.replace(/\/+$/, "")}/deliveries`;
     const payload = {
+      type: 10,
+      specs: {
+        packageDetails: {
+          itemsCount: params.items.reduce((s, i) => s + i.quantity, 0),
+          description: params.items.map((i) => `${i.name} x${i.quantity}`).join(", "),
+        },
+      },
       receiver: {
         firstName: params.recipient.fullName.split(" ")[0] || params.recipient.fullName,
         lastName: params.recipient.fullName.split(" ").slice(1).join(" ") || "Customer",
@@ -251,8 +384,9 @@ export class UniversalShippingService {
       dropOffAddress: {
         city: params.recipient.governorate,
         firstLine: `${params.recipient.city} - ${params.recipient.street}`,
+        buildingNumber: params.recipient.building || "1",
       },
-      cod: params.codAmount,
+      cod: Number(params.codAmount) || 0,
       businessReference: params.orderNumber,
       notes: params.recipient.notes,
     };
@@ -261,22 +395,22 @@ export class UniversalShippingService {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: provider.apiKey,
+        Authorization: provider.apiKey.trim(),
       },
       body: JSON.stringify(payload),
     });
 
-    const data = await res.json();
-    if (res.ok && (data._id || data.trackingNumber)) {
-      const tracking = data.trackingNumber || data._id;
+    const data = await res.json().catch(() => ({}));
+    const tracking = data.trackingNumber || data.data?.trackingNumber || data._id || data.data?._id;
+    if (res.ok && tracking) {
       return {
         success: true,
         provider: "bosta",
         providerName: provider.nameAr,
-        trackingNumber: tracking,
-        carrierOrderId: data._id,
-        waybillUrl: `https://api.bosta.co/api/v0/deliveries/awb/${data._id}`,
-        trackingUrl: this.getTrackingUrl(tracking, provider),
+        trackingNumber: String(tracking),
+        carrierOrderId: String(data._id || data.data?._id || tracking),
+        waybillUrl: `https://api.bosta.co/api/v0/deliveries/awb/${data._id || tracking}`,
+        trackingUrl: this.getTrackingUrl(String(tracking), provider),
         status: "CREATED",
         rawResponse: data,
       };
@@ -293,21 +427,7 @@ export class UniversalShippingService {
     provider: ShippingProviderConfig
   ): Promise<ShippingShipmentResult> {
     const endpoint = `${provider.baseUrl.replace(/\/+$/, "")}/shipments`;
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    };
-
-    if (provider.apiKey) {
-      if (provider.authHeaderType === "ApiKey") {
-        headers[provider.authHeaderName || "X-API-Key"] = provider.apiKey;
-      } else if (provider.authHeaderType === "Basic" && provider.apiSecret) {
-        const credentials = Buffer.from(`${provider.apiKey}:${provider.apiSecret}`).toString("base64");
-        headers["Authorization"] = `Basic ${credentials}`;
-      } else {
-        headers["Authorization"] = `Bearer ${provider.apiKey}`;
-      }
-    }
+    const headers = this.buildAuthHeaders(provider);
 
     const payload = {
       orderId: params.orderId,
@@ -323,7 +443,7 @@ export class UniversalShippingService {
       body: JSON.stringify(payload),
     });
 
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     const tracking = data.trackingNumber || data.tracking_number || data.tracking || data.id;
 
     if (res.ok && tracking) {
@@ -331,10 +451,10 @@ export class UniversalShippingService {
         success: true,
         provider: provider.id,
         providerName: provider.nameAr,
-        trackingNumber: tracking,
-        carrierOrderId: data.orderId || data.id,
+        trackingNumber: String(tracking),
+        carrierOrderId: String(data.orderId || data.id || tracking),
         waybillUrl: data.waybillUrl || data.waybill_url,
-        trackingUrl: this.getTrackingUrl(tracking, provider),
+        trackingUrl: this.getTrackingUrl(String(tracking), provider),
         status: "CREATED",
         rawResponse: data,
       };
@@ -350,50 +470,29 @@ export class UniversalShippingService {
     const provider = this.getActiveProvider();
     const trackingUrl = this.getTrackingUrl(trackingNumber, provider);
 
-    // If sandbox or key missing, return realistic simulated timeline
-    if (provider.isSandbox || !provider.apiKey) {
+    if (isPlaceholderKey(provider.apiKey)) {
       return {
         trackingNumber,
         provider: provider.id,
         providerName: provider.nameAr,
-        currentStatus: "OUT_FOR_DELIVERY",
-        statusTextAr: `الشحنة مع مندوب ${provider.nameAr} وفي طريقها للتسليم`,
-        statusTextEn: `Shipment is out for delivery with ${provider.nameEn} courier`,
-        lastUpdated: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-        carrierHub: `${provider.nameAr} - مركز التوزيع الرئيسي`,
+        currentStatus: "CREATED",
+        statusTextAr: `رقم التتبع لدى ${provider.nameAr}: ${trackingNumber}`,
+        statusTextEn: `Tracking number with ${provider.nameEn}: ${trackingNumber}`,
+        lastUpdated: new Date().toISOString(),
+        carrierHub: provider.nameAr,
         trackingUrl,
-        events: [
-          {
-            status: "تم إنشاء الشحنة وإصدار البوليصة من مختبرات سلاف",
-            timestamp: "اليوم، 09:30 ص",
-            hubName: "مستودع سلاف المركزي",
-          },
-          {
-            status: `تم استلام الشحنة وفحصها بواسطة مندوب ${provider.nameAr}`,
-            timestamp: "اليوم، 11:15 ص",
-            hubName: "مركز تجميع الشحنات",
-          },
-          {
-            status: "الشحنة في مرحلة التوزيع النهائي مع المندوب",
-            timestamp: "اليوم، 01:45 م",
-            hubName: "سيارة التوزيع - خط سير العميل",
-            notes: "يرجى تجهيز المبلغ المتبقي عند الاستلام إن وجد.",
-          },
-        ],
+        events: [],
       };
     }
 
-    // Live tracking check
     try {
       const endpoint = `${provider.baseUrl.replace(/\/+$/, "")}${
-        provider.trackingEndpoint?.replace(/\{tracking\}/g, trackingNumber) || `/shipments/track/${trackingNumber}`
+        provider.trackingEndpoint?.replace(/\{tracking\}/g, encodeURIComponent(trackingNumber)) ||
+        `/shipments/track/${encodeURIComponent(trackingNumber)}`
       }`;
 
       const res = await fetch(endpoint, {
-        headers: {
-          Authorization: `Bearer ${provider.apiKey}`,
-          Accept: "application/json",
-        },
+        headers: this.buildAuthHeaders(provider),
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -403,13 +502,13 @@ export class UniversalShippingService {
         trackingNumber,
         provider: provider.id,
         providerName: provider.nameAr,
-        currentStatus: data.status || "OUT_FOR_DELIVERY",
+        currentStatus: data.status || data.data?.status || "OUT_FOR_DELIVERY",
         statusTextAr: data.status_description_ar || data.statusTextAr || "قيد التوصيل",
         statusTextEn: data.status_description_en || data.statusTextEn || "In Transit",
         lastUpdated: data.updated_at || new Date().toISOString(),
         carrierHub: data.hub_name || `${provider.nameEn} Hub`,
         trackingUrl,
-        events: data.events || [],
+        events: data.events || data.data?.events || [],
       };
     } catch (e: any) {
       console.warn(`[Shipping Track] Live query to ${provider.nameEn} failed:`, e.message);
@@ -418,7 +517,7 @@ export class UniversalShippingService {
         provider: provider.id,
         providerName: provider.nameAr,
         currentStatus: "CREATED",
-        statusTextAr: `تم تسجيل الشحنة بنجاح لدى ${provider.nameAr}`,
+        statusTextAr: `تم تسجيل الشحنة لدى ${provider.nameAr}`,
         statusTextEn: `Shipment registered with ${provider.nameEn}`,
         lastUpdated: new Date().toISOString(),
         carrierHub: provider.nameEn,
@@ -429,7 +528,7 @@ export class UniversalShippingService {
   }
 
   /**
-   * Tests API connection for any provider
+   * Tests REAL API connection for STOX or any shipping provider
    */
   public async testProviderConnection(provider: ShippingProviderConfig): Promise<{
     success: boolean;
@@ -440,58 +539,134 @@ export class UniversalShippingService {
     details?: any;
   }> {
     const startTime = Date.now();
+    const cleanKey = (provider.apiKey || "").trim();
 
-    if (provider.isSandbox || !provider.apiKey) {
-      return {
-        success: true,
-        provider: provider.id,
-        messageAr: `تم فحص وتأكيد وضع المحاكاة التجريبي بنجاح لـ ${provider.nameAr}. النظام جاهز لإصدار البوليصات والتتبع التجريبي.`,
-        messageEn: `Sandbox mode verified successfully for ${provider.nameEn}. Ready for test dispatches and tracking.`,
-        latencyMs: 14,
-        details: { mode: "sandbox", endpoint: provider.baseUrl, status: "ONLINE_READY" },
-      };
-    }
-
-    try {
-      const testUrl = `${provider.baseUrl.replace(/\/+$/, "")}/ping`;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
-
-      const res = await fetch(testUrl, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${provider.apiKey}`,
-          Accept: "application/json",
-        },
-        signal: controller.signal,
-      }).catch(() => null);
-
-      clearTimeout(timeoutId);
-      const latencyMs = Date.now() - startTime;
-
-      return {
-        success: true,
-        provider: provider.id,
-        messageAr: `تم الاتصال بنجاح بخوادم ${provider.nameAr}! زمن الاستجابة: ${latencyMs}ms.`,
-        messageEn: `Connected successfully to ${provider.nameEn} API! Latency: ${latencyMs}ms.`,
-        latencyMs,
-        details: {
-          endpoint: provider.baseUrl,
-          httpStatus: res ? res.status : 200,
-          status: "ONLINE",
-        },
-      };
-    } catch (err: any) {
-      const latencyMs = Date.now() - startTime;
+    if (isPlaceholderKey(cleanKey)) {
       return {
         success: false,
         provider: provider.id,
-        messageAr: `فشل الاتصال بـ ${provider.nameAr}: ${err.message}`,
-        messageEn: `Failed to connect to ${provider.nameEn}: ${err.message}`,
-        latencyMs,
-        details: { error: err.message },
+        messageAr: `يرجى إدخال مفتاح الربط الحقيقي (API Key / Bearer Token) الخاص بـ ${provider.nameAr} أولاً لاختبار الاتصال الفعلي بالخادم.`,
+        messageEn: `Please enter a valid ${provider.nameEn} API Key / Bearer Token first to test live connection.`,
+        latencyMs: 0,
+        details: { error: "MISSING_API_KEY" },
       };
     }
+
+    const cleanBase = (provider.baseUrl || "").trim().replace(/\/+$/, "");
+    if (!cleanBase || !cleanBase.startsWith("http")) {
+      return {
+        success: false,
+        provider: provider.id,
+        messageAr: "يرجى إدخال رابط خادم صحيح (API Base URL يبدأ بـ https://).",
+        messageEn: "Please enter a valid API Base URL starting with https://.",
+        latencyMs: 0,
+      };
+    }
+
+    const headers = this.buildAuthHeaders(provider);
+    const probeUrls = [
+      `${cleanBase}/orders`,
+      `${cleanBase}/shipments`,
+      `${cleanBase}/profile`,
+      cleanBase,
+    ];
+
+    let lastStatus = 0;
+    let lastError = "";
+
+    for (const url of probeUrls) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      try {
+        const res = await fetch(url, {
+          method: "GET",
+          headers,
+          redirect: "manual",
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        const latencyMs = Date.now() - startTime;
+        lastStatus = res.status;
+
+        // If the server redirects to a login page (301/302/307/308), the token or endpoint is unauthenticated
+        if (res.status >= 300 && res.status < 400) {
+          const loc = res.headers.get("location") || "";
+          if (loc.includes("login") || loc.includes("auth")) {
+            return {
+              success: false,
+              provider: provider.id,
+              messageAr: `رفض خادم ${provider.nameAr} المصادقة (تحويل لصفحة الدخول). تأكد من صحة مفتاح الـ API Key ورابط الـ API Base URL.`,
+              messageEn: `${provider.nameEn} redirected to login. Please verify your API Key and API Base URL.`,
+              latencyMs,
+              details: { httpStatus: res.status, redirectLocation: loc },
+            };
+          }
+        }
+
+        if (res.status === 401 || res.status === 403) {
+          const errBody = await res.json().catch(() => ({}));
+          return {
+            success: false,
+            provider: provider.id,
+            messageAr: `رفض خادم ${provider.nameAr} مفتاح الـ API (HTTP ${res.status} Unauthorized): ${
+              errBody.message || errBody.error || "المفتاح غير صحيح أو منتهي الصلاحية"
+            }`,
+            messageEn: `${provider.nameEn} rejected API Key (HTTP ${res.status} Unauthorized).`,
+            latencyMs,
+            details: { httpStatus: res.status, response: errBody },
+          };
+        }
+
+        // Check if response is JSON (or 200..299 / 405 Method Not Allowed on POST-only endpoint)
+        const contentType = res.headers.get("content-type") || "";
+        if ((res.ok && contentType.includes("application/json")) || res.status === 405 || res.status === 422) {
+          return {
+            success: true,
+            provider: provider.id,
+            messageAr: `تم الاتصال والمصادقة الحقيقية بنجاح مع خوادم ${provider.nameAr}! (HTTP ${res.status} — زمن الاستجابة: ${latencyMs}ms)`,
+            messageEn: `Successfully authenticated with ${provider.nameEn} API! (HTTP ${res.status} — Latency: ${latencyMs}ms)`,
+            latencyMs,
+            details: {
+              endpoint: url,
+              httpStatus: res.status,
+              status: "ONLINE_AUTHENTICATED",
+            },
+          };
+        }
+
+        if (res.ok && !contentType.includes("text/html")) {
+          return {
+            success: true,
+            provider: provider.id,
+            messageAr: `تم الاتصال بنجاح بخادم ${provider.nameAr}! (زمن الاستجابة: ${latencyMs}ms)`,
+            messageEn: `Connected successfully to ${provider.nameEn}! (Latency: ${latencyMs}ms)`,
+            latencyMs,
+            details: {
+              endpoint: url,
+              httpStatus: res.status,
+              status: "ONLINE",
+            },
+          };
+        }
+
+        lastError = contentType.includes("text/html")
+          ? `الخادم أعاد صفحة ويب HTML بدلاً من استجابة JSON API على الرابط (${url})`
+          : `HTTP ${res.status}`;
+      } catch (err: any) {
+        clearTimeout(timeoutId);
+        lastError = err.message || "Network timeout / unreachable";
+      }
+    }
+
+    const latencyMs = Date.now() - startTime;
+    return {
+      success: false,
+      provider: provider.id,
+      messageAr: `تعذر التحقق من استجابة الـ API لـ ${provider.nameAr}: ${lastError} (تأكد من صحة رابط الـ API Base URL ومفتاح الربط من حسابك في الشركة).`,
+      messageEn: `Could not verify ${provider.nameEn} API response: ${lastError}`,
+      latencyMs,
+      details: { httpStatus: lastStatus, error: lastError },
+    };
   }
 }
 

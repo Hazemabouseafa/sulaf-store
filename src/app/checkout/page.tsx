@@ -10,7 +10,7 @@ import { useLanguage } from "@/lib/i18n/language-context";
 import { useCustomerAuth } from "@/lib/auth/customer-auth";
 import { SULAF_SETTINGS } from "@/lib/data/mock-data";
 import { EGYPT_GOVERNORATES_RATES } from "@/lib/shipping/stox";
-import { createOrder, OrderRecord } from "@/lib/orders/order-store";
+import { createOrder, createOrderApi, OrderRecord } from "@/lib/orders/order-store";
 import {
   ShieldCheck,
   CreditCard,
@@ -229,6 +229,54 @@ export default function CheckoutPage() {
     }
   }
 
+  // Handle return callback from Paymob Checkout (`?paymob_return=1&order=...&success=...`)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const isPaymobReturn =
+      params.get("paymob_return") === "1" ||
+      params.has("merchant_order_id") ||
+      params.has("special_reference");
+
+    if (!isPaymobReturn) return;
+
+    const queryObj: Record<string, string> = {};
+    params.forEach((v, k) => {
+      queryObj[k] = v;
+    });
+
+    const savedSummaryRaw = sessionStorage.getItem("sulaf_paymob_summary");
+    if (savedSummaryRaw) {
+      try {
+        setCompletedOrderSummary(JSON.parse(savedSummaryRaw));
+      } catch {}
+    }
+
+    fetch("/api/payments/paymob/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderNumber: params.get("order") || params.get("merchant_order_id") || params.get("special_reference"),
+        queryParams: queryObj,
+      }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.order) {
+          clearCart();
+          sessionStorage.removeItem("sulaf_paymob_summary");
+          setCreatedOrderNumber(data.order.orderNumber);
+        } else {
+          alert(
+            isArabic
+              ? "لم تكتمل عملية الدفع عبر بوابة Paymob. يمكنك المحاولة مرة أخرى أو اختيار وسيلة دفع بديلة."
+              : "Paymob payment was not completed. Please try again or choose another payment method."
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Handle Order Placement
   async function handleSubmitOrder(e: React.FormEvent) {
     e.preventDefault();
@@ -253,10 +301,12 @@ export default function CheckoutPage() {
         ? "SHA7NAWY_WALLET"
         : (paymentMethod === "PAYMOB" ? "PAYMOB_CARD" : "MANUAL_INSTAPAY");
 
-      // Reuse pendingOrder on retry so we do not create duplicate orders or double-deduct stock
+      // Reuse pendingOrder on retry so we do not create duplicate orders or double-deduct stock.
+      // IMPORTANT: Order starts as PENDING_CONFIRMATION with NO stoxTrackingNumber.
+      // It is dispatched to STOX only after the Admin marks it as PROCESSING.
       const newOrder =
         pendingOrder ||
-        createOrder({
+        (await createOrderApi({
           customerName: fullName,
           customerPhone: phone,
           customerEmail: email,
@@ -283,14 +333,12 @@ export default function CheckoutPage() {
           depositAmount: isDepositMode ? depositAmount : 0,
           remainingCodAmount: remainingCod,
           paymentMethod: orderPaymentMethod,
-          paymentStatus: paymentMethod === "PAYMOB" ? (isDepositMode ? "DEPOSIT_PAID" : "FULLY_PAID") : "PENDING",
-          orderStatus: paymentMethod === "PAYMOB" ? "PROCESSING" : "PENDING_CONFIRMATION",
+          paymentStatus: "PENDING",
+          orderStatus: "PENDING_CONFIRMATION",
           receiptUrl: receiptImage || undefined,
           birthdate: birthdate || undefined,
           closePersonName: closePersonName || undefined,
-          stoxTrackingNumber: `STX-EG-${Math.floor(100000 + Math.random() * 900000)}`,
-          stoxStatus: "CREATED",
-        });
+        }));
 
       const orderSummarySnapshot = {
         orderNumber: newOrder.orderNumber,
@@ -302,7 +350,46 @@ export default function CheckoutPage() {
         carrierName: activeCarrierName,
       };
 
-      // Special Flow for Sha7nawy Wallet
+      // 1. Live Flow for Paymob Gateway
+      if (paymentMethod === "PAYMOB") {
+        setPendingOrder(newOrder);
+        setCompletedOrderSummary(orderSummarySnapshot);
+
+        const res = await fetch("/api/payments/paymob/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: newOrder.id,
+            orderNumber: newOrder.orderNumber,
+            amountEgp: payNow,
+            customerName: fullName,
+            customerPhone: phone,
+            customerEmail: email,
+            governorate,
+            city,
+            street,
+            building,
+            paymentMethodType: "card",
+          }),
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success && data.paymentUrl) {
+          sessionStorage.setItem("sulaf_paymob_summary", JSON.stringify(orderSummarySnapshot));
+          window.location.href = data.paymentUrl;
+          return;
+        } else {
+          alert(
+            data.error ||
+              (isArabic
+                ? "تعذر الاتصال ببوابة الدفع Paymob حالياً. يرجى التأكد من إعدادات البوابة أو اختيار وسيلة دفع أخرى."
+                : "Could not connect to Paymob payment gateway. Please try again or select another method.")
+          );
+          return;
+        }
+      }
+
+      // 2. Live Flow for Sha7nawy Wallet
       if (paymentMethod === "SHA7NAWY") {
         setPendingOrder(newOrder);
         setCompletedOrderSummary(orderSummarySnapshot);
@@ -335,6 +422,7 @@ export default function CheckoutPage() {
         return;
       }
 
+      // 3. Manual InstaPay / Vodafone Cash Flow
       setCompletedOrderSummary(orderSummarySnapshot);
       setCreatedOrderNumber(newOrder.orderNumber);
       clearCart();

@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     if (idx !== -1) {
       if (event === "transaction.completed" || data.status === "completed") {
         orders[idx].paymentStatus = orders[idx].isDepositMode ? "DEPOSIT_PAID" : "FULLY_PAID";
-        orders[idx].orderStatus = "PROCESSING";
+        // Keep orderStatus as PENDING_CONFIRMATION until the Admin explicitly marks it PROCESSING
         orders[idx].notes = `${orders[idx].notes || ""}\n[Sha7nawy Webhook] تم استلام إشعار الدفع بنجاح (المعاملة: ${data.transaction_id || reference})`;
       } else if (event === "transaction.rejected" || data.status === "rejected") {
         orders[idx].paymentStatus = "FAILED";

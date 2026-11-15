@@ -54,8 +54,12 @@ export async function POST(req: NextRequest) {
       ...body,
       id: body.id || `ord-${Date.now()}`,
       orderNumber,
+      // New customer orders always start as PENDING_CONFIRMATION;
+      // STOX shipment is only created when the Admin changes orderStatus to PROCESSING.
       orderStatus: body.orderStatus || "PENDING_CONFIRMATION",
-      paymentStatus: body.paymentStatus || (body.paymentMethod === "CARD" ? "PAID" : "PENDING"),
+      paymentStatus: body.paymentStatus || "PENDING",
+      stoxTrackingNumber: undefined,
+      stoxStatus: undefined,
       createdAt: body.createdAt || new Date().toISOString(),
     };
 
