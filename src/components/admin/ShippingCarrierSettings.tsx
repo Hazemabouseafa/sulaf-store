@@ -282,7 +282,11 @@ export function ShippingCarrierSettings({
               <input
                 type="text"
                 readOnly
-                value="/api/webhooks/stox"
+                value={
+                  typeof window !== "undefined"
+                    ? `${window.location.origin}/api/webhooks/stox`
+                    : "http://wykuolicna5eycqzsayj44xj.187.126.13.178.sslip.io/api/webhooks/stox"
+                }
                 className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-100 text-xs font-mono text-gray-700 cursor-copy"
                 onClick={() => {
                   if (typeof window !== "undefined") {

@@ -4,34 +4,92 @@ import { NextRequest, NextResponse } from "next/server";
 import { readJsonFile, writeJsonFile } from "@/lib/db/json-db";
 import { OrderRecord } from "@/lib/orders/order-store";
 
+export async function GET() {
+  return NextResponse.json({
+    success: true,
+    service: "Sulaf Store - STOX Egypt Webhook Receiver",
+    status: "ACTIVE",
+    endpoint: "/api/webhooks/stox",
+  });
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const payload = await req.json();
-    const trackingNo = payload.tracking_number || payload.awb;
-    const status = payload.status; // e.g. "DELIVERED", "OUT_FOR_DELIVERY"
+    const payload = await req.json().catch(() => ({}));
+    const source = payload.data || payload.order || payload;
 
-    console.log(`[Stox Webhook] Received update for AWB ${trackingNo}: ${status}`);
+    const candidates = [
+      source.tracking_number,
+      source.trackingNumber,
+      source.awb,
+      source.code,
+      source.reference_id,
+      source.order_reference,
+      source.order_id,
+      source.id,
+      payload.tracking_number,
+      payload.reference_id,
+      payload.id,
+    ]
+      .filter(Boolean)
+      .map((v) => String(v).trim().toLowerCase());
 
-    if (trackingNo && status) {
+    const rawStatus = String(
+      source.status || source.order_status || payload.status || payload.event || ""
+    ).trim();
+
+    console.log(`[Stox Webhook] Received update for [${candidates.join(", ")}]: ${rawStatus}`);
+
+    if (candidates.length > 0 && rawStatus) {
       const orders = readJsonFile<OrderRecord[]>("orders.json", []);
-      const cleanTrack = String(trackingNo).trim().toLowerCase();
-      const idx = orders.findIndex(
-        (o) =>
-          o.stoxTrackingNumber?.toLowerCase() === cleanTrack ||
-          (o.orderNumber || "").toLowerCase() === cleanTrack
-      );
+      const idx = orders.findIndex((o) => {
+        const oTrack = (o.stoxTrackingNumber || "").trim().toLowerCase();
+        const oId = (o.stoxOrderId || "").trim().toLowerCase();
+        const oNum = (o.orderNumber || "").trim().toLowerCase();
+        return (
+          (oTrack && candidates.includes(oTrack)) ||
+          (oId && candidates.includes(oId)) ||
+          (oNum && candidates.includes(oNum))
+        );
+      });
+
       if (idx !== -1) {
-        orders[idx].stoxStatus = status;
-        if (status === "DELIVERED") {
+        const upper = rawStatus.toUpperCase();
+        orders[idx].stoxStatus = rawStatus;
+
+        if (
+          upper.includes("DELIVERED") ||
+          upper.includes("COMPLETED") ||
+          rawStatus.includes("تم التوصيل") ||
+          rawStatus.includes("تم التسليم")
+        ) {
           orders[idx].orderStatus = "DELIVERED";
           orders[idx].paymentStatus = "FULLY_PAID";
           orders[idx].remainingCodAmount = 0;
+        } else if (
+          upper.includes("OUT_FOR_DELIVERY") ||
+          upper.includes("SHIPPED") ||
+          upper.includes("IN_TRANSIT") ||
+          upper.includes("DISPATCHED") ||
+          rawStatus.includes("جاري التوصيل") ||
+          rawStatus.includes("تم الشحن")
+        ) {
+          orders[idx].orderStatus = "SHIPPED";
+        } else if (
+          upper.includes("CANCEL") ||
+          upper.includes("RETURN") ||
+          upper.includes("REJECT") ||
+          rawStatus.includes("ملغي") ||
+          rawStatus.includes("مرتجع")
+        ) {
+          orders[idx].orderStatus = "CANCELLED";
         }
+
         writeJsonFile("orders.json", orders);
       }
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, received: true });
   } catch (err: any) {
     console.error("[Stox Webhook Error]", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
