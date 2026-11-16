@@ -43,6 +43,8 @@ export interface OrderRecord {
   waybillUrl?: string;
   stoxDispatchedAt?: string;
   stoxError?: string;
+  paymobOrderId?: string;
+  paymobTransactionId?: string;
   birthdate?: string;
   closePersonName?: string;
   createdAt: string;

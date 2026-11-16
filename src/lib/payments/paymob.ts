@@ -196,7 +196,7 @@ export class PaymobService {
           if (payload.order && typeof payload.order === "object") {
             return String(payload.order.id ?? "");
           }
-          return String(payload["order.id"] ?? payload.order ?? "");
+          return String(payload["order.id"] ?? payload.order ?? payload.order_id ?? "");
         case "source_data.pan":
           return String(
             payload.source_data?.pan ?? payload["source_data.pan"] ?? payload.source_data_pan ?? ""
@@ -255,6 +255,96 @@ export class PaymobService {
   }
 
   /**
+   * Verifies a Paymob transaction directly with Paymob servers when Classic API Key is available.
+   */
+  public async verifyTransactionServerSide(params: {
+    transactionId?: string;
+    paymobOrderId?: string;
+    merchantOrderId?: string;
+  }): Promise<{
+    verified: boolean;
+    success: boolean;
+    pending: boolean;
+    transactionId?: string;
+    paymobOrderId?: string;
+  } | null> {
+    const config = this.getConfig();
+    const classicApiKey =
+      !this.isIntentionSecretKey(config.apiKey) && config.apiKey
+        ? config.apiKey
+        : !this.isIntentionSecretKey(config.secretKey) && config.secretKey
+        ? config.secretKey
+        : "";
+
+    if (!classicApiKey) return null;
+
+    try {
+      const authRes = await fetch("https://accept.paymob.com/api/auth/tokens", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ api_key: classicApiKey }),
+      });
+      const authData = await authRes.json().catch(() => ({}));
+      const authToken = authData?.token;
+      if (!authRes.ok || !authToken) return null;
+
+      if (params.transactionId) {
+        const txRes = await fetch(
+          `https://accept.paymob.com/api/acceptance/transactions/${encodeURIComponent(
+            params.transactionId
+          )}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
+        const txData = await txRes.json().catch(() => ({}));
+        if (txRes.ok && txData && typeof txData.success === "boolean") {
+          return {
+            verified: true,
+            success: txData.success === true,
+            pending: txData.pending === true,
+            transactionId: txData.id ? String(txData.id) : params.transactionId,
+            paymobOrderId: txData.order?.id ? String(txData.order.id) : params.paymobOrderId,
+          };
+        }
+      }
+
+      if (params.paymobOrderId || params.merchantOrderId) {
+        const inqRes = await fetch(
+          "https://accept.paymob.com/api/ecommerce/orders/transaction_inquiry",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              auth_token: authToken,
+              ...(params.paymobOrderId ? { order_id: params.paymobOrderId } : {}),
+              ...(params.merchantOrderId ? { merchant_order_id: params.merchantOrderId } : {}),
+            }),
+          }
+        );
+        const inqData = await inqRes.json().catch(() => ({}));
+        if (inqRes.ok && inqData && typeof inqData.success === "boolean") {
+          return {
+            verified: true,
+            success: inqData.success === true,
+            pending: inqData.pending === true,
+            transactionId: inqData.id ? String(inqData.id) : undefined,
+            paymobOrderId: inqData.order?.id ? String(inqData.order.id) : params.paymobOrderId,
+          };
+        }
+      }
+
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Creates a real Paymob payment session using either:
    * 1. Paymob Intention / Unified Checkout API (`https://accept.paymob.com/v1/intention/`)
    * 2. Paymob Classic 3-Step Accept API (`https://accept.paymob.com/api/auth/tokens` -> `orders` -> `payment_keys`)
@@ -284,7 +374,8 @@ export class PaymobService {
     ).replace(/\/+$/, "");
 
     const notificationUrl = `${origin}/api/webhooks/paymob`;
-    const redirectionUrl = `${origin}/checkout?paymob_return=1&order=${encodeURIComponent(params.orderNumber)}`;
+    const redirectionUrl = `${origin}/checkout?paymob_return=1&sulaf_order=${encodeURIComponent(params.orderNumber)}`;
+    const uniqueMerchantOrderId = `${params.orderNumber}__${Date.now().toString().slice(-5)}`;
 
     const billingData = {
       apartment: "NA",
@@ -362,7 +453,10 @@ export class PaymobService {
             email: billingData.email,
             phone_number: billingData.phone_number,
           },
-          special_reference: params.orderNumber,
+          special_reference: uniqueMerchantOrderId,
+          extras: {
+            sulaf_order_number: params.orderNumber,
+          },
           notification_url: notificationUrl,
           redirection_url: redirectionUrl,
         });
@@ -478,7 +572,6 @@ export class PaymobService {
         const authToken: string = authData.token;
 
         // Step 2: Register Order on Paymob
-        const uniqueMerchantOrderId = `${params.orderNumber}__${Date.now().toString().slice(-5)}`;
         const orderRes = await fetch("https://accept.paymob.com/api/ecommerce/orders", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

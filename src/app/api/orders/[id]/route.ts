@@ -2,9 +2,48 @@ import { NextRequest, NextResponse } from "next/server";
 import { readJsonFile, writeJsonFile } from "@/lib/db/json-db";
 import { OrderRecord } from "@/lib/orders/order-store";
 import { ProductData } from "@/lib/data/mock-data";
-import { universalShippingService, ShippingShipmentResult } from "@/lib/shipping/shipping-provider";
+import {
+  dispatchOrderToShipping,
+  withOrdersFileLock,
+} from "@/lib/shipping/order-dispatch";
 
 export const dynamic = "force-dynamic";
+
+function adjustProductInventoryForOrderStatus(
+  order: OrderRecord,
+  sign: 1 | -1
+): void {
+  const products = readJsonFile<ProductData[]>("products.json", []);
+  for (const item of order.items || []) {
+    const qty = Math.max(1, Number(item.quantity) || 1);
+    const prodIndex = products.findIndex(
+      (p) => p.id === item.productId || p.slug === item.productId
+    );
+    if (prodIndex !== -1) {
+      const prod = products[prodIndex];
+      prod.stock = Math.max(0, (Number(prod.stock) || 0) + sign * qty);
+      if (Array.isArray(prod.variants) && prod.variants.length > 0) {
+        const varIdx = item.variantId
+          ? prod.variants.findIndex((v) => v.id === item.variantId)
+          : item.variantTitle
+          ? prod.variants.findIndex(
+              (v) => v.titleAr === item.variantTitle || v.titleEn === item.variantTitle
+            )
+          : 0;
+        const targetIdx = varIdx !== -1 ? varIdx : 0;
+        if (prod.variants.length === 1) {
+          prod.variants[0].stock = prod.stock;
+        } else if (prod.variants[targetIdx]) {
+          prod.variants[targetIdx].stock = Math.max(
+            0,
+            (Number(prod.variants[targetIdx].stock) || 0) + sign * qty
+          );
+        }
+      }
+    }
+  }
+  writeJsonFile("products.json", products);
+}
 
 export async function GET(
   req: NextRequest,
@@ -39,121 +78,46 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await req.json();
-    const orders = readJsonFile<OrderRecord[]>("orders.json", []);
-    const index = orders.findIndex(
-      (o) => o.id === id || (o.orderNumber || "").toLowerCase() === id.toLowerCase()
-    );
+    const { dispatchToStox, forceRedispatch, ...orderFields } = body;
+    const newStatus = body.orderStatus;
 
-    if (index === -1) {
+    // Dispatch automatically when Admin marks order as PROCESSING,
+    // or when Admin clicks manual dispatchToStox / forceRedispatch.
+    // (Paymob orders also dispatch automatically upon payment confirmation via handlePaymobPaymentConfirmation.)
+    const result = await dispatchOrderToShipping([id], {
+      forceRedispatch: forceRedispatch === true,
+      shouldDispatch: (targetOrder) =>
+        dispatchToStox === true ||
+        forceRedispatch === true ||
+        (newStatus === "PROCESSING" &&
+          (!targetOrder.stoxTrackingNumber || targetOrder.stoxStatus === "FAILED")),
+      preDispatchPatch: (existing) => {
+        const previousStatus = existing.orderStatus;
+        if (
+          (newStatus === "CANCELLED" && previousStatus !== "CANCELLED") ||
+          (previousStatus === "CANCELLED" && newStatus && newStatus !== "CANCELLED")
+        ) {
+          const sign: 1 | -1 = newStatus === "CANCELLED" ? 1 : -1;
+          adjustProductInventoryForOrderStatus(existing, sign);
+        }
+
+        const autoPaymentUpdates =
+          newStatus === "DELIVERED" && !body.paymentStatus
+            ? { paymentStatus: "FULLY_PAID" as const, remainingCodAmount: 0 }
+            : {};
+
+        return {
+          ...autoPaymentUpdates,
+          ...orderFields,
+        };
+      },
+    });
+
+    if (!result.found || !result.order) {
       return NextResponse.json({ success: false, error: "الطلب غير موجود." }, { status: 404 });
     }
 
-    const previousStatus = orders[index].orderStatus;
-    const newStatus = body.orderStatus;
-
-    // Handle stock restoration if order was cancelled, or re-deduction if un-cancelled
-    if (
-      (newStatus === "CANCELLED" && previousStatus !== "CANCELLED") ||
-      (previousStatus === "CANCELLED" && newStatus && newStatus !== "CANCELLED")
-    ) {
-      const sign = newStatus === "CANCELLED" ? 1 : -1;
-      const products = readJsonFile<ProductData[]>("products.json", []);
-      for (const item of orders[index].items || []) {
-        const qty = Math.max(1, Number(item.quantity) || 1);
-        const prodIndex = products.findIndex((p) => p.id === item.productId || p.slug === item.productId);
-        if (prodIndex !== -1) {
-          const prod = products[prodIndex];
-          prod.stock = Math.max(0, (Number(prod.stock) || 0) + sign * qty);
-          if (Array.isArray(prod.variants) && prod.variants.length > 0) {
-            const varIdx = item.variantId
-              ? prod.variants.findIndex((v) => v.id === item.variantId)
-              : item.variantTitle
-              ? prod.variants.findIndex((v) => v.titleAr === item.variantTitle || v.titleEn === item.variantTitle)
-              : 0;
-            const targetIdx = varIdx !== -1 ? varIdx : 0;
-            if (prod.variants.length === 1) {
-              prod.variants[0].stock = prod.stock;
-            } else if (prod.variants[targetIdx]) {
-              prod.variants[targetIdx].stock = Math.max(
-                0,
-                (Number(prod.variants[targetIdx].stock) || 0) + sign * qty
-              );
-            }
-          }
-        }
-      }
-      writeJsonFile("products.json", products);
-    }
-
-    // When an order is marked DELIVERED, mark its payment as FULLY_PAID and remaining COD as 0 (unless explicitly overridden)
-    const autoPaymentUpdates =
-      newStatus === "DELIVERED" && !body.paymentStatus
-        ? { paymentStatus: "FULLY_PAID" as const, remainingCodAmount: 0 }
-        : {};
-
-    const { dispatchToStox, forceRedispatch, ...orderFields } = body;
-
-    // Merge updates first
-    orders[index] = {
-      ...orders[index],
-      ...autoPaymentUpdates,
-      ...orderFields,
-    };
-
-    // CRITICAL WORKFLOW:
-    // Automatically dispatch the order to STOX (or active carrier) ONLY when Admin marks order as PROCESSING
-    // (or when Admin explicitly clicks manual dispatchToStox / forceRedispatch).
-    let stoxDispatch: ShippingShipmentResult | null = null;
-    const targetOrder = orders[index];
-    const shouldDispatchToStox =
-      dispatchToStox === true ||
-      forceRedispatch === true ||
-      (newStatus === "PROCESSING" &&
-        (!targetOrder.stoxTrackingNumber || targetOrder.stoxStatus === "FAILED"));
-
-    if (shouldDispatchToStox) {
-      const codToCollect =
-        targetOrder.paymentStatus === "FULLY_PAID"
-          ? 0
-          : typeof targetOrder.remainingCodAmount === "number"
-          ? targetOrder.remainingCodAmount
-          : targetOrder.total;
-
-      stoxDispatch = await universalShippingService.createShipment({
-        orderId: targetOrder.id,
-        orderNumber: targetOrder.orderNumber,
-        recipient: {
-          fullName: targetOrder.customerName,
-          phone: targetOrder.customerPhone,
-          governorate: targetOrder.governorate,
-          city: targetOrder.city,
-          street: targetOrder.street,
-          building: targetOrder.building,
-          notes: targetOrder.notes,
-        },
-        codAmount: codToCollect,
-        items: (targetOrder.items || []).map((item) => ({
-          sku: item.variantId || item.productId || "SLF-001",
-          name: `${item.productName}${item.variantTitle ? ` (${item.variantTitle})` : ""}`,
-          quantity: Number(item.quantity) || 1,
-          price: Number(item.unitPrice) || 0,
-        })),
-      });
-
-      if (stoxDispatch.success && stoxDispatch.trackingNumber) {
-        orders[index].stoxTrackingNumber = stoxDispatch.trackingNumber;
-        orders[index].stoxStatus = stoxDispatch.status || "CREATED";
-        orders[index].stoxOrderId = stoxDispatch.carrierOrderId;
-        orders[index].waybillUrl = stoxDispatch.waybillUrl;
-        orders[index].stoxDispatchedAt = new Date().toISOString();
-        orders[index].stoxError = undefined;
-      } else {
-        orders[index].stoxStatus = "FAILED";
-        orders[index].stoxError = stoxDispatch.error || "تعذر إرسال الشحنة لشركة الشحن";
-      }
-    }
-
-    writeJsonFile("orders.json", orders);
+    const stoxDispatch = result.stoxDispatch;
 
     return NextResponse.json({
       success: true,
@@ -162,7 +126,7 @@ export async function PATCH(
           ? `تم تحديث الطلب إلى قيد التجهيز وإرساله إلى ${stoxDispatch.providerName} بنجاح (بوليصة: ${stoxDispatch.trackingNumber})`
           : `تم تحديث حالة الطلب، ولكن تعذر الإرسال لـ ${stoxDispatch.providerName}: ${stoxDispatch.error}`
         : "تم تحديث بيانات الطلب بنجاح.",
-      order: orders[index],
+      order: result.order,
       stoxDispatch,
     });
   } catch (err: any) {
@@ -176,16 +140,24 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const orders = readJsonFile<OrderRecord[]>("orders.json", []);
-    const filtered = orders.filter(
-      (o) => o.id !== id && o.orderNumber.toLowerCase() !== id.toLowerCase()
-    );
+    const deleted = await withOrdersFileLock(() => {
+      const orders = readJsonFile<OrderRecord[]>("orders.json", []);
+      const filtered = orders.filter(
+        (o) => o.id !== id && o.orderNumber.toLowerCase() !== id.toLowerCase()
+      );
 
-    if (filtered.length === orders.length) {
+      if (filtered.length === orders.length) {
+        return false;
+      }
+
+      writeJsonFile("orders.json", filtered);
+      return true;
+    });
+
+    if (!deleted) {
       return NextResponse.json({ success: false, error: "الطلب غير موجود." }, { status: 404 });
     }
 
-    writeJsonFile("orders.json", filtered);
     return NextResponse.json({ success: true, message: "تم حذف الطلب بنجاح." });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });

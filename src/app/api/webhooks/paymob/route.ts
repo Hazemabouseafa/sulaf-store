@@ -2,14 +2,21 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { paymobService } from "@/lib/payments/paymob";
-import { readJsonFile, writeJsonFile } from "@/lib/db/json-db";
-import { OrderRecord } from "@/lib/orders/order-store";
+import { handlePaymobPaymentConfirmation } from "@/lib/shipping/order-dispatch";
 
 export async function POST(req: NextRequest) {
   try {
     const payload = await req.json();
     const hmacHeader =
-      req.nextUrl.searchParams.get("hmac") || req.headers.get("x-paymob-hmac") || "";
+      req.nextUrl.searchParams.get("hmac") ||
+      payload.hmac ||
+      req.headers.get("x-paymob-hmac") ||
+      "";
+
+    // Ignore non-transaction events such as card token saves or standalone notifications
+    if (payload.type && payload.type !== "TRANSACTION") {
+      return NextResponse.json({ received: true, ignored: payload.type });
+    }
 
     const transaction = payload.obj || payload;
 
@@ -20,38 +27,55 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
-    const rawOrderRef =
-      transaction.order?.merchant_order_id ||
-      transaction.special_reference ||
-      transaction.merchant_order_id ||
-      "";
-    // Strip optional `__12345` suffix added for unique Paymob order retries
-    const orderNumber = String(rawOrderRef).split("__")[0].trim();
-    const success = transaction.success === true || String(transaction.success) === "true";
+    const orderLookupKeys = [
+      transaction.order?.merchant_order_id,
+      transaction.special_reference,
+      transaction.merchant_order_id,
+      transaction.payment_key_claims?.extra?.sulaf_order_number,
+    ].filter(Boolean);
 
-    console.log(`[Paymob Webhook] Received status for order ${orderNumber}: success=${success}`);
+    const paymobOrderId =
+      transaction.order?.id !== undefined && transaction.order?.id !== null
+        ? String(transaction.order.id)
+        : undefined;
+    const transactionId =
+      transaction.id !== undefined && transaction.id !== null ? String(transaction.id) : undefined;
+    const isPending = transaction.pending === true || String(transaction.pending) === "true";
+    const isSuccess = transaction.success === true || String(transaction.success) === "true";
 
-    if (orderNumber) {
-      const orders = readJsonFile<OrderRecord[]>("orders.json", []);
-      const cleanRef = orderNumber.toLowerCase();
-      const idx = orders.findIndex(
-        (o) =>
-          (o.orderNumber || "").toLowerCase() === cleanRef ||
-          (o.id || "").toLowerCase() === cleanRef
-      );
-      if (idx !== -1) {
-        if (success) {
-          orders[idx].paymentStatus = orders[idx].isDepositMode ? "DEPOSIT_PAID" : "FULLY_PAID";
-          // Keep orderStatus as PENDING_CONFIRMATION until the Admin explicitly marks it PROCESSING
-          // (which then dispatches the order to STOX).
-        } else {
-          orders[idx].paymentStatus = "FAILED";
-        }
-        writeJsonFile("orders.json", orders);
+    console.log(
+      `[Paymob Webhook] Received status for order keys [${orderLookupKeys.join(",")}] (paymobOrderId=${paymobOrderId}): success=${isSuccess}, pending=${isPending}`
+    );
+
+    const result = await handlePaymobPaymentConfirmation({
+      orderLookupKeys,
+      paymobOrderId,
+      isSuccess,
+      isPending,
+      transactionId,
+      source: "WEBHOOK",
+    });
+
+    if (result.stoxDispatch) {
+      if (result.stoxDispatch.success) {
+        console.log(
+          `[Paymob Webhook] Auto-dispatched order ${result.order?.orderNumber} to STOX: AWB=${result.stoxDispatch.trackingNumber}`
+        );
+      } else {
+        console.error(
+          `[Paymob Webhook] Auto-dispatch to STOX failed for ${result.order?.orderNumber}: ${result.stoxDispatch.error}`
+        );
       }
     }
 
-    return NextResponse.json({ received: true });
+    return NextResponse.json({
+      received: true,
+      found: result.found,
+      pending: result.pending,
+      orderStatus: result.order?.orderStatus,
+      paymentStatus: result.order?.paymentStatus,
+      stoxTrackingNumber: result.order?.stoxTrackingNumber,
+    });
   } catch (err: any) {
     console.error("[Paymob Webhook Error]", err);
     return NextResponse.json({ error: err.message }, { status: 500 });

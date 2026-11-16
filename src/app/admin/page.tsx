@@ -297,6 +297,7 @@ const ADMIN_I18N = {
       FULLY_PAID: "مدفوع بالكامل ✓",
       DEPOSIT_PAID: "مسدد العربون",
       UNPAID: "بانتظار السداد",
+      FAILED: "فشل الدفع الإلكتروني",
     },
     login: {
       title: "لوحة تحكم سلاف | Sulaf",
@@ -430,6 +431,7 @@ const ADMIN_I18N = {
       FULLY_PAID: "Fully Paid ✓",
       DEPOSIT_PAID: "Deposit Paid",
       UNPAID: "Awaiting Payment",
+      FAILED: "Payment Failed",
     },
     login: {
       title: "Sulaf Admin Portal",
@@ -2443,6 +2445,9 @@ export default function AdminPage() {
     }
     if (status === "DEPOSIT_PAID") {
       return <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-100 text-indigo-800">{ADMIN_I18N[adminLang].payment.DEPOSIT_PAID}</span>;
+    }
+    if (status === "FAILED") {
+      return <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800">{ADMIN_I18N[adminLang].payment.FAILED}</span>;
     }
     return <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-gray-100 text-gray-800">{ADMIN_I18N[adminLang].payment.UNPAID}</span>;
   }

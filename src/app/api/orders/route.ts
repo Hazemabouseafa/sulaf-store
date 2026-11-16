@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { readJsonFile, writeJsonFile } from "@/lib/db/json-db";
 import { OrderRecord } from "@/lib/orders/order-store";
 import { ProductData } from "@/lib/data/mock-data";
+import { withOrdersFileLock } from "@/lib/shipping/order-dispatch";
 
 export const dynamic = "force-dynamic";
 
@@ -46,16 +47,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const orders = readJsonFile<OrderRecord[]>("orders.json", []);
-    const products = readJsonFile<ProductData[]>("products.json", []);
-
     const orderNumber = body.orderNumber || `SLF-${Math.floor(1000 + Math.random() * 9000)}`;
     const newOrder: OrderRecord = {
       ...body,
       id: body.id || `ord-${Date.now()}`,
       orderNumber,
       // New customer orders always start as PENDING_CONFIRMATION;
-      // STOX shipment is only created when the Admin changes orderStatus to PROCESSING.
+      // Paymob orders auto-promote to PROCESSING and dispatch to STOX once payment is confirmed,
+      // while other payment methods dispatch when Admin changes orderStatus to PROCESSING.
       orderStatus: body.orderStatus || "PENDING_CONFIRMATION",
       paymentStatus: body.paymentStatus || "PENDING",
       stoxTrackingNumber: undefined,
@@ -63,51 +62,56 @@ export async function POST(req: NextRequest) {
       createdAt: body.createdAt || new Date().toISOString(),
     };
 
-    // Auto-deduct stock from purchased products and matching variants
-    let productsUpdated = false;
-    for (const item of body.items) {
-      const qty = Math.max(1, Number(item.quantity) || 1);
-      const prodIndex = products.findIndex((p) => p.id === item.productId || p.slug === item.productId);
-      if (prodIndex !== -1) {
-        const prod = products[prodIndex];
-        prod.stock = Math.max(0, (Number(prod.stock) || 0) - qty);
-        if (Array.isArray(prod.variants) && prod.variants.length > 0) {
-          const varIdx = item.variantId
-            ? prod.variants.findIndex((v) => v.id === item.variantId)
-            : item.variantTitle
-            ? prod.variants.findIndex((v) => v.titleAr === item.variantTitle || v.titleEn === item.variantTitle)
-            : 0;
-          const targetIdx = varIdx !== -1 ? varIdx : 0;
-          if (prod.variants.length === 1) {
-            prod.variants[0].stock = prod.stock;
-          } else if (prod.variants[targetIdx]) {
-            prod.variants[targetIdx].stock = Math.max(0, (Number(prod.variants[targetIdx].stock) || 0) - qty);
+    await withOrdersFileLock(() => {
+      const orders = readJsonFile<OrderRecord[]>("orders.json", []);
+      const products = readJsonFile<ProductData[]>("products.json", []);
+
+      // Auto-deduct stock from purchased products and matching variants
+      let productsUpdated = false;
+      for (const item of body.items) {
+        const qty = Math.max(1, Number(item.quantity) || 1);
+        const prodIndex = products.findIndex((p) => p.id === item.productId || p.slug === item.productId);
+        if (prodIndex !== -1) {
+          const prod = products[prodIndex];
+          prod.stock = Math.max(0, (Number(prod.stock) || 0) - qty);
+          if (Array.isArray(prod.variants) && prod.variants.length > 0) {
+            const varIdx = item.variantId
+              ? prod.variants.findIndex((v) => v.id === item.variantId)
+              : item.variantTitle
+              ? prod.variants.findIndex((v) => v.titleAr === item.variantTitle || v.titleEn === item.variantTitle)
+              : 0;
+            const targetIdx = varIdx !== -1 ? varIdx : 0;
+            if (prod.variants.length === 1) {
+              prod.variants[0].stock = prod.stock;
+            } else if (prod.variants[targetIdx]) {
+              prod.variants[targetIdx].stock = Math.max(0, (Number(prod.variants[targetIdx].stock) || 0) - qty);
+            }
           }
+          productsUpdated = true;
         }
-        productsUpdated = true;
       }
-    }
-    if (productsUpdated) {
-      writeJsonFile("products.json", products);
-    }
+      if (productsUpdated) {
+        writeJsonFile("products.json", products);
+      }
 
-    // Increment coupon usage count if coupon applied
-    if (body.couponCode) {
-      try {
-        const coupons = readJsonFile<any[]>("coupons.json", []);
-        const cleanCode = body.couponCode.trim().toUpperCase();
-        const couponIdx = coupons.findIndex((c) => c.code === cleanCode);
-        if (couponIdx !== -1) {
-          coupons[couponIdx].usedCount = (coupons[couponIdx].usedCount || 0) + 1;
-          writeJsonFile("coupons.json", coupons);
+      // Increment coupon usage count if coupon applied
+      if (body.couponCode) {
+        try {
+          const coupons = readJsonFile<any[]>("coupons.json", []);
+          const cleanCode = body.couponCode.trim().toUpperCase();
+          const couponIdx = coupons.findIndex((c) => c.code === cleanCode);
+          if (couponIdx !== -1) {
+            coupons[couponIdx].usedCount = (coupons[couponIdx].usedCount || 0) + 1;
+            writeJsonFile("coupons.json", coupons);
+          }
+        } catch (e) {
+          console.error("Coupon usage increment error:", e);
         }
-      } catch (e) {
-        console.error("Coupon usage increment error:", e);
       }
-    }
 
-    orders.unshift(newOrder);
-    writeJsonFile("orders.json", orders);
+      orders.unshift(newOrder);
+      writeJsonFile("orders.json", orders);
+    });
 
     // Auto-register/sync customer in registered-customers.json
     try {

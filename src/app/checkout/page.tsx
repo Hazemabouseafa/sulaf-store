@@ -132,6 +132,8 @@ export default function CheckoutPage() {
 
   // Order state
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVerifyingPaymob, setIsVerifyingPaymob] = useState(false);
+  const paymobVerifyStartedRef = React.useRef(false);
   const [createdOrderNumber, setCreatedOrderNumber] = useState<string | null>(null);
   const [completedOrderSummary, setCompletedOrderSummary] = useState<{
     orderNumber: string;
@@ -141,6 +143,7 @@ export default function CheckoutPage() {
     governorate: string;
     city: string;
     carrierName: string;
+    stoxTrackingNumber?: string;
   } | null>(null);
 
   // 1. Multi-product Promo & Volume Discount
@@ -229,26 +232,44 @@ export default function CheckoutPage() {
     }
   }
 
-  // Handle return callback from Paymob Checkout (`?paymob_return=1&order=...&success=...`)
+  // Handle return callback from Paymob Checkout (`?paymob_return=1&sulaf_order=...&success=...`)
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
+    if (typeof window === "undefined" || paymobVerifyStartedRef.current) return;
+    const normalizedSearch = window.location.search.replace(
+      /\?(?=id=|success=|pending=|amount_cents=|hmac=|order=|order_id=|merchant_order_id=|special_reference=)/g,
+      "&"
+    );
+    const params = new URLSearchParams(normalizedSearch);
     const isPaymobReturn =
       params.get("paymob_return") === "1" ||
       params.has("merchant_order_id") ||
-      params.has("special_reference");
+      params.has("special_reference") ||
+      params.has("sulaf_order");
 
     if (!isPaymobReturn) return;
+
+    paymobVerifyStartedRef.current = true;
+    setIsVerifyingPaymob(true);
 
     const queryObj: Record<string, string> = {};
     params.forEach((v, k) => {
       queryObj[k] = v;
     });
 
+    let savedSummary: {
+      orderNumber: string;
+      payNow: number;
+      remainingCod: number;
+      isDepositMode: boolean;
+      governorate: string;
+      city: string;
+      carrierName: string;
+    } | null = null;
     const savedSummaryRaw = sessionStorage.getItem("sulaf_paymob_summary");
     if (savedSummaryRaw) {
       try {
-        setCompletedOrderSummary(JSON.parse(savedSummaryRaw));
+        savedSummary = JSON.parse(savedSummaryRaw);
+        if (savedSummary) setCompletedOrderSummary(savedSummary);
       } catch {}
     }
 
@@ -256,7 +277,11 @@ export default function CheckoutPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        orderNumber: params.get("order") || params.get("merchant_order_id") || params.get("special_reference"),
+        orderNumber:
+          params.get("sulaf_order") ||
+          params.get("merchant_order_id") ||
+          params.get("special_reference") ||
+          params.get("order"),
         queryParams: queryObj,
       }),
     })
@@ -265,16 +290,41 @@ export default function CheckoutPage() {
         if (data.success && data.order) {
           clearCart();
           sessionStorage.removeItem("sulaf_paymob_summary");
-          setCreatedOrderNumber(data.order.orderNumber);
+          const verifiedOrder: OrderRecord = data.order;
+          setCompletedOrderSummary({
+            orderNumber: verifiedOrder.orderNumber,
+            payNow:
+              savedSummary?.payNow ??
+              (verifiedOrder.isDepositMode ? verifiedOrder.depositAmount : verifiedOrder.total),
+            remainingCod: savedSummary?.remainingCod ?? verifiedOrder.remainingCodAmount,
+            isDepositMode: savedSummary?.isDepositMode ?? verifiedOrder.isDepositMode,
+            governorate: savedSummary?.governorate || verifiedOrder.governorate,
+            city: savedSummary?.city || verifiedOrder.city,
+            carrierName: savedSummary?.carrierName || activeCarrierName,
+            stoxTrackingNumber: verifiedOrder.stoxTrackingNumber,
+          });
+          setCreatedOrderNumber(verifiedOrder.orderNumber);
+          window.history.replaceState({}, "", window.location.pathname);
+        } else if (data.pending) {
+          alert(
+            isArabic
+              ? "عملية الدفع قيد التأكيد من البنك. يمكنكِ متابعة حالة الطلب من صفحة تتبع الطلبات."
+              : "Your Paymob payment is pending bank confirmation. Please check order tracking shortly."
+          );
+          window.history.replaceState({}, "", window.location.pathname);
         } else {
           alert(
             isArabic
               ? "لم تكتمل عملية الدفع عبر بوابة Paymob. يمكنك المحاولة مرة أخرى أو اختيار وسيلة دفع بديلة."
               : "Paymob payment was not completed. Please try again or choose another payment method."
           );
+          window.history.replaceState({}, "", window.location.pathname);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        setIsVerifyingPaymob(false);
+      });
   }, []);
 
   // Handle Order Placement
@@ -302,8 +352,8 @@ export default function CheckoutPage() {
         : (paymentMethod === "PAYMOB" ? "PAYMOB_CARD" : "MANUAL_INSTAPAY");
 
       // Reuse pendingOrder on retry so we do not create duplicate orders or double-deduct stock.
-      // IMPORTANT: Order starts as PENDING_CONFIRMATION with NO stoxTrackingNumber.
-      // It is dispatched to STOX only after the Admin marks it as PROCESSING.
+      // Order starts as PENDING_CONFIRMATION; Paymob payments auto-promote to PROCESSING
+      // and dispatch to STOX automatically upon payment confirmation. Other methods dispatch when Admin marks PROCESSING.
       const newOrder =
         pendingOrder ||
         (await createOrderApi({
@@ -494,6 +544,27 @@ export default function CheckoutPage() {
     }
   }
 
+  // Verifying Paymob return overlay
+  if (isVerifyingPaymob && !createdOrderNumber) {
+    return (
+      <div className="py-24 bg-[#f4f1e6] min-h-screen flex items-center justify-center px-4 font-cairo">
+        <div className="max-w-md w-full p-8 rounded-3xl bg-[#fdfef8] border border-[#e2e8c0] shadow-xl text-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-[#485c36]/10 text-[#485c36] flex items-center justify-center mx-auto">
+            <RotateCw className="w-8 h-8 animate-spin" />
+          </div>
+          <h2 className="font-amiri text-2xl font-bold text-[#485c36]">
+            {isArabic ? "جاري تأكيد عملية الدفع..." : "Verifying your Paymob payment..."}
+          </h2>
+          <p className="text-xs text-gray-600 leading-relaxed">
+            {isArabic
+              ? "لحظات من فضلك، يتم الآن توثيق السداد وتجهيز بوليصة الشحن تلقائياً."
+              : "Please wait a moment while we verify your payment and prepare your shipment automatically."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // Success Screen
   if (createdOrderNumber) {
     return (
@@ -544,6 +615,16 @@ export default function CheckoutPage() {
                 {completedOrderSummary?.carrierName || activeCarrierName}
               </span>
             </div>
+            {completedOrderSummary?.stoxTrackingNumber && (
+              <div className="flex justify-between pt-1.5 border-t border-[#e2e8c0]">
+                <span className="text-gray-600">
+                  {isArabic ? "رقم بوليصة الشحن:" : "Shipping Waybill:"}
+                </span>
+                <strong className="text-[#485c36] font-mono">
+                  {completedOrderSummary.stoxTrackingNumber}
+                </strong>
+              </div>
+            )}
           </div>
 
           <div className="pt-2 flex flex-col sm:flex-row gap-3">

@@ -1,12 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
 import { paymobService } from "@/lib/payments/paymob";
+import { readJsonFile, writeJsonFile } from "@/lib/db/json-db";
+import { OrderRecord } from "@/lib/orders/order-store";
+import { findOrderIndex, withOrdersFileLock } from "@/lib/shipping/order-dispatch";
 
 export const dynamic = "force-dynamic";
+
+function resolvePublicOrigin(req: NextRequest): string {
+  const originHeader = req.headers.get("origin");
+  if (originHeader && /^https?:\/\//i.test(originHeader)) {
+    return originHeader.replace(/\/+$/, "");
+  }
+
+  const forwardedHost = req.headers.get("x-forwarded-host") || req.headers.get("host");
+  const forwardedProto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || "https";
+  if (
+    forwardedHost &&
+    !forwardedHost.startsWith("0.0.0.0") &&
+    !forwardedHost.startsWith("localhost")
+  ) {
+    return `${forwardedProto}://${forwardedHost}`.replace(/\/+$/, "");
+  }
+
+  const envUrl = (process.env.NEXT_PUBLIC_SITE_URL || process.env.COOLIFY_URL || "")
+    .split(",")[0]
+    .trim();
+  if (envUrl) {
+    return (/^https?:\/\//i.test(envUrl) ? envUrl : `https://${envUrl}`).replace(/\/+$/, "");
+  }
+
+  return new URL(req.url).origin;
+}
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const {
+      orderId,
       orderNumber,
       amountEgp,
       customerName,
@@ -31,11 +61,7 @@ export async function POST(req: NextRequest) {
     const firstName = nameParts[0] || "عميل";
     const lastName = nameParts.slice(1).join(" ") || "سلاف";
 
-    const originUrl =
-      req.headers.get("origin") ||
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      process.env.COOLIFY_URL ||
-      new URL(req.url).origin;
+    const originUrl = resolvePublicOrigin(req);
 
     const result = await paymobService.createIntention({
       amountCents: Math.round(Number(amountEgp) * 100),
@@ -67,6 +93,22 @@ export async function POST(req: NextRequest) {
         },
         { status: 400 }
       );
+    }
+
+    // Persist paymobOrderId on the order record so webhook/redirect matching always succeeds.
+    if (result.paymobOrderId) {
+      try {
+        await withOrdersFileLock(() => {
+          const orders = readJsonFile<OrderRecord[]>("orders.json", []);
+          const idx = findOrderIndex(orders, [orderId, orderNumber]);
+          if (idx !== -1) {
+            orders[idx].paymobOrderId = String(result.paymobOrderId);
+            writeJsonFile("orders.json", orders);
+          }
+        });
+      } catch (e) {
+        console.warn("[Paymob Create] Failed to save paymobOrderId:", e);
+      }
     }
 
     return NextResponse.json({
