@@ -116,15 +116,40 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    const targetId = decodeURIComponent(id).trim();
     const products = readJsonFile<ProductData[]>("products.json", []);
-    const filtered = products.filter((p) => p.id !== id && p.slug !== id);
+    const targetProduct = products.find(
+      (p) => (p.id || "").trim() === targetId || (p.slug || "").trim() === targetId
+    );
+    const filtered = products.filter(
+      (p) => (p.id || "").trim() !== targetId && (p.slug || "").trim() !== targetId
+    );
 
     if (filtered.length === products.length) {
       return NextResponse.json({ success: false, error: "المستحضر غير موجود." }, { status: 404 });
     }
 
     writeJsonFile("products.json", filtered);
-    return NextResponse.json({ success: true, message: "تم حذف المستحضر بنجاح." });
+
+    try {
+      const settings = readJsonFile<any>("store-settings.json", {});
+      if (
+        settings &&
+        (settings.featuredProductId === targetId ||
+          (targetProduct &&
+            (settings.featuredProductId === targetProduct.id ||
+              settings.featuredProductId === targetProduct.slug)))
+      ) {
+        settings.featuredProductId = filtered[0]?.id || "";
+        writeJsonFile("store-settings.json", settings);
+      }
+    } catch {}
+
+    return NextResponse.json({
+      success: true,
+      message: "تم حذف المستحضر نهائياً بنجاح.",
+      remainingCount: filtered.length,
+    });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }

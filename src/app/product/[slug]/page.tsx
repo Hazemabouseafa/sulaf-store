@@ -7,7 +7,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { MOCK_PRODUCTS, ProductData } from "@/lib/data/mock-data";
 import { ReviewItem } from "@/lib/reviews/review-store";
-import { getStoredProducts } from "@/lib/products/product-store";
+import { getStoredProducts, useProducts } from "@/lib/products/product-store";
 import { useCart } from "@/lib/cart/cart-context";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { useStoreSettings } from "@/lib/settings/store-settings-context";
@@ -59,6 +59,14 @@ export default function ProductStoryPage() {
     const all = getStoredProducts();
     return all.find((p) => p.slug === slug || p.id === slug) || MOCK_PRODUCTS[0];
   });
+  const liveProducts = useProducts();
+  const complementaryProducts = useMemo(
+    () =>
+      liveProducts.filter(
+        (p) => p.id !== product.id && p.slug !== product.slug
+      ),
+    [liveProducts, product.id, product.slug]
+  );
 
   const [inciOpen, setInciOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(() => {
@@ -874,24 +882,26 @@ export default function ProductStoryPage() {
       </section>
 
       {/* 7. Complementary Formulations Section */}
-      <section className="py-20 pb-28 lg:pb-20 bg-[#f4f1e6]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="font-amiri text-3xl font-bold text-[#485c36]">
-              {isArabic ? "روتين سلاف المتكامل للعناية الفائقة" : "Sulaf Complete High-Performance Ritual"}
-            </h2>
-            <p className="text-xs text-gray-600 font-cairo mt-1">
-              Complementary clinical formulas formulated to reinforce epidermal cellular renewal.
-            </p>
-          </div>
+      {complementaryProducts.length > 0 && (
+        <section className="py-20 pb-28 lg:pb-20 bg-[#f4f1e6]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-10">
+              <h2 className="font-amiri text-3xl font-bold text-[#485c36]">
+                {isArabic ? "روتين سلاف المتكامل للعناية الفائقة" : "Sulaf Complete High-Performance Ritual"}
+              </h2>
+              <p className="text-xs text-gray-600 font-cairo mt-1">
+                Complementary clinical formulas formulated to reinforce epidermal cellular renewal.
+              </p>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {MOCK_PRODUCTS.filter((p) => p.id !== product.id).map((cp) => (
-              <ProductCard key={cp.id} product={cp} displayMode="podium" />
-            ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {complementaryProducts.map((cp) => (
+                <ProductCard key={cp.id} product={cp} displayMode="podium" />
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Mobile Sticky Add to Bag Bar for Seamless Phone Experience */}
       <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#fdfef8]/95 backdrop-blur-md border-t border-[#e2e8c0] p-3 px-4 shadow-[0_-8px_25px_rgba(0,0,0,0.08)] flex items-center justify-between gap-3 pb-safe">

@@ -11,7 +11,7 @@ import { HomepageSectionBuilder } from "@/components/admin/HomepageSectionBuilde
 import { ShippingCarrierSettings } from "@/components/admin/ShippingCarrierSettings";
 import { CouponData, saveCoupons } from "@/lib/coupons/coupon-store";
 import { ReviewItem } from "@/lib/reviews/review-store";
-import { saveProducts, getStoredProducts } from "@/lib/products/product-store";
+import { saveProducts } from "@/lib/products/product-store";
 import { useStoreSettings } from "@/lib/settings/store-settings-context";
 import {
   DEFAULT_SHIPPING_PROVIDERS,
@@ -1248,28 +1248,8 @@ export default function AdminPage() {
       if (resProducts.ok) {
         const d = await resProducts.json();
         if (d.products && Array.isArray(d.products)) {
-          const localCurrent = getStoredProducts();
-          // Non-destructive self-healing: if server only has default 1 product while admin browser has more added products, sync them back to server
-          if (d.products.length <= 1 && localCurrent.length > d.products.length) {
-            const putRes = await fetch("/api/products", {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ products: localCurrent }),
-            }).catch(() => null);
-            if (putRes && putRes.ok) {
-              const putData = await putRes.json();
-              if (Array.isArray(putData.products)) {
-                setProducts(putData.products);
-                saveProducts(putData.products);
-              }
-            } else {
-              setProducts(d.products);
-              saveProducts(d.products);
-            }
-          } else {
-            setProducts(d.products);
-            saveProducts(d.products);
-          }
+          setProducts(d.products);
+          saveProducts(d.products);
         }
       }
       if (resCoupons.ok) {
@@ -1926,10 +1906,18 @@ export default function AdminPage() {
   async function handleDeleteProduct(id: string) {
     if (!confirm("هل أنت متأكد من حذف هذا المستحضر نهائياً من المتجر؟")) return;
     try {
-      const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        showToast("تم حذف المستحضر بنجاح.");
-        loadLiveBackendData(true);
+      const res = await fetch(`/api/products/${encodeURIComponent(id)}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success !== false) {
+        setProducts((prev) => {
+          const next = prev.filter((p) => p.id !== id && p.slug !== id);
+          saveProducts(next);
+          return next;
+        });
+        showToast(data.message || "تم حذف المستحضر بنجاح ✓");
+        await loadLiveBackendData(true);
+      } else {
+        showToast(data.error || "فشل حذف المستحضر من الخادم.", "error");
       }
     } catch {
       showToast("فشل حذف المستحضر.", "error");

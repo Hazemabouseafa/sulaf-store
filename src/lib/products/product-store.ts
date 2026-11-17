@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { MOCK_PRODUCTS, ProductData } from "../data/mock-data";
 
-const STORAGE_KEY = "sulaf_products_catalog_v3";
+const STORAGE_KEY = "sulaf_products_catalog_v4";
 
 export function getStoredProducts(): ProductData[] {
   if (typeof window === "undefined") {
@@ -11,6 +11,7 @@ export function getStoredProducts(): ProductData[] {
   }
 
   try {
+    localStorage.removeItem("sulaf_products_catalog_v3");
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_PRODUCTS));
@@ -18,7 +19,7 @@ export function getStoredProducts(): ProductData[] {
       return MOCK_PRODUCTS;
     }
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : MOCK_PRODUCTS;
+    return Array.isArray(parsed) ? parsed : MOCK_PRODUCTS;
   } catch (err) {
     console.error("Failed to load products from storage:", err);
     return MOCK_PRODUCTS;
@@ -30,36 +31,8 @@ export async function syncProductsFromServer(): Promise<ProductData[]> {
     const res = await fetch("/api/products", { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
-      if (data.products && Array.isArray(data.products) && data.products.length > 0) {
+      if (data.products && Array.isArray(data.products)) {
         const serverProducts: ProductData[] = data.products;
-        // Self-healing guard: if admin has custom products in localStorage that are missing from a fresh default 1-product server DB, restore them!
-        if (typeof window !== "undefined") {
-          const isAdmin = localStorage.getItem("sulaf_admin_auth") === "true";
-          const localRaw = localStorage.getItem(STORAGE_KEY);
-          if (isAdmin && localRaw && serverProducts.length <= 1) {
-            try {
-              const localParsed: ProductData[] = JSON.parse(localRaw);
-              if (Array.isArray(localParsed) && localParsed.length > serverProducts.length) {
-                const serverIds = new Set(serverProducts.map((p) => p.id));
-                const missingLocal = localParsed.filter((p) => p && p.id && !serverIds.has(p.id));
-                if (missingLocal.length > 0) {
-                  const putRes = await fetch("/api/products", {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ products: localParsed }),
-                  });
-                  if (putRes.ok) {
-                    const putData = await putRes.json();
-                    if (Array.isArray(putData.products) && putData.products.length > 0) {
-                      saveProducts(putData.products);
-                      return putData.products;
-                    }
-                  }
-                }
-              }
-            } catch {}
-          }
-        }
         saveProducts(serverProducts);
         return serverProducts;
       }
@@ -90,7 +63,7 @@ export function useProducts(): ProductData[] {
   useEffect(() => {
     setProducts(getStoredProducts());
     syncProductsFromServer().then((fresh) => {
-      if (fresh && fresh.length > 0) {
+      if (Array.isArray(fresh)) {
         setProducts(fresh);
       }
     });
@@ -165,7 +138,7 @@ export async function deleteProductApi(id: string): Promise<boolean> {
   });
   if (res.ok) {
     const current = getStoredProducts();
-    saveProducts(current.filter((p) => p.id !== id));
+    saveProducts(current.filter((p) => p.id !== id && p.slug !== id));
     return true;
   }
   return false;

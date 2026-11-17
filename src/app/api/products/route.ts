@@ -154,32 +154,14 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-// Non-destructive bulk sync/restore (merges products without deleting existing ones)
-export async function PUT(req: NextRequest) {
+// Server catalog is the single source of truth; do not re-insert deleted products from stale browser caches
+export async function PUT() {
   try {
-    const body = await req.json();
-    const incoming: ProductData[] = Array.isArray(body?.products) ? body.products : [];
-    if (incoming.length === 0) {
-      return NextResponse.json({ success: false, error: "لا توجد مستحضرات للمزامنة." }, { status: 400 });
-    }
-
     const current = readJsonFile<ProductData[]>("products.json", []);
-    const byId = new Map<string, ProductData>();
-    for (const p of current) {
-      if (p && p.id) byId.set(p.id, p);
-    }
-    for (const p of incoming) {
-      if (p && p.id && !byId.has(p.id)) {
-        byId.set(p.id, p);
-      }
-    }
-
-    const merged = Array.from(byId.values());
-    writeJsonFile("products.json", merged);
     return NextResponse.json({
       success: true,
-      count: merged.length,
-      products: merged,
+      count: current.length,
+      products: current,
     });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
