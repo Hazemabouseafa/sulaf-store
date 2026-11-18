@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { useStoreSettings } from "@/lib/settings/store-settings-context";
-import { LiveTextOverride } from "@/lib/settings/store-settings";
+import { LiveAddedElement, LiveTextOverride } from "@/lib/settings/store-settings";
 import {
   Sparkles,
   Edit3,
@@ -26,7 +26,16 @@ import {
   LayoutGrid,
   AlertTriangle,
   RefreshCw,
+  PlusCircle,
 } from "lucide-react";
+
+interface RepeatableContext {
+  parentEl: HTMLElement;
+  parentKey: string;
+  templateEl: HTMLElement;
+  itemLabel: string;
+  nextOrdinal: number;
+}
 
 interface ElementTargetData {
   element: HTMLElement;
@@ -35,6 +44,7 @@ interface ElementTargetData {
   isSection: boolean;
   isContainer: boolean;
   canEditText: boolean;
+  repeatable?: RepeatableContext | null;
   sectionName?: string;
   tagName: string;
   currentText: string;
@@ -102,12 +112,18 @@ const FONT_FAMILIES = [
  * Never relies on unstable global document querySelectorAll indexes.
  */
 function getElementKey(el: HTMLElement, pathname: string): string {
+  if (el.dataset.liveCloneId) {
+    return `clone::${el.dataset.liveCloneId}`;
+  }
   if (el.dataset.liveKey) {
     return `live::${el.dataset.liveKey}`;
   }
   const closestLiveKeyEl = el.closest("[data-live-key]") as HTMLElement | null;
   if (closestLiveKeyEl && closestLiveKeyEl.dataset.liveKey) {
     return `live::${closestLiveKeyEl.dataset.liveKey}`;
+  }
+  if (el.dataset.liveList) {
+    return `list::${pathname}::${el.dataset.liveList}`;
   }
   if (el.dataset.liveSection) {
     return `section::${el.dataset.liveSection}`;
@@ -130,11 +146,12 @@ function getElementKey(el: HTMLElement, pathname: string): string {
   while (curr && curr !== stopAt && curr.parentElement) {
     const parentEl: HTMLElement = curr.parentElement;
     const tag = curr.tagName.toLowerCase();
-    // Ignore dynamic LiveVisualEditor UI nodes when computing sibling indices
+    // Ignore dynamic LiveVisualEditor UI nodes and added clones when computing sibling indices
     const sameTagSiblings = Array.from(parentEl.children).filter(
       (c: Element) =>
         c.tagName.toLowerCase() === tag &&
-        !c.hasAttribute("data-live-editor-ui")
+        !c.hasAttribute("data-live-editor-ui") &&
+        !c.hasAttribute("data-live-clone-id")
     );
     const index = sameTagSiblings.indexOf(curr);
     pathParts.unshift(`${tag}:nth-of-type(${Math.max(1, index + 1)})`);
@@ -152,6 +169,13 @@ function getElementKey(el: HTMLElement, pathname: string): string {
   } else {
     return `pagePath::${pathname}::${pathStr}::${snippet}`;
   }
+}
+
+function getListContainerKey(parentEl: HTMLElement, pathname: string): string {
+  if (parentEl.dataset.liveList) {
+    return `list::${pathname}::${parentEl.dataset.liveList}`;
+  }
+  return getElementKey(parentEl, pathname);
 }
 
 /**
@@ -177,6 +201,22 @@ function resolveElementByKey(key: string, pathname: string): HTMLElement | null 
   if (typeof document === "undefined") return null;
 
   try {
+    if (key.startsWith("clone::")) {
+      const cloneId = key.replace("clone::", "");
+      return document.querySelector(`[data-live-clone-id="${cloneId}"]`);
+    }
+    if (key.startsWith("list::")) {
+      const rest = key.slice("list::".length);
+      const splitIdx = rest.indexOf("::");
+      if (splitIdx !== -1) {
+        const targetPath = rest.slice(0, splitIdx);
+        const listId = rest.slice(splitIdx + 2);
+        if (targetPath === pathname && listId) {
+          return document.querySelector(`[data-live-list="${listId}"]`);
+        }
+      }
+      return null;
+    }
     if (key.startsWith("live::")) {
       const liveKey = key.replace("live::", "");
       return document.querySelector(`[data-live-key="${liveKey}"]`);
@@ -260,12 +300,42 @@ function resolveElementByKey(key: string, pathname: string): HTMLElement | null 
 }
 
 /**
- * Safely applies text without using innerText which destroys child JSX/HTML elements.
+ * Extracts text while preserving explicit <br> and newline line breaks instead of collapsing them.
+ */
+function extractTextPreservingLines(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return (node.textContent || "").replace(/[^\S\r\n]+/g, " ");
+  }
+  if (node.nodeType !== Node.ELEMENT_NODE) return "";
+  const el = node as HTMLElement;
+  const tag = el.tagName.toLowerCase();
+  if (tag === "br") return "\n";
+  if (["svg", "path", "g", "circle", "script", "style"].includes(tag)) return "";
+
+  const isBlock = ["p", "div", "li", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote"].includes(tag);
+  const inner = Array.from(el.childNodes).map(extractTextPreservingLines).join("");
+  return isBlock ? `${inner}\n` : inner;
+}
+
+function readCleanEditableText(el: HTMLElement): string {
+  return extractTextPreservingLines(el)
+    .replace(/\r\n/g, "\n")
+    .replace(/[ \t]*\n[ \t]*/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+/**
+ * Safely applies text without using innerText which destroys child JSX/HTML elements,
+ * and sets white-space: pre-line so Enter line breaks always render accurately.
  */
 function applyTextSafely(element: HTMLElement, newText: string) {
+  const normalizedText = newText.replace(/\r\n/g, "\n");
+
   // If element explicitly has a data-live-key (e.g. hero-poem-line-1 with word spans) or no child elements
   if (element.dataset.liveKey || element.children.length === 0) {
-    element.textContent = newText;
+    element.style.whiteSpace = "pre-line";
+    element.textContent = normalizedText;
     return;
   }
 
@@ -275,28 +345,220 @@ function applyTextSafely(element: HTMLElement, newText: string) {
     (n) => n.nodeType === Node.TEXT_NODE && (n.textContent || "").trim().length > 0
   );
   if (textNode) {
-    textNode.textContent = newText;
+    element.style.whiteSpace = "pre-line";
+    textNode.textContent = normalizedText;
     return;
   }
 
   // If there's an inner [data-live-key] or leaf text element (like a single <span> inside a button with SVG icons), update it
   const liveKeyChild = element.querySelector("[data-live-key]") as HTMLElement | null;
   if (liveKeyChild) {
-    liveKeyChild.textContent = newText;
+    liveKeyChild.style.whiteSpace = "pre-line";
+    liveKeyChild.textContent = normalizedText;
     return;
   }
 
-  const leaf = element.querySelector("span, p, strong, b, em, label, h1, h2, h3, h4, h5, h6");
+  const leaf = element.querySelector("span, p, strong, b, em, label, h1, h2, h3, h4, h5, h6") as HTMLElement | null;
   if (leaf && leaf.children.length === 0) {
-    leaf.textContent = newText;
+    leaf.style.whiteSpace = "pre-line";
+    leaf.textContent = normalizedText;
     return;
   }
 
   // Fallback: only if it contains ONLY text nodes and no child elements
   const hasElementChildren = childNodes.some((n) => n.nodeType === Node.ELEMENT_NODE);
   if (!hasElementChildren) {
-    element.textContent = newText;
+    element.style.whiteSpace = "pre-line";
+    element.textContent = normalizedText;
   }
+}
+
+/**
+ * Finds the nearest repeatable list item (e.g. Product Ritual Step 01/02/03, card, FAQ item, paragraph)
+ * so the Admin can add another element of the exact same type in-place.
+ */
+function findRepeatableContext(el: HTMLElement, pathname: string): RepeatableContext | null {
+  const countVisibleChildren = (parent: HTMLElement) =>
+    Array.from(parent.children).filter(
+      (c) =>
+        !c.hasAttribute("data-live-editor-ui") &&
+        (c as HTMLElement).style.display !== "none"
+    ).length;
+
+  // 1. Explicit semantic [data-live-item] item wrapper
+  const taggedItem = el.closest("[data-live-item]") as HTMLElement | null;
+  if (taggedItem) {
+    const parentEl =
+      (taggedItem.closest("[data-live-list]") as HTMLElement | null) ||
+      taggedItem.parentElement;
+    if (parentEl && parentEl !== document.body) {
+      return {
+        parentEl,
+        parentKey: getListContainerKey(parentEl, pathname),
+        templateEl: taggedItem,
+        itemLabel: taggedItem.getAttribute("data-live-item") || "عنصر",
+        nextOrdinal: countVisibleChildren(parentEl) + 1,
+      };
+    }
+  }
+
+  // 2. Smart fallback heuristic for any repeating sibling grid/list
+  let curr: HTMLElement | null = el;
+  for (let depth = 0; depth < 5 && curr; depth++) {
+    const tag = curr.tagName.toLowerCase();
+    if (
+      ["section", "main", "header", "footer", "nav", "body", "html"].includes(tag) ||
+      curr.hasAttribute("data-live-section")
+    ) {
+      break;
+    }
+
+    const parent: HTMLElement | null = curr.parentElement;
+    if (!parent || parent === document.body || parent.hasAttribute("data-live-key")) {
+      curr = parent;
+      continue;
+    }
+
+    const skipInline = ["span", "strong", "b", "em", "small", "svg", "path", "g", "circle"].includes(tag);
+    if (!skipInline || ["ul", "ol"].includes(parent.tagName.toLowerCase())) {
+      const sameTagSiblings = Array.from(parent.children).filter(
+        (c: Element) =>
+          !c.hasAttribute("data-live-editor-ui") &&
+          !c.hasAttribute("data-live-clone-id") &&
+          c.tagName === curr!.tagName
+      );
+      const isItemShape =
+        curr.children.length > 0 || ["li", "p", "article", "blockquote"].includes(tag);
+
+      if (sameTagSiblings.length >= 2 && isItemShape) {
+        let inferredLabel = "عنصر";
+        if (tag === "p") inferredLabel = "فقرة";
+        else if (/\b0[1-9]\b/.test(curr.textContent || "")) inferredLabel = "خطوة";
+        else if (tag === "li") inferredLabel = "بند";
+        else inferredLabel = "بطاقة";
+
+        return {
+          parentEl: parent,
+          parentKey: getListContainerKey(parent, pathname),
+          templateEl: curr,
+          itemLabel: inferredLabel,
+          nextOrdinal: countVisibleChildren(parent) + 1,
+        };
+      }
+    }
+
+    curr = parent;
+  }
+
+  return null;
+}
+
+/**
+ * Clones a template DOM node cleanly, increments any step/card counter (01..03 -> 04),
+ * and assigns deterministic `data-live-key` attributes to editable leaves inside the clone.
+ */
+function hydrateAndInsertClone(entry: LiveAddedElement, pathname: string): HTMLElement | null {
+  if (typeof document === "undefined" || entry.pathname !== pathname) return null;
+
+  const existing = document.querySelector(`[data-live-clone-id="${entry.id}"]`) as HTMLElement | null;
+  if (existing) return existing;
+
+  const parentEl = resolveElementByKey(entry.parentKey, pathname);
+  if (!parentEl) return null;
+
+  let templateEl: HTMLElement | null = null;
+  if (entry.sourceCloneId) {
+    templateEl = parentEl.querySelector(
+      `:scope > [data-live-clone-id="${entry.sourceCloneId}"]`
+    ) as HTMLElement | null;
+  }
+
+  if (!templateEl) {
+    const originalChildren = Array.from(parentEl.children).filter(
+      (c) =>
+        !c.hasAttribute("data-live-editor-ui") &&
+        !c.hasAttribute("data-live-clone-id")
+    ) as HTMLElement[];
+
+    if (originalChildren.length === 0) return null;
+    const idx =
+      typeof entry.sourceIndex === "number" &&
+      entry.sourceIndex >= 0 &&
+      entry.sourceIndex < originalChildren.length
+        ? entry.sourceIndex
+        : originalChildren.length - 1;
+    templateEl = originalChildren[idx];
+  }
+
+  const clone = templateEl.cloneNode(true) as HTMLElement;
+
+  const cleanTransientStyles = (node: HTMLElement) => {
+    node.style.outline = "";
+    node.style.outlineOffset = "";
+    node.style.cursor = "";
+    node.style.removeProperty("display");
+  };
+  cleanTransientStyles(clone);
+  clone.removeAttribute("data-live-key");
+  clone.removeAttribute("data-live-clone-id");
+
+  Array.from(clone.querySelectorAll("*")).forEach((d) => {
+    const el = d as HTMLElement;
+    cleanTransientStyles(el);
+    el.removeAttribute("data-live-key");
+    el.removeAttribute("data-live-clone-id");
+  });
+
+  // Compute ordinal based on currently visible items before inserting
+  const visibleSiblingsCount = Array.from(parentEl.children).filter(
+    (c) =>
+      !c.hasAttribute("data-live-editor-ui") &&
+      (c as HTMLElement).style.display !== "none"
+  ).length;
+  const ordinal = visibleSiblingsCount + 1;
+
+  // Auto-increment numeric badges such as 01/02/03 -> 04
+  const leafEls = Array.from(clone.querySelectorAll("*")).filter(
+    (n) =>
+      !["svg", "path", "g", "circle"].includes(n.tagName.toLowerCase()) &&
+      n.children.length === 0
+  ) as HTMLElement[];
+
+  for (const leaf of leafEls) {
+    const raw = (leaf.textContent || "").trim();
+    if (!raw) continue;
+    if (/^0\d+$/.test(raw)) {
+      leaf.textContent = String(ordinal).padStart(Math.max(2, raw.length), "0");
+      break;
+    } else if (/^\d+$/.test(raw) && Number(raw) > 0 && Number(raw) <= 25) {
+      leaf.textContent = String(ordinal);
+      break;
+    } else if (/^(الخطوة|خطوة|Step)\s*\d+$/i.test(raw)) {
+      leaf.textContent = raw.replace(/\d+$/, String(ordinal));
+      break;
+    }
+  }
+
+  clone.setAttribute("data-live-clone-id", entry.id);
+
+  // Assign deterministic data-live-key to editable leaf/link descendants inside the clone
+  const descendants = Array.from(clone.querySelectorAll("*")) as HTMLElement[];
+  descendants.forEach((desc, idx) => {
+    const tag = desc.tagName.toLowerCase();
+    if (["svg", "path", "g", "circle", "br"].includes(tag)) return;
+    const nonSvgKids = Array.from(desc.children).filter(
+      (c) => !["svg", "path", "g", "circle"].includes(c.tagName.toLowerCase())
+    );
+    const hasDirectText = Array.from(desc.childNodes).some(
+      (n) => n.nodeType === Node.TEXT_NODE && (n.textContent || "").trim().length > 0
+    );
+    if (nonSvgKids.length === 0 || (nonSvgKids.length <= 1 && (hasDirectText || tag === "a" || tag === "button"))) {
+      desc.setAttribute("data-live-key", `${entry.id}__c${idx}`);
+    }
+  });
+
+  parentEl.appendChild(clone);
+  return clone;
 }
 
 export function LiveVisualEditor() {
@@ -420,31 +682,57 @@ export function LiveVisualEditor() {
   // Helper to immediately persist updated overrides to context, localStorage, and /api/settings
   const persistOverridesImmediately = useCallback(
     async (nextPending: Record<string, LiveTextOverride>) => {
-      const mergedOverrides: Record<string, LiveTextOverride> = {
-        ...(settings.liveTextOverrides || {}),
-        ...nextPending,
-      };
-      const updatedCustomLinks: Record<string, string> = {
-        ...(settings.customLinks || {}),
-      };
-      Object.entries(mergedOverrides).forEach(([k, o]) => {
-        if (o.href) {
-          updatedCustomLinks[k] = o.href;
-        }
-      });
+      updateSettings((prev) => {
+        const mergedOverrides: Record<string, LiveTextOverride> = {
+          ...(prev.liveTextOverrides || {}),
+          ...nextPending,
+        };
+        const updatedCustomLinks: Record<string, string> = {
+          ...(prev.customLinks || {}),
+        };
+        Object.entries(mergedOverrides).forEach(([k, o]) => {
+          if (o.href) {
+            updatedCustomLinks[k] = o.href;
+          }
+        });
 
-      updateSettings({
-        liveTextOverrides: mergedOverrides,
-        customLinks: updatedCustomLinks,
+        return {
+          ...prev,
+          liveTextOverrides: mergedOverrides,
+          customLinks: updatedCustomLinks,
+        };
       });
     },
-    [settings.liveTextOverrides, settings.customLinks, updateSettings]
+    [updateSettings]
   );
 
-  // Apply saved overrides to DOM safely for ALL visitors and admins
+  // Apply added elements & saved overrides to DOM safely for ALL visitors and admins
   const applyOverrides = useCallback(() => {
     if (typeof document === "undefined") return;
 
+    // 1. Hydrate any cloned/added elements belonging to this page cleanly in insertion order
+    const addedList = [...(settings.liveAddedElements || [])].sort(
+      (a, b) => (a.insertedAt || 0) - (b.insertedAt || 0)
+    );
+    const activeCloneIdsOnPage = new Set(
+      addedList.filter((e) => e.pathname === pathname).map((e) => e.id)
+    );
+
+    // Clean up any stale clones that do not belong to the active list on this route
+    document.querySelectorAll("[data-live-clone-id]").forEach((node) => {
+      const cid = node.getAttribute("data-live-clone-id");
+      if (cid && !activeCloneIdsOnPage.has(cid)) {
+        node.remove();
+      }
+    });
+
+    for (const entry of addedList) {
+      if (entry.pathname === pathname) {
+        hydrateAndInsertClone(entry, pathname);
+      }
+    }
+
+    // 2. Apply text, style, link, and visibility overrides (including elements inside new clones)
     const allOverrides = {
       ...(settings.liveTextOverrides || {}),
       ...pendingOverrides,
@@ -501,7 +789,7 @@ export function LiveVisualEditor() {
         if (override.textAlign) el.style.textAlign = override.textAlign;
       }
     });
-  }, [pathname, settings.liveTextOverrides, pendingOverrides]);
+  }, [pathname, settings.liveTextOverrides, settings.liveAddedElements, pendingOverrides]);
 
   useEffect(() => {
     applyOverrides();
@@ -582,6 +870,8 @@ export function LiveVisualEditor() {
           target.tagName.toLowerCase()
         ) ||
         target.dataset.liveKey ||
+        target.hasAttribute("data-live-item") ||
+        target.hasAttribute("data-live-clone-id") ||
         isDirectSection;
 
       if (!isTextOrLink && !sectionContainer) return;
@@ -649,7 +939,7 @@ export function LiveVisualEditor() {
       const closestLiveKeyEl = leafElement.closest("[data-live-key]") as HTMLElement | null;
       if (closestLiveKeyEl) {
         leafElement = closestLiveKeyEl;
-      } else {
+      } else if (["button", "a"].includes(leafElement.tagName.toLowerCase())) {
         // If user clicked a button or anchor that wraps SVG icons + a single [data-live-key] or <span>, select that text element
         const innerLiveKey = leafElement.querySelector("[data-live-key]") as HTMLElement | null;
         if (innerLiveKey) {
@@ -676,19 +966,21 @@ export function LiveVisualEditor() {
         ((nonSvgChildElements.length <= 1 || directText.length > 0) && !hasMultipleChildElements);
       const isContainer = !canEditText && leafElement.children.length > 0;
 
-      // Extract text safely without concatenating child elements destructively
+      // Extract text safely while preserving Enter line breaks
       let currentText = "";
       if (canEditText) {
         if (hasLiveKey || leafElement.children.length === 0) {
-          currentText = (leafElement.textContent || "").trim().replace(/\s+/g, " ");
+          currentText = readCleanEditableText(leafElement);
         } else {
-          currentText = directText;
+          currentText = directText ? readCleanEditableText(leafElement) : "";
           if (!currentText) {
-            const firstLeaf = leafElement.querySelector("span, strong, b, em, p, h1, h2, h3, h4, h5, h6");
-            currentText = (firstLeaf?.textContent || "").trim();
+            const firstLeaf = leafElement.querySelector("span, strong, b, em, p, h1, h2, h3, h4, h5, h6") as HTMLElement | null;
+            currentText = firstLeaf ? readCleanEditableText(firstLeaf) : "";
           }
         }
       }
+
+      const repeatable = findRepeatableContext(leafElement, pathname);
 
       e.preventDefault();
       e.stopPropagation();
@@ -715,6 +1007,7 @@ export function LiveVisualEditor() {
         isSection: false,
         isContainer,
         canEditText,
+        repeatable,
         sectionName:
           sectionContainer?.getAttribute("data-section-name") ||
           sectionContainer?.getAttribute("data-live-section") ||
@@ -762,14 +1055,15 @@ export function LiveVisualEditor() {
     if (!activeTarget) return;
 
     const { element, key, isLink, isSection, isContainer, canEditText } = activeTarget;
+    const normalizedEditText = editText.replace(/\r\n/g, "\n");
 
     // Direct DOM preview
     if (!editIsHidden) {
       element.style.removeProperty("display");
 
       // Apply text ONLY if it's a leaf text element and can edit text safely
-      if (canEditText && editText && !isSection) {
-        applyTextSafely(element, editText);
+      if (canEditText && normalizedEditText.length > 0 && !isSection) {
+        applyTextSafely(element, normalizedEditText);
       }
 
       // Apply link URL to enclosing link if applicable
@@ -801,7 +1095,7 @@ export function LiveVisualEditor() {
     const newOverride: LiveTextOverride = {
       ...((settings.liveTextOverrides || {})[key] || {}),
       ...(pendingOverrides[key] || {}),
-      ...(canEditText && editText && !isSection ? { text: editText } : {}),
+      ...(canEditText && normalizedEditText.length > 0 && !isSection ? { text: normalizedEditText } : {}),
       ...(isLink ? { href: editHref, target: editTarget } : {}),
       ...(!isSection && !isContainer && editColor ? { color: editColor } : {}),
       ...(!isSection && !isContainer && editFontSize ? { fontSize: editFontSize } : {}),
@@ -846,12 +1140,100 @@ export function LiveVisualEditor() {
     setActiveTarget(null);
   };
 
+  // Duplicate/Add a New Element of the Same Type inside Repeatable Lists (e.g. Step 04)
+  const handleDuplicateElement = () => {
+    if (!activeTarget?.repeatable) return;
+    const { parentEl, parentKey, templateEl, itemLabel, nextOrdinal } = activeTarget.repeatable;
+
+    const sourceCloneId = templateEl.getAttribute("data-live-clone-id") || undefined;
+    let sourceIndex: number | undefined;
+    if (!sourceCloneId) {
+      const originalChildren = Array.from(parentEl.children).filter(
+        (c) =>
+          !c.hasAttribute("data-live-editor-ui") &&
+          !c.hasAttribute("data-live-clone-id")
+      );
+      const foundIdx = originalChildren.indexOf(templateEl);
+      sourceIndex = foundIdx >= 0 ? foundIdx : Math.max(0, originalChildren.length - 1);
+    }
+
+    const newEntry: LiveAddedElement = {
+      id: `live_dup_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
+      pathname,
+      parentKey,
+      sourceIndex,
+      sourceCloneId,
+      itemLabel,
+      insertedAt: Date.now(),
+    };
+
+    const insertedClone = hydrateAndInsertClone(newEntry, pathname);
+
+    updateSettings((prev) => ({
+      ...prev,
+      liveAddedElements: [
+        ...(prev.liveAddedElements || []).filter((e) => e.id !== newEntry.id),
+        newEntry,
+      ],
+    }));
+
+    setActiveTarget(null);
+
+    if (insertedClone) {
+      insertedClone.scrollIntoView({ behavior: "smooth", block: "center" });
+      insertedClone.style.outline = "3px solid #10b981";
+      insertedClone.style.outlineOffset = "3px";
+      setTimeout(() => {
+        insertedClone.style.outline = "";
+        insertedClone.style.outlineOffset = "";
+      }, 2200);
+    }
+
+    const formattedOrdinal = String(nextOrdinal).padStart(2, "0");
+    showToast(
+      `✨ تمت إضافة ${itemLabel} جديدة (${formattedOrdinal}) وحفظها! انقر على عنوانها أو نصها لتعديله.`
+    );
+  };
+
   // Immediate Delete Action
   const handleQuickDelete = () => {
     if (!activeTarget) return;
     if (!confirm("هل أنت متأكد من حذف هذا العنصر نهائياً من العرض؟")) return;
 
     const { element, key } = activeTarget;
+
+    // If deleting a cloned element root, remove it cleanly from liveAddedElements & DOM
+    if (key.startsWith("clone::") || element.hasAttribute("data-live-clone-id")) {
+      const cloneId = element.getAttribute("data-live-clone-id") || key.replace("clone::", "");
+      element.remove();
+
+      const nextPending = { ...pendingOverrides };
+      Object.keys(nextPending).forEach((k) => {
+        if (k === key || k.startsWith(`live::${cloneId}__`)) {
+          delete nextPending[k];
+        }
+      });
+      setPendingOverrides(nextPending);
+
+      updateSettings((prev) => {
+        const cleanedOverrides: Record<string, LiveTextOverride> = {};
+        Object.entries(prev.liveTextOverrides || {}).forEach(([k, v]) => {
+          if (k !== key && !k.startsWith(`live::${cloneId}__`)) {
+            cleanedOverrides[k] = v;
+          }
+        });
+        return {
+          ...prev,
+          liveTextOverrides: cleanedOverrides,
+          liveAddedElements: (prev.liveAddedElements || []).filter((e) => e.id !== cloneId),
+        };
+      });
+
+      showToast("🗑️ تم حذف العنصر المضاف نهائياً.");
+      setActiveTarget(null);
+      return;
+    }
+
     element.style.setProperty("display", "none", "important");
 
     const newOverride: LiveTextOverride = {
@@ -961,11 +1343,15 @@ export function LiveVisualEditor() {
 
   // Reset/Fix All Overrides and restore original HTML text formatting
   const handleResetAllOverrides = () => {
-    if (!confirm("هل تود مسح كافة تعديلات النصوص وإعادة ضبط الموقع لتنسيقه وتصميمه الأصلي 100%؟")) return;
+    if (!confirm("هل تود مسح كافة تعديلات النصوص والعناصر المضافة وإعادة ضبط الموقع لتنسيقه وتصميمه الأصلي 100%؟")) return;
 
-    updateSettings({
+    document.querySelectorAll("[data-live-clone-id]").forEach((node) => node.remove());
+
+    updateSettings((prev) => ({
+      ...prev,
       liveTextOverrides: {},
-    });
+      liveAddedElements: [],
+    }));
     setPendingOverrides({});
     setActiveTarget(null);
     showToast("✓ تم إعادة ضبط جميع النصوص للأصل واستعادة التصميم الكامل!");
@@ -1258,41 +1644,58 @@ export function LiveVisualEditor() {
           </div>
 
           {/* Quick Visibility & Delete Toolbar */}
-          <div className="p-2.5 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setEditIsHidden(!editIsHidden)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                  editIsHidden
-                    ? "bg-amber-500 text-black shadow-xs"
-                    : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-100"
-                }`}
-                title="إخفاء هذا العنصر/القسم من العرض"
-              >
-                <EyeOff className="w-3.5 h-3.5 text-amber-600" />
-                <span>{editIsHidden ? "محدد للإخفاء" : "إخفاء العنصر"}</span>
-              </button>
+          <div className="p-2.5 rounded-2xl bg-gray-50 border border-gray-200 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setEditIsHidden(!editIsHidden)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    editIsHidden
+                      ? "bg-amber-500 text-black shadow-xs"
+                      : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-100"
+                  }`}
+                  title="إخفاء هذا العنصر/القسم من العرض"
+                >
+                  <EyeOff className="w-3.5 h-3.5 text-amber-600" />
+                  <span>{editIsHidden ? "محدد للإخفاء" : "إخفاء العنصر"}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleQuickDelete}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-all flex items-center gap-1.5 cursor-pointer"
+                  title="حذف هذا العنصر من الصفحة"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                  <span>حذف نهائي</span>
+                </button>
+              </div>
 
               <button
                 type="button"
-                onClick={handleQuickDelete}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-all flex items-center gap-1.5 cursor-pointer"
-                title="حذف هذا العنصر من الصفحة"
+                onClick={handleQuickHide}
+                className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-gray-200 hover:bg-gray-300 text-gray-800 cursor-pointer"
+                title="إخفاء سريع الآن"
               >
-                <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                <span>حذف نهائي</span>
+                إخفاء سريع
               </button>
             </div>
 
-            <button
-              type="button"
-              onClick={handleQuickHide}
-              className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-gray-200 hover:bg-gray-300 text-gray-800 cursor-pointer"
-              title="إخفاء سريع الآن"
-            >
-              إخفاء سريع
-            </button>
+            {activeTarget.repeatable && !activeTarget.isSection && (
+              <button
+                type="button"
+                onClick={handleDuplicateElement}
+                className="w-full py-2 px-3 rounded-xl text-xs font-bold bg-emerald-50 hover:bg-emerald-600 text-emerald-900 hover:text-white border border-emerald-300 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                title="إضافة عنصر جديد مطابق في نفس المجموعة"
+              >
+                <PlusCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>
+                  إضافة {activeTarget.repeatable.itemLabel} جديدة (
+                  {String(activeTarget.repeatable.nextOrdinal).padStart(2, "0")}) من نفس النوع
+                </span>
+              </button>
+            )}
           </div>
 
           {/* If Section: Show Section Specific Controls (NO TEXT AREA TO AVOID DESTROYING LAYOUT) */}
@@ -1312,7 +1715,9 @@ export function LiveVisualEditor() {
                 <span>حاوية عناصر / بطاقة مجمعة</span>
               </div>
               <p className="text-[11px] text-gray-600 leading-relaxed">
-                هذا العنصر يضم عدة عناصر فرعية (أيقونات، صور، ونصوص). لحماية التنسيق والتصميم، يمكنك إخفاؤه أو حذفه بالكامل، أو انقر مباشرة على أي نص محدد بداخله لتعديل كلماته بأمان.
+                {activeTarget.repeatable
+                  ? "يمكنك إضافة عنصر جديد مماثل بالزر الأخضر بالأعلى، أو إخفاء/حذف هذه البطاقة، أو النقر مباشرة على أي عنوان أو فقرة بداخلها لتعديل النص."
+                  : "هذا العنصر يضم عدة عناصر فرعية (أيقونات، صور، ونصوص). لحماية التنسيق والتصميم، يمكنك إخفاؤه أو حذفه بالكامل، أو انقر مباشرة على أي نص محدد بداخله لتعديل كلماته بأمان."}
               </p>
             </div>
           ) : (
@@ -1320,16 +1725,22 @@ export function LiveVisualEditor() {
               {/* Text Input */}
               {activeTarget.canEditText && (
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-gray-700 flex items-center gap-1">
-                    <Type className="w-3 h-3 text-[#485c36]" />
-                    <span>محتوى النص (Text Content):</span>
-                  </label>
+                  <div className="flex items-center justify-between gap-2">
+                    <label className="text-[11px] font-bold text-gray-700 flex items-center gap-1">
+                      <Type className="w-3 h-3 text-[#485c36]" />
+                      <span>محتوى النص (Text Content):</span>
+                    </label>
+                    <span className="text-[10px] text-gray-400">Enter = سطر جديد ↵</span>
+                  </div>
                   <textarea
-                    rows={3}
+                    rows={4}
                     value={editText}
                     onChange={(e) => setEditText(e.target.value)}
-                    placeholder="اكتب النص الجديد هنا..."
-                    className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-gray-300 focus:outline-none focus:border-[#485c36] focus:ring-1 focus:ring-[#485c36] leading-relaxed"
+                    onKeyDown={(e) => {
+                      e.stopPropagation();
+                    }}
+                    placeholder="اكتب النص الجديد هنا... واضغط Enter للنزول إلى سطر جديد"
+                    className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-gray-300 focus:outline-none focus:border-[#485c36] focus:ring-1 focus:ring-[#485c36] leading-relaxed resize-y"
                     dir="auto"
                   />
                 </div>

@@ -176,7 +176,7 @@ export function CustomSectionRenderer({ section }: CustomSectionRendererProps) {
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div data-live-list={`custom-features-${section.id}`} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {items.map((item, idx) => {
               const itemTitle = isArabic ? item.titleAr : (item.titleEn || item.titleAr);
               const itemDesc = isArabic ? item.descAr : (item.descEn || item.descAr);
@@ -185,6 +185,7 @@ export function CustomSectionRenderer({ section }: CustomSectionRendererProps) {
               return (
                 <div
                   key={item.id || idx}
+                  data-live-item="ميزة"
                   className={`p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 ${
                     isDark
                       ? "bg-white/5 border-white/10 hover:border-[#d4af37]/50"
@@ -329,7 +330,7 @@ export function CustomSectionRenderer({ section }: CustomSectionRendererProps) {
             )}
           </div>
 
-          <div className="space-y-3">
+          <div data-live-list={`custom-faq-${section.id}`} className="space-y-3">
             {items.map((item, idx) => {
               const q = isArabic ? item.titleAr : (item.titleEn || item.titleAr);
               const a = isArabic ? item.descAr : (item.descEn || item.descAr);
@@ -338,6 +339,7 @@ export function CustomSectionRenderer({ section }: CustomSectionRendererProps) {
               return (
                 <div
                   key={item.id || idx}
+                  data-live-item="سؤال"
                   className={`rounded-2xl border transition-all ${
                     isDark
                       ? "bg-white/5 border-white/10"

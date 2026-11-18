@@ -59,7 +59,11 @@ export function ProductCustomSectionsRenderer({
       {/* 1. CLINICAL STORY SECTION (Default or Custom)                         */}
       {/* ===================================================================== */}
       {pb.storyEnabled !== false && (
-        <section className="py-20 bg-[#f4f1e6] border-b border-[#e2e8c0] relative overflow-hidden">
+        <section
+          data-live-section="productStory"
+          data-section-name="قصة المستحضر السريرية"
+          className="py-20 bg-[#f4f1e6] border-b border-[#e2e8c0] relative overflow-hidden"
+        >
           <AndalusianPattern opacity={0.03} color="#485c36" scale={1.2} />
 
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -79,12 +83,16 @@ export function ProductCustomSectionsRenderer({
               </h2>
             </div>
 
-            <div className="space-y-6 text-gray-800 font-cairo text-base sm:text-lg leading-relaxed bg-[#fdfef8] p-8 sm:p-12 rounded-3xl border border-[#e2e8c0] shadow-sm">
+            <div
+              data-live-list="product-story-paragraphs"
+              className="space-y-6 text-gray-800 font-cairo text-base sm:text-lg leading-relaxed bg-[#fdfef8] p-8 sm:p-12 rounded-3xl border border-[#e2e8c0] shadow-sm"
+            >
               {((isArabic ? pb.storyParagraphs : (pb.storyParagraphsEn || pb.storyParagraphs)) && (isArabic ? pb.storyParagraphs : (pb.storyParagraphsEn || pb.storyParagraphs))!.length > 0) ? (
                 (isArabic ? pb.storyParagraphs! : (pb.storyParagraphsEn || pb.storyParagraphs)!).map((paragraph, i, arr) => (
                   <p
                     key={i}
-                    className={`font-medium text-[#1c2616] ${
+                    data-live-item="فقرة"
+                    className={`font-medium text-[#1c2616] whitespace-pre-line ${
                       i === arr.length - 1
                         ? "p-6 rounded-2xl bg-[#f9fbf0] border-s-4 border-[#485c36] shadow-sm"
                         : ""
@@ -95,21 +103,21 @@ export function ProductCustomSectionsRenderer({
                 ))
               ) : (
                 <>
-                  <p className="font-medium text-[#1c2616]">
+                  <p data-live-item="فقرة" className="font-medium text-[#1c2616] whitespace-pre-line">
                     {isArabic
                       ? customSettings.productStoryParagraph1 ||
                         "حين شيد الحرفيون القدامى قصور الأندلس، فهموا قانوناً جوهرياً للتوازن: الحجر لا يخضع للقوة الغاشمة، بل للهندسة المتقنة."
                       : "When ancient artisans raised the palaces of Andalusia, they understood a fundamental law of balance: stone never submits to brute force, only to enduring geometry."}
                   </p>
 
-                  <p className="font-medium text-[#1c2616]">
+                  <p data-live-item="فقرة" className="font-medium text-[#1c2616] whitespace-pre-line">
                     {isArabic
                       ? customSettings.productStoryParagraph2 ||
                         "بشرتك تتحدث باللغة ذاتها. تلك الحبيبات الخشنة وجلد الوزة ليست أوساخاً لتُفرك بخشونة، بل هي دروع كيراتينية دفاعية بنتها بشرتك لحماية حاجز فقد ترطيبه."
                       : "Your skin speaks the same language. Those rough, strawberry bumps are not debris to be scrubbed away—they are fragile ramparts, desperate keratin shields raised by a barrier stripped of moisture."}
                   </p>
 
-                  <p className="font-medium text-[#1c2616] p-6 rounded-2xl bg-[#f9fbf0] border-s-4 border-[#485c36] shadow-sm">
+                  <p data-live-item="فقرة" className="font-medium text-[#1c2616] whitespace-pre-line p-6 rounded-2xl bg-[#f9fbf0] border-s-4 border-[#485c36] shadow-sm">
                     {isArabic
                       ? customSettings.productStoryParagraph3 ||
                         `${product.nameAr} تحفة سريرية صُممت لإنهاء الحرب بين بشرتك والمقشرات القاسية. بتركيبة صيدلانية متطورة تذيب الروابط المتصلبة من الجذور. لا خدوش دقيقة، ولا انتكاس للخشونة. بل كيمياء حيوية راقية تحول الملمس الخشن إلى حرير لا يُهزم.`
@@ -126,7 +134,11 @@ export function ProductCustomSectionsRenderer({
       {/* 2. ACTIVE INGREDIENTS / CARDS SECTION                                 */}
       {/* ===================================================================== */}
       {pb.activesEnabled !== false && (
-        <section className="py-20 bg-[#f4f1e6] border-b border-[#e2e8c0]">
+        <section
+          data-live-section="productActives"
+          data-section-name="المكونات والمركبات الفعالة"
+          className="py-20 bg-[#f4f1e6] border-b border-[#e2e8c0]"
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#485c36]/10 text-[#485c36] text-xs font-cairo font-bold mb-3">
               <Sparkles className="w-3.5 h-3.5 text-[#485c36]" />
@@ -155,10 +167,11 @@ export function ProductCustomSectionsRenderer({
 
             {/* Custom Actives Cards (if defined by manager) or Pearl Orbs */}
             {pb.activesCards && pb.activesCards.length > 0 ? (
-              <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-start">
+              <div data-live-list="product-actives-cards" className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-start">
                 {pb.activesCards.map((card, i) => (
                   <div
                     key={card.id || i}
+                    data-live-item="مكون فعال"
                     className="p-6 rounded-3xl bg-[#fdfef8] border border-[#e2e8c0] shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group"
                   >
                     <div className="flex items-center justify-between mb-4">
@@ -193,7 +206,11 @@ export function ProductCustomSectionsRenderer({
       {/* 3. APPLICATION RITUAL & TIMELINE STEPS                                */}
       {/* ===================================================================== */}
       {pb.ritualEnabled !== false && (
-        <section className="py-20 bg-[#f4f1e6] border-b border-[#e2e8c0]">
+        <section
+          data-live-section="productRitual"
+          data-section-name="خطوات وطقوس الاستخدام"
+          className="py-20 bg-[#f4f1e6] border-b border-[#e2e8c0]"
+        >
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#610b0d]/10 text-[#610b0d] text-xs font-cairo font-bold mb-3">
@@ -209,7 +226,7 @@ export function ProductCustomSectionsRenderer({
                   ? pb.ritualTitleAr || customSettings.productRitualTitle || "بروتوكول الاستخدام والتطبيق الهيكلي"
                   : pb.ritualTitleEn || customSettings.productRitualTitle || "Ritual & Architectural Application"}
               </h2>
-              <p className="mt-2 text-xs sm:text-sm text-gray-600 font-cairo">
+              <p className="mt-2 text-xs sm:text-sm text-gray-600 font-cairo whitespace-pre-line">
                 {isArabic
                   ? pb.ritualSubtitleAr ||
                     customSettings.productRitualSubtitle ||
@@ -221,21 +238,22 @@ export function ProductCustomSectionsRenderer({
             </div>
 
             {/* Step-by-Step Cards */}
-            <div className="space-y-4">
+            <div data-live-list="product-ritual-steps" className="space-y-4">
               {pb.ritualSteps && pb.ritualSteps.length > 0 ? (
                 pb.ritualSteps.map((step, idx) => (
                   <div
                     key={idx}
+                    data-live-item="خطوة"
                     className="p-6 sm:p-7 rounded-2xl bg-[#fdfef8] border border-[#e2e8c0] shadow-xs flex items-start gap-4 sm:gap-6 text-start"
                   >
                     <div className="w-12 h-12 rounded-2xl bg-[#485c36] text-[#f6f9e6] flex items-center justify-center font-mono font-black text-sm shrink-0 shadow-sm">
                       {step.stepNum || String(idx + 1).padStart(2, "0")}
                     </div>
                     <div>
-                      <h3 className="font-amiri text-lg sm:text-xl font-bold text-[#1e2b18] mb-1">
+                      <h3 className="font-amiri text-lg sm:text-xl font-bold text-[#1e2b18] mb-1 whitespace-pre-line">
                         {isArabic ? step.titleAr : step.titleEn || step.titleAr}
                       </h3>
-                      <p className="text-xs sm:text-sm text-gray-700 font-cairo leading-relaxed">
+                      <p className="text-xs sm:text-sm text-gray-700 font-cairo leading-relaxed whitespace-pre-line">
                         {isArabic ? step.descAr : step.descEn || step.descAr}
                       </p>
                     </div>
@@ -243,15 +261,18 @@ export function ProductCustomSectionsRenderer({
                 ))
               ) : (
                 <>
-                  <div className="p-6 sm:p-7 rounded-2xl bg-[#fdfef8] border border-[#e2e8c0] shadow-xs flex items-start gap-4 sm:gap-6 text-start">
+                  <div
+                    data-live-item="خطوة"
+                    className="p-6 sm:p-7 rounded-2xl bg-[#fdfef8] border border-[#e2e8c0] shadow-xs flex items-start gap-4 sm:gap-6 text-start"
+                  >
                     <div className="w-12 h-12 rounded-2xl bg-[#485c36] text-[#f6f9e6] flex items-center justify-center font-mono font-black text-sm shrink-0 shadow-sm">
                       01
                     </div>
                     <div>
-                      <h3 className="font-amiri text-lg sm:text-xl font-bold text-[#1e2b18] mb-1">
+                      <h3 className="font-amiri text-lg sm:text-xl font-bold text-[#1e2b18] mb-1 whitespace-pre-line">
                         {isArabic ? "التطبيق على بشرة دافئة ونظيفة" : "Apply to Warm, Clean Skin"}
                       </h3>
-                      <p className="text-xs sm:text-sm text-gray-700 font-cairo leading-relaxed">
+                      <p className="text-xs sm:text-sm text-gray-700 font-cairo leading-relaxed whitespace-pre-line">
                         {isArabic
                           ? "استخدمي المستحضر مباشرة بعد الاستحمام بالماء الدافئ حين تكون المسام مهيأة لامتصاص اليوريا والأمونيوم لاكتات بعمق."
                           : "Apply directly after a warm shower when follicles are receptive to deep urea and ammonium lactate infiltration."}
@@ -259,15 +280,18 @@ export function ProductCustomSectionsRenderer({
                     </div>
                   </div>
 
-                  <div className="p-6 sm:p-7 rounded-2xl bg-[#fdfef8] border border-[#e2e8c0] shadow-xs flex items-start gap-4 sm:gap-6 text-start">
+                  <div
+                    data-live-item="خطوة"
+                    className="p-6 sm:p-7 rounded-2xl bg-[#fdfef8] border border-[#e2e8c0] shadow-xs flex items-start gap-4 sm:gap-6 text-start"
+                  >
                     <div className="w-12 h-12 rounded-2xl bg-[#485c36] text-[#f6f9e6] flex items-center justify-center font-mono font-black text-sm shrink-0 shadow-sm">
                       02
                     </div>
                     <div>
-                      <h3 className="font-amiri text-lg sm:text-xl font-bold text-[#1e2b18] mb-1">
+                      <h3 className="font-amiri text-lg sm:text-xl font-bold text-[#1e2b18] mb-1 whitespace-pre-line">
                         {isArabic ? "التوزيع الحركي الدائري اللطيف" : "Gentle Circular Kinetic Distribution"}
                       </h3>
-                      <p className="text-xs sm:text-sm text-gray-700 font-cairo leading-relaxed">
+                      <p className="text-xs sm:text-sm text-gray-700 font-cairo leading-relaxed whitespace-pre-line">
                         {isArabic
                           ? "دلكي بحركات دائرية هادئة على مناطق الخشونة وجلد الوزة (الذراعين، الفخذين، الركبتين) دون فرك عنيف حتى يُمتص تماماً."
                           : "Massage in calm circular strokes over targeted rough patches until fully absorbed without aggressive friction."}
@@ -275,15 +299,18 @@ export function ProductCustomSectionsRenderer({
                     </div>
                   </div>
 
-                  <div className="p-6 sm:p-7 rounded-2xl bg-[#fdfef8] border border-[#e2e8c0] shadow-xs flex items-start gap-4 sm:gap-6 text-start">
+                  <div
+                    data-live-item="خطوة"
+                    className="p-6 sm:p-7 rounded-2xl bg-[#fdfef8] border border-[#e2e8c0] shadow-xs flex items-start gap-4 sm:gap-6 text-start"
+                  >
                     <div className="w-12 h-12 rounded-2xl bg-[#610b0d] text-[#f6f9e6] flex items-center justify-center font-mono font-black text-sm shrink-0 shadow-sm">
                       03
                     </div>
                     <div>
-                      <h3 className="font-amiri text-lg sm:text-xl font-bold text-[#1e2b18] mb-1">
+                      <h3 className="font-amiri text-lg sm:text-xl font-bold text-[#1e2b18] mb-1 whitespace-pre-line">
                         {isArabic ? "المواظبة لليوم السابع لترسيخ النعومة الحريرية" : "Maintain Through Day 7 for Silk Lock"}
                       </h3>
-                      <p className="text-xs sm:text-sm text-gray-700 font-cairo leading-relaxed">
+                      <p className="text-xs sm:text-sm text-gray-700 font-cairo leading-relaxed whitespace-pre-line">
                         {isArabic
                           ? "كرري الطقس مساءً كل يوم. من اليوم الثالث تبدأ الروابط الكيراتينية بالذوبان، وبحلول اليوم السابع يستقر ملمس الحرير الدائم."
                           : "Repeat nightly. By day 3 keratin plugs dissolve from the root, reaching lasting touchable silk by day 7."}
@@ -311,6 +338,8 @@ export function ProductCustomSectionsRenderer({
                 return (
                   <section
                     key={section.id}
+                    data-live-section={`productCustom-${section.id}`}
+                    data-section-name={section.titleAr || "قسم بطاقات"}
                     className="py-20 bg-[#f4f1e6] border-b border-[#e2e8c0] relative overflow-hidden"
                   >
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -326,16 +355,17 @@ export function ProductCustomSectionsRenderer({
                       </h2>
 
                       {section.subtitleAr && (
-                        <p className="mt-3 text-sm sm:text-base text-gray-700 font-cairo max-w-2xl mx-auto font-medium">
+                        <p className="mt-3 text-sm sm:text-base text-gray-700 font-cairo max-w-2xl mx-auto font-medium whitespace-pre-line">
                           {isArabic ? section.subtitleAr : section.subtitleEn || section.subtitleAr}
                         </p>
                       )}
 
                       {/* Cards Grid */}
-                      <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-start">
+                      <div data-live-list={`product-custom-cards-${section.id}`} className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-start">
                         {(section.cards || []).map((c, idx) => (
                           <div
                             key={c.id || idx}
+                            data-live-item="بطاقة"
                             className="p-6 rounded-3xl bg-[#fdfef8] border border-[#e2e8c0] shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
                           >
                             <div className="flex items-center justify-between mb-4">
@@ -444,12 +474,13 @@ export function ProductCustomSectionsRenderer({
                         </h2>
                       </div>
 
-                      <div className="space-y-3">
+                      <div data-live-list={`product-custom-faqs-${section.id}`} className="space-y-3">
                         {(section.cards || []).map((faqItem, idx) => {
                           const isOpen = !!openFaq[faqItem.id || String(idx)];
                           return (
                             <div
                               key={faqItem.id || idx}
+                              data-live-item="سؤال"
                               className="rounded-2xl bg-[#fdfef8] border border-[#e2e8c0] overflow-hidden shadow-xs transition-all"
                             >
                               <button
@@ -544,7 +575,11 @@ export function ProductCustomSectionsRenderer({
       {/* 5. FULL INCI COMPOSITION ACCORDION                                    */}
       {/* ===================================================================== */}
       {pb.inciEnabled !== false && (
-        <section className="py-16 bg-[#f4f1e6] border-b border-[#e2e8c0]">
+        <section
+          data-live-section="productInci"
+          data-section-name="قائمة المكونات (INCI)"
+          className="py-16 bg-[#f4f1e6] border-b border-[#e2e8c0]"
+        >
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="p-6 sm:p-8 rounded-3xl bg-[#fdfef8] border border-[#e2e8c0] shadow-sm">
               <button
@@ -592,7 +627,11 @@ export function ProductCustomSectionsRenderer({
       {/* 6. BRAND SIGNATURE & CALLIGRAPHY VERSE                                */}
       {/* ===================================================================== */}
       {pb.signatureEnabled !== false && (
-        <section className="py-24 bg-gradient-to-b from-[#18271b] via-[#1f3322] to-[#142217] text-[#f6f9e6] relative overflow-hidden text-center">
+        <section
+          data-live-section="productSignature"
+          data-section-name="توقيع سلاف والشعر"
+          className="py-24 bg-gradient-to-b from-[#18271b] via-[#1f3322] to-[#142217] text-[#f6f9e6] relative overflow-hidden text-center"
+        >
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-4">
             <span className="font-mono text-xs tracking-[0.28em] uppercase text-[#f3a5a1] font-bold block">
               SULAF CLINICAL SIGNATURE

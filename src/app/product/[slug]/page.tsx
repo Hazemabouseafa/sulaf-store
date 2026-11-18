@@ -143,6 +143,9 @@ export default function ProductStoryPage() {
           if (d.product.variants?.[0]?.id) {
             setSelectedVariantId(d.product.variants[0].id);
           }
+          requestAnimationFrame(() => {
+            window.dispatchEvent(new Event("sulaf:ready"));
+          });
         }
       })
       .catch(() => {});
@@ -268,7 +271,11 @@ export default function ProductStoryPage() {
   return (
     <div className="bg-[#f4f1e6] text-[#222b1a] min-h-screen font-cairo">
       {/* 1. Main Showcase & Purchase Card */}
-      <section className="relative py-12 lg:py-16 border-b border-[#e2e8c0] overflow-hidden">
+      <section
+        data-live-section="productOverview"
+        data-section-name="بطاقة المنتج الرئيسية"
+        className="relative py-12 lg:py-16 border-b border-[#e2e8c0] overflow-hidden"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex items-center gap-2 text-xs font-cairo text-gray-500 mb-6">
             <Link href="/" className="hover:text-[#485c36]">{t.nav.home}</Link>
@@ -597,16 +604,28 @@ export default function ProductStoryPage() {
               </div>
 
               {/* Guarantees */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-3 border-t border-[#e2e8c0] text-center font-cairo text-xs text-gray-700 font-semibold">
-                <div className="p-2.5 rounded-xl bg-[#fdfef8] border border-[#e2e8c0] flex sm:flex-col items-center justify-center gap-2 sm:gap-1">
+              <div
+                data-live-list="product-guarantees"
+                className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-3 border-t border-[#e2e8c0] text-center font-cairo text-xs text-gray-700 font-semibold"
+              >
+                <div
+                  data-live-item="ميزة ضمان"
+                  className="p-2.5 rounded-xl bg-[#fdfef8] border border-[#e2e8c0] flex sm:flex-col items-center justify-center gap-2 sm:gap-1"
+                >
                   <Truck className="w-4 h-4 text-[#485c36] shrink-0" />
                   <span>{custom.productGuarantee1 || (isArabic ? "شحن سريع لكافة المحافظات" : "Express Nationwide Delivery")}</span>
                 </div>
-                <div className="p-2.5 rounded-xl bg-[#fdfef8] border border-[#e2e8c0] flex sm:flex-col items-center justify-center gap-2 sm:gap-1">
+                <div
+                  data-live-item="ميزة ضمان"
+                  className="p-2.5 rounded-xl bg-[#fdfef8] border border-[#e2e8c0] flex sm:flex-col items-center justify-center gap-2 sm:gap-1"
+                >
                   <ShieldCheck className="w-4 h-4 text-[#485c36] shrink-0" />
                   <span>{custom.productGuarantee2 || (isArabic ? "تحول ملمس الحرير في 7 أيام" : "Silk Skin in 7 Days")}</span>
                 </div>
-                <div className="p-2.5 rounded-xl bg-[#fdfef8] border border-[#e2e8c0] flex sm:flex-col items-center justify-center gap-2 sm:gap-1">
+                <div
+                  data-live-item="ميزة ضمان"
+                  className="p-2.5 rounded-xl bg-[#fdfef8] border border-[#e2e8c0] flex sm:flex-col items-center justify-center gap-2 sm:gap-1"
+                >
                   <CheckCircle2 className="w-4 h-4 text-[#485c36] shrink-0" />
                   <span>{custom.productGuarantee3 || (isArabic ? "فحص العبوة قبل الاستلام" : "Inspect on Delivery")}</span>
                 </div>

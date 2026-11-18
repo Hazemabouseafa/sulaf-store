@@ -742,6 +742,16 @@ export interface LiveTextOverride {
   isDeleted?: boolean;
 }
 
+export interface LiveAddedElement {
+  id: string;
+  pathname: string;
+  parentKey: string;
+  sourceIndex?: number;
+  sourceCloneId?: string;
+  itemLabel?: string;
+  insertedAt: number;
+}
+
 export interface CustomSocialLink {
   id: string;
   platform: string;
@@ -854,6 +864,7 @@ export interface StoreSettings {
   themeColors?: ThemeColorsSettings;
   customLinks?: Record<string, string>;
   liveTextOverrides?: Record<string, LiveTextOverride>;
+  liveAddedElements?: LiveAddedElement[];
 
   socialMedia?: SocialMediaSettings;
 
@@ -1109,6 +1120,7 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   themeColors: DEFAULT_THEME_COLORS,
   customLinks: {},
   liveTextOverrides: {},
+  liveAddedElements: [],
 
   socialMedia: {
     instagram: "https://instagram.com/sulaf.eg",
@@ -1173,6 +1185,7 @@ export function getClientSettings(): StoreSettings {
       customContentEn: { ...(parsed.customContentEn || {}) },
       customLinks: { ...(parsed.customLinks || {}) },
       liveTextOverrides: { ...(parsed.liveTextOverrides || {}) },
+      liveAddedElements: Array.isArray(parsed.liveAddedElements) ? parsed.liveAddedElements : [],
       shipping: {
         ...DEFAULT_STORE_SETTINGS.shipping,
         ...(parsed.shipping || {}),

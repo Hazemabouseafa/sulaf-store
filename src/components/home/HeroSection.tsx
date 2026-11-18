@@ -270,43 +270,47 @@ export function HeroSection() {
                     : "font-cinzel text-[clamp(2.4rem,4.8vw,4.2rem)] leading-[1.15]"
                 } font-normal text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.9)]`}
               >
-                <span data-live-key="hero-poem-line-1" className="block">
-                  {wordsLine1.map((word, i) => (
-                    <motion.span
-                      key={`l1-${i}`}
-                      initial={{ opacity: 0, y: 18, filter: "blur(4px)" }}
-                      animate={isReady ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 18, filter: "blur(4px)" }}
-                      transition={{
-                        duration: 0.65,
-                        delay: isReady ? (0.05 + i * 0.07) : 0,
-                        ease: [0.16, 1, 0.3, 1],
-                      }}
-                      className="inline-block me-2"
-                    >
-                      {word}
-                    </motion.span>
-                  ))}
+                <span data-live-key="hero-poem-line-1" className="block whitespace-pre-line">
+                  {poemLine1.includes("\n")
+                    ? poemLine1
+                    : wordsLine1.map((word, i) => (
+                        <motion.span
+                          key={`l1-${i}`}
+                          initial={{ opacity: 0, y: 18, filter: "blur(4px)" }}
+                          animate={isReady ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 18, filter: "blur(4px)" }}
+                          transition={{
+                            duration: 0.65,
+                            delay: isReady ? (0.05 + i * 0.07) : 0,
+                            ease: [0.16, 1, 0.3, 1],
+                          }}
+                          className="inline-block me-2"
+                        >
+                          {word}
+                        </motion.span>
+                      ))}
                 </span>
 
                 <span
                   data-live-key="hero-poem-line-2"
-                  className="block italic text-[#f3a5a1] mt-2 drop-shadow-[0_4px_22px_rgba(202,56,74,0.45)]"
+                  className="block whitespace-pre-line italic text-[#f3a5a1] mt-2 drop-shadow-[0_4px_22px_rgba(202,56,74,0.45)]"
                 >
-                  {wordsLine2.map((word, i) => (
-                    <motion.span
-                      key={`l2-${i}`}
-                      initial={{ opacity: 0, y: 18, filter: "blur(4px)" }}
-                      animate={isReady ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 18, filter: "blur(4px)" }}
-                      transition={{
-                        duration: 0.65,
-                        delay: isReady ? (0.35 + i * 0.08) : 0,
-                        ease: [0.16, 1, 0.3, 1],
-                      }}
-                      className="inline-block me-2"
-                    >
-                      {word}
-                    </motion.span>
-                  ))}
+                  {poemLine2.includes("\n")
+                    ? poemLine2
+                    : wordsLine2.map((word, i) => (
+                        <motion.span
+                          key={`l2-${i}`}
+                          initial={{ opacity: 0, y: 18, filter: "blur(4px)" }}
+                          animate={isReady ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 18, filter: "blur(4px)" }}
+                          transition={{
+                            duration: 0.65,
+                            delay: isReady ? (0.35 + i * 0.08) : 0,
+                            ease: [0.16, 1, 0.3, 1],
+                          }}
+                          className="inline-block me-2"
+                        >
+                          {word}
+                        </motion.span>
+                      ))}
                 </span>
               </h1>
             )}

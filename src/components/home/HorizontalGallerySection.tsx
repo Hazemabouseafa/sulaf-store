@@ -164,12 +164,13 @@ export function HorizontalGallerySection() {
           </motion.div>
 
           {/* 5 Sculptural Arches Row with Fluid Hover Lift & Staggered Reveal */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 pt-2">
+          <div data-live-list="home-gallery-arches" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 pt-2">
             {fiveArches.map((arch, idx) => {
               const linkedProd = allProducts[arch.productIndex] || allProducts[0];
               return (
                 <motion.div
                   key={idx}
+                  data-live-item="قوس عرض"
                   initial={{ opacity: 0, y: 26 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -494,9 +495,10 @@ export function HorizontalGallerySection() {
             </div>
 
             {/* Right/End 4 Icon Columns with Vertical Dividers (8 Cols) */}
-            <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x rtl:sm:divide-x-reverse divide-[#610b0d]/20 border-s border-[#610b0d]/20">
+            <div data-live-list="home-sulaf-difference-pillars" className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x rtl:sm:divide-x-reverse divide-[#610b0d]/20 border-s border-[#610b0d]/20">
               
               <motion.div
+                data-live-item="ركيزة"
                 whileHover={{ y: -4 }}
                 className="py-4 px-4 flex flex-col items-center text-center space-y-2"
               >
@@ -514,6 +516,7 @@ export function HorizontalGallerySection() {
               </motion.div>
 
               <motion.div
+                data-live-item="ركيزة"
                 whileHover={{ y: -4 }}
                 className="py-4 px-4 flex flex-col items-center text-center space-y-2"
               >
@@ -531,6 +534,7 @@ export function HorizontalGallerySection() {
               </motion.div>
 
               <motion.div
+                data-live-item="ركيزة"
                 whileHover={{ y: -4 }}
                 className="py-4 px-4 flex flex-col items-center text-center space-y-2"
               >
@@ -550,6 +554,7 @@ export function HorizontalGallerySection() {
               </motion.div>
 
               <motion.div
+                data-live-item="ركيزة"
                 whileHover={{ y: -4 }}
                 className="py-4 px-4 flex flex-col items-center text-center space-y-2"
               >

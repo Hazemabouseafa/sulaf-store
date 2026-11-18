@@ -49,6 +49,9 @@ export function StoreSettingsProvider({
         liveTextOverrides: {
           ...(initialSettings.liveTextOverrides || {}),
         },
+        liveAddedElements: Array.isArray(initialSettings.liveAddedElements)
+          ? initialSettings.liveAddedElements
+          : [],
         socialMedia: {
           ...DEFAULT_STORE_SETTINGS.socialMedia,
           ...(initialSettings.socialMedia || {}),
@@ -97,6 +100,11 @@ export function StoreSettingsProvider({
             ...(localLoaded.liveTextOverrides || {}),
             ...(initialSettings.liveTextOverrides || {}),
           },
+          liveAddedElements: Array.isArray(initialSettings.liveAddedElements)
+            ? initialSettings.liveAddedElements
+            : Array.isArray(localLoaded.liveAddedElements)
+            ? localLoaded.liveAddedElements
+            : [],
           socialMedia: {
             ...DEFAULT_STORE_SETTINGS.socialMedia,
             ...(localLoaded.socialMedia || {}),
@@ -128,6 +136,9 @@ export function StoreSettingsProvider({
               liveTextOverrides: {
                 ...(serverData.settings.liveTextOverrides || {}),
               },
+              liveAddedElements: Array.isArray(serverData.settings.liveAddedElements)
+                ? serverData.settings.liveAddedElements
+                : [],
               customLinks: {
                 ...(serverData.settings.customLinks || {}),
               },
