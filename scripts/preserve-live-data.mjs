@@ -236,6 +236,13 @@ async function main() {
       console.log(`[PreserveLiveData] Preserved ${customersRes.customers.length} live registered customers.`);
     }
 
+    // 7.5 Visitors Analytics
+    const visitorsRes = await fetchJsonWithTimeout(`${baseUrl}/api/visitors?raw=1`);
+    if (visitorsRes && visitorsRes.raw && Number(visitorsRes.raw.totalPageViews) > 0) {
+      saveBoth("visitors.json", visitorsRes.raw);
+      console.log(`[PreserveLiveData] Preserved live visitors.json (${visitorsRes.raw.totalPageViews} total views).`);
+    }
+
     // 8. Download any referenced uploaded images
     for (const uploadPath of uploadRefs) {
       await downloadUploadFile(baseUrl, uploadPath);

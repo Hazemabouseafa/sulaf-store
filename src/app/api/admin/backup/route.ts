@@ -15,6 +15,7 @@ export async function GET() {
       pages: readJsonFile("pages.json", []),
       reviews: readJsonFile("reviews.json", []),
       customers: readJsonFile("registered-customers.json", []),
+      visitors: readJsonFile("visitors.json", null),
     };
 
     return NextResponse.json(
@@ -59,6 +60,9 @@ export async function POST(req: NextRequest) {
     }
     if (Array.isArray(snap.customers) && snap.customers.length > 0) {
       writeJsonFile("registered-customers.json", snap.customers);
+    }
+    if (snap.visitors && typeof snap.visitors === "object" && Number(snap.visitors.totalPageViews) > 0) {
+      writeJsonFile("visitors.json", snap.visitors);
     }
 
     return NextResponse.json({

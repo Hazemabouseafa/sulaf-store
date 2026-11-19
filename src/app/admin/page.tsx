@@ -9,6 +9,7 @@ import { ProductPageBuilderModal } from "@/components/admin/ProductPageBuilderMo
 import { PageContentEditor } from "@/components/admin/PageContentEditor";
 import { HomepageSectionBuilder } from "@/components/admin/HomepageSectionBuilder";
 import { ShippingCarrierSettings } from "@/components/admin/ShippingCarrierSettings";
+import { VisitorsAnalyticsTab, VisitorAnalyticsPayload } from "@/components/admin/VisitorsAnalyticsTab";
 import { CouponData, saveCoupons } from "@/lib/coupons/coupon-store";
 import { ReviewItem } from "@/lib/reviews/review-store";
 import { saveProducts } from "@/lib/products/product-store";
@@ -193,6 +194,7 @@ const ADMIN_I18N = {
     navSection: "أقسام الإدارة",
     tabs: {
       overview: "نظرة عامة والتقارير",
+      visitors: "عداد الزوار والإحصائيات",
       orders: "إدارة الطلبات",
       products: "المنتجات والمخزون",
       coupons: "كوبونات الخصم",
@@ -326,6 +328,7 @@ const ADMIN_I18N = {
     navSection: "MANAGEMENT SECTIONS",
     tabs: {
       overview: "Overview",
+      visitors: "Visitor Counter",
       orders: "Orders",
       products: "Products & Stock",
       coupons: "Coupons",
@@ -494,7 +497,7 @@ export default function AdminPage() {
   const [shippingTestResult, setShippingTestResult] = useState<any>(null);
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "orders" | "products" | "coupons" | "customers" | "pages" | "cms" | "settings" | "reviews"
+    "overview" | "visitors" | "orders" | "products" | "coupons" | "customers" | "pages" | "cms" | "settings" | "reviews"
   >("overview");
 
   // Data Stores
@@ -502,6 +505,7 @@ export default function AdminPage() {
   const [products, setProducts] = useState<ProductData[]>([]);
   const [coupons, setCoupons] = useState<CouponData[]>([]);
   const [analytics, setAnalytics] = useState<any>(null);
+  const [visitorAnalytics, setVisitorAnalytics] = useState<VisitorAnalyticsPayload | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<string>("");
 
@@ -1228,7 +1232,7 @@ export default function AdminPage() {
   async function loadLiveBackendData(silent = false) {
     if (!silent) setIsSyncing(true);
     try {
-      const [resOrders, resProducts, resCoupons, resAnalytics, resCustomers, resPages, resReviews] = await Promise.all([
+      const [resOrders, resProducts, resCoupons, resAnalytics, resCustomers, resPages, resReviews, resVisitors] = await Promise.all([
         fetch("/api/orders", { cache: "no-store" }),
         fetch("/api/products", { cache: "no-store" }),
         fetch("/api/coupons", { cache: "no-store" }),
@@ -1236,6 +1240,7 @@ export default function AdminPage() {
         fetch("/api/customers", { cache: "no-store" }),
         fetch("/api/pages", { cache: "no-store" }),
         fetch("/api/reviews", { cache: "no-store" }),
+        fetch("/api/visitors?range=today", { cache: "no-store" }),
       ]);
 
       if (resOrders.ok) {
@@ -1274,6 +1279,10 @@ export default function AdminPage() {
       if (resReviews && resReviews.ok) {
         const rd = await resReviews.json();
         if (Array.isArray(rd.reviews)) setReviewsList(rd.reviews);
+      }
+      if (resVisitors && resVisitors.ok) {
+        const vd = await resVisitors.json();
+        if (vd.success) setVisitorAnalytics(vd);
       }
       setLastSyncTime(new Date().toLocaleTimeString("ar-EG"));
     } catch (err) {
@@ -2677,6 +2686,24 @@ export default function AdminPage() {
               </div>
             </button>
 
+            {/* 1.5 Visitors & Analytics */}
+            <button
+              onClick={() => setActiveTab("visitors")}
+              className={`shrink-0 md:w-full flex items-center justify-between px-3.5 py-2.5 sm:py-3 rounded-2xl font-bold text-xs lg:text-sm transition-all overflow-hidden cursor-pointer ${
+                activeTab === "visitors"
+                  ? "bg-[#3d502d] text-white shadow-md ring-2 ring-emerald-400/40"
+                  : "text-gray-300 hover:bg-[#233019] hover:text-white"
+              }`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Users className="w-4 h-4 shrink-0 text-emerald-300" />
+                <span className="truncate">{ADMIN_I18N[adminLang].tabs.visitors}</span>
+              </div>
+              <span className="shrink-0 ms-2 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500 text-white">
+                {visitorAnalytics?.summary?.totalUniqueVisitors ?? 0}
+              </span>
+            </button>
+
             {/* 2. Orders */}
             <button
               onClick={() => setActiveTab("orders")}
@@ -2910,6 +2937,81 @@ export default function AdminPage() {
                 </div>
               </div>
 
+              {/* Live Visitor Counter Summary Card in Overview */}
+              <div className="bg-white p-5 sm:p-6 rounded-3xl border border-[#dbe2bd] shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-bold">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>
+                        {adminLang === "ar"
+                          ? `نشط الآن: ${visitorAnalytics?.summary?.activeNow ?? 0} زائر`
+                          : `Active Now: ${visitorAnalytics?.summary?.activeNow ?? 0}`}
+                      </span>
+                    </span>
+                    <span className="text-xs font-bold text-gray-500">
+                      {visitorAnalytics?.summary?.todayDateStr
+                        ? `${visitorAnalytics.summary.todayDateStr} (${adminLang === "ar" ? visitorAnalytics.summary.todayDayNameAr : visitorAnalytics.summary.todayDayNameEn})`
+                        : ""}
+                    </span>
+                  </div>
+                  <h3 className="font-bold text-lg text-[#1c2616] flex items-center gap-2">
+                    <Users className="w-5 h-5 text-[#3d502d]" />
+                    <span>{adminLang === "ar" ? "عداد الزوار المباشر (بالتاريخ واليوم والساعة)" : "Live Visitor Counter (Date, Day & Hour)"}</span>
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1 max-w-2xl">
+                  <div className="p-3 rounded-2xl bg-[#f6f9e6] border border-[#dbe2bd] text-center">
+                    <span className="text-[11px] font-bold text-gray-600 block">
+                      {adminLang === "ar" ? "زوار اليوم" : "Today"}
+                    </span>
+                    <strong className="text-xl font-black text-[#3d502d]">
+                      {visitorAnalytics?.summary?.todayVisitors ?? 0}
+                    </strong>
+                    <span className="text-[10px] text-gray-500 block">
+                      {visitorAnalytics?.summary?.todayViews ?? 0} {adminLang === "ar" ? "مشاهدة" : "views"}
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-blue-50/70 border border-blue-100 text-center">
+                    <span className="text-[11px] font-bold text-gray-600 block">
+                      {adminLang === "ar" ? "إجمالي الزوار" : "Total Unique"}
+                    </span>
+                    <strong className="text-xl font-black text-blue-900">
+                      {visitorAnalytics?.summary?.totalUniqueVisitors ?? 0}
+                    </strong>
+                    <span className="text-[10px] text-gray-500 block">
+                      {visitorAnalytics?.summary?.totalPageViews ?? 0} {adminLang === "ar" ? "مشاهدة" : "views"}
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-100 text-center">
+                    <span className="text-[11px] font-bold text-gray-600 block">
+                      {adminLang === "ar" ? "ساعة الذروة اليوم" : "Peak Hour"}
+                    </span>
+                    <strong className="text-base font-black text-amber-900 leading-tight block mt-1">
+                      {visitorAnalytics?.summary?.peakHour && visitorAnalytics.summary.peakHour.views > 0
+                        ? adminLang === "ar"
+                          ? visitorAnalytics.summary.peakHour.labelAr
+                          : visitorAnalytics.summary.peakHour.labelEn
+                        : "—"}
+                    </strong>
+                    <span className="text-[10px] text-gray-500 block">
+                      {visitorAnalytics?.summary?.peakHour?.visitors ?? 0} {adminLang === "ar" ? "زائر" : "vis."}
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-purple-50/70 border border-purple-100 text-center flex flex-col justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("visitors")}
+                      className="w-full h-full flex flex-col items-center justify-center gap-1 text-[#3d502d] hover:text-[#610b0d] font-bold text-xs cursor-pointer"
+                    >
+                      <Activity className="w-4 h-4" />
+                      <span>{adminLang === "ar" ? "عرض التفاصيل" : "Full Details"}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* Pending Reviews Urgent Alert in Overview */}
               {reviewsList.filter((r) => r.status === "PENDING").length > 0 && (
                 <div className="p-5 rounded-3xl bg-amber-50 border-2 border-amber-300 text-amber-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
@@ -3042,6 +3144,17 @@ export default function AdminPage() {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* TAB 1.5: VISITOR COUNTER & TRAFFIC ANALYTICS              */}
+          {/* ========================================================= */}
+          {activeTab === "visitors" && (
+            <VisitorsAnalyticsTab
+              adminLang={adminLang}
+              initialData={visitorAnalytics}
+              onSyncExternal={setVisitorAnalytics}
+            />
           )}
 
           {/* ========================================================= */}

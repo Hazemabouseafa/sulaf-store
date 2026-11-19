@@ -8,6 +8,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { CartDrawer } from "@/components/shop/CartDrawer";
 import { Footer } from "@/components/layout/Footer";
 import { LiveVisualEditor } from "@/components/live-editor/LiveVisualEditor";
+import { VisitorTracker } from "@/components/analytics/VisitorTracker";
 
 export function StorefrontShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -52,6 +53,9 @@ export function StorefrontShell({ children }: { children: React.ReactNode }) {
 
       {/* Live In-Context Visual Editor for Storefront Texts & Hyperlinks */}
       <LiveVisualEditor />
+
+      {/* Storefront Visitor Counter & Analytics Tracker */}
+      <VisitorTracker />
     </>
   );
 }
