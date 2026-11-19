@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useCart } from "@/lib/cart/cart-context";
 import { useStoreSettings } from "@/lib/settings/store-settings-context";
+import { getLiveTextOverridesForLang } from "@/lib/settings/store-settings";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { useProducts } from "@/lib/products/product-store";
 import { MOCK_PRODUCTS } from "@/lib/data/mock-data";
@@ -166,14 +167,15 @@ export function HeroSection() {
     heroTrustBadges: true,
   };
   const custom = isArabic ? (settings.customContent || {}) : (settings.customContentEn || {});
+  const langLiveOverrides = getLiveTextOverridesForLang(settings, isArabic ? "ar" : "en");
 
   // Authentic Sulaf Hero Texts from Settings & Translations
   const poemLine1 =
-    settings.liveTextOverrides?.["live::hero-poem-line-1"]?.text ||
+    langLiveOverrides["live::hero-poem-line-1"]?.text ||
     custom.heroPoemLine1 ||
     (isArabic ? settings.hero.poemLine1 || t.brand.poemLine1 : t.brand.poemLine1);
   const poemLine2 =
-    settings.liveTextOverrides?.["live::hero-poem-line-2"]?.text ||
+    langLiveOverrides["live::hero-poem-line-2"]?.text ||
     custom.heroPoemLine2 ||
     (isArabic ? settings.hero.poemLine2 || t.brand.poemLine2 : t.brand.poemLine2);
 
@@ -270,7 +272,11 @@ export function HeroSection() {
                     : "font-cinzel text-[clamp(2.4rem,4.8vw,4.2rem)] leading-[1.15]"
                 } font-normal text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.9)]`}
               >
-                <span data-live-key="hero-poem-line-1" className="block whitespace-pre-line">
+                <span
+                  data-live-key="hero-poem-line-1"
+                  data-live-react-managed="true"
+                  className="block whitespace-pre-line"
+                >
                   {poemLine1.includes("\n")
                     ? poemLine1
                     : wordsLine1.map((word, i) => (
@@ -292,6 +298,7 @@ export function HeroSection() {
 
                 <span
                   data-live-key="hero-poem-line-2"
+                  data-live-react-managed="true"
                   className="block whitespace-pre-line italic text-[#f3a5a1] mt-2 drop-shadow-[0_4px_22px_rgba(202,56,74,0.45)]"
                 >
                   {poemLine2.includes("\n")

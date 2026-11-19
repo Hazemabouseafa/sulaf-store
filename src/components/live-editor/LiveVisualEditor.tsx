@@ -3,7 +3,15 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { useStoreSettings } from "@/lib/settings/store-settings-context";
-import { LiveAddedElement, LiveTextOverride } from "@/lib/settings/store-settings";
+import { useLanguage } from "@/lib/i18n/language-context";
+import {
+  LiveAddedElement,
+  LiveEditorLanguage,
+  LiveTextOverride,
+  getLiveAddedElementsForLang,
+  getLiveTextOverridesForLang,
+  materializeLegacyLiveEditorState,
+} from "@/lib/settings/store-settings";
 import {
   Sparkles,
   Edit3,
@@ -27,6 +35,7 @@ import {
   AlertTriangle,
   RefreshCw,
   PlusCircle,
+  Globe,
 } from "lucide-react";
 
 interface RepeatableContext {
@@ -299,8 +308,25 @@ function resolveElementByKey(key: string, pathname: string): HTMLElement | null 
   return null;
 }
 
+interface DomAppliedSnapshot {
+  lang: LiveEditorLanguage;
+  key: string;
+  textTarget?: HTMLElement | null;
+  appliedText?: string;
+  baselineNodeValues?: string[];
+  baselineWhiteSpace: string;
+  baselineDisplay: string;
+  baselineColor: string;
+  baselineFontSize: string;
+  baselineFontWeight: string;
+  baselineFontFamily: string;
+  baselineTextAlign: string;
+  baselineHref: string | null;
+  baselineTarget: string | null;
+}
+
 /**
- * Extracts text while preserving explicit <br> and newline line breaks instead of collapsing them.
+ * Extracts text while preserving explicit <br>, newlines, and spaces between adjacent inline elements.
  */
 function extractTextPreservingLines(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE) {
@@ -313,7 +339,26 @@ function extractTextPreservingLines(node: Node): string {
   if (["svg", "path", "g", "circle", "script", "style"].includes(tag)) return "";
 
   const isBlock = ["p", "div", "li", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote"].includes(tag);
-  const inner = Array.from(el.childNodes).map(extractTextPreservingLines).join("");
+  const children = Array.from(el.childNodes);
+  const parts: string[] = [];
+  for (let i = 0; i < children.length; i++) {
+    const child = children[i];
+    const chunk = extractTextPreservingLines(child);
+    if (!chunk) continue;
+    if (
+      parts.length > 0 &&
+      child.nodeType === Node.ELEMENT_NODE &&
+      children[i - 1]?.nodeType === Node.ELEMENT_NODE &&
+      !parts[parts.length - 1].endsWith(" ") &&
+      !parts[parts.length - 1].endsWith("\n") &&
+      !chunk.startsWith(" ") &&
+      !chunk.startsWith("\n")
+    ) {
+      parts.push(" ");
+    }
+    parts.push(chunk);
+  }
+  const inner = parts.join("");
   return isBlock ? `${inner}\n` : inner;
 }
 
@@ -326,50 +371,158 @@ function readCleanEditableText(el: HTMLElement): string {
 }
 
 /**
- * Safely applies text without using innerText which destroys child JSX/HTML elements,
- * and sets white-space: pre-line so Enter line breaks always render accurately.
+ * Resolves the exact leaf DOM container whose Text node(s) hold editable copy.
  */
-function applyTextSafely(element: HTMLElement, newText: string) {
-  const normalizedText = newText.replace(/\r\n/g, "\n");
+function getLeafTextTarget(element: HTMLElement): HTMLElement | null {
+  if (element.dataset.liveReactManaged === "true") return null;
 
-  // If element explicitly has a data-live-key (e.g. hero-poem-line-1 with word spans) or no child elements
   if (element.dataset.liveKey || element.children.length === 0) {
-    element.style.whiteSpace = "pre-line";
-    element.textContent = normalizedText;
-    return;
+    return element;
   }
 
-  // If element has direct text nodes, update the first non-empty text node
   const childNodes = Array.from(element.childNodes);
-  const textNode = childNodes.find(
+  const hasDirectText = childNodes.some(
     (n) => n.nodeType === Node.TEXT_NODE && (n.textContent || "").trim().length > 0
   );
-  if (textNode) {
-    element.style.whiteSpace = "pre-line";
-    textNode.textContent = normalizedText;
-    return;
-  }
+  if (hasDirectText) return element;
 
-  // If there's an inner [data-live-key] or leaf text element (like a single <span> inside a button with SVG icons), update it
   const liveKeyChild = element.querySelector("[data-live-key]") as HTMLElement | null;
   if (liveKeyChild) {
-    liveKeyChild.style.whiteSpace = "pre-line";
-    liveKeyChild.textContent = normalizedText;
-    return;
+    return liveKeyChild.dataset.liveReactManaged === "true" ? null : liveKeyChild;
   }
 
   const leaf = element.querySelector("span, p, strong, b, em, label, h1, h2, h3, h4, h5, h6") as HTMLElement | null;
-  if (leaf && leaf.children.length === 0) {
-    leaf.style.whiteSpace = "pre-line";
-    leaf.textContent = normalizedText;
-    return;
+  if (leaf && leaf.children.length === 0) return leaf;
+
+  const hasElementChildren = childNodes.some((n) => n.nodeType === Node.ELEMENT_NODE);
+  return hasElementChildren ? null : element;
+}
+
+/**
+ * Updates Text nodes in-place (keeping React HostText DOM references intact) so React
+ * language switches and state updates continue smoothly without detached DOM nodes.
+ */
+function writeTextNodesInPlace(target: HTMLElement, newText: string): string {
+  const normalizedText = newText.replace(/\r\n/g, "\n");
+  target.style.whiteSpace = "pre-line";
+
+  const textNodes = Array.from(target.childNodes).filter(
+    (n) => n.nodeType === Node.TEXT_NODE
+  ) as Text[];
+
+  if (target.children.length === 0) {
+    if (textNodes.length > 0) {
+      textNodes[0].nodeValue = normalizedText;
+      for (let i = 1; i < textNodes.length; i++) {
+        textNodes[i].nodeValue = "";
+      }
+    } else {
+      target.textContent = normalizedText;
+    }
+    return normalizedText;
   }
 
-  // Fallback: only if it contains ONLY text nodes and no child elements
-  const hasElementChildren = childNodes.some((n) => n.nodeType === Node.ELEMENT_NODE);
-  if (!hasElementChildren) {
-    element.style.whiteSpace = "pre-line";
-    element.textContent = normalizedText;
+  const primaryNode = textNodes.find((n) => (n.nodeValue || "").trim().length > 0) || textNodes[0];
+  if (primaryNode) {
+    primaryNode.nodeValue = normalizedText;
+    for (const node of textNodes) {
+      if (node !== primaryNode) node.nodeValue = "";
+    }
+  }
+  return normalizedText;
+}
+
+function applyTextSafely(element: HTMLElement, newText: string): HTMLElement | null {
+  const target = getLeafTextTarget(element);
+  if (!target) return null;
+  writeTextNodesInPlace(target, newText);
+  return target;
+}
+
+function captureSnapshot(el: HTMLElement, lang: LiveEditorLanguage, key: string): DomAppliedSnapshot {
+  const textTarget = getLeafTextTarget(el);
+  const textNodes = textTarget
+    ? (Array.from(textTarget.childNodes).filter((n) => n.nodeType === Node.TEXT_NODE) as Text[])
+    : [];
+  const anchorEl =
+    el.tagName.toLowerCase() === "a" ? (el as HTMLAnchorElement) : (el.closest("a") as HTMLAnchorElement | null);
+
+  return {
+    lang,
+    key,
+    textTarget,
+    baselineNodeValues: textNodes.map((n) => n.nodeValue ?? ""),
+    baselineWhiteSpace: el.style.whiteSpace || "",
+    baselineDisplay: el.style.display || "",
+    baselineColor: el.style.color || "",
+    baselineFontSize: el.style.fontSize || "",
+    baselineFontWeight: el.style.fontWeight || "",
+    baselineFontFamily: el.style.fontFamily || "",
+    baselineTextAlign: el.style.textAlign || "",
+    baselineHref: anchorEl ? anchorEl.getAttribute("href") : null,
+    baselineTarget: anchorEl ? anchorEl.getAttribute("target") : null,
+  };
+}
+
+function restoreInlinePropsFromSnapshot(el: HTMLElement, snap: DomAppliedSnapshot) {
+  const setOrClear = (prop: keyof CSSStyleDeclaration, val: string) => {
+    if (val) {
+      (el.style as any)[prop] = val;
+    } else {
+      (el.style as any)[prop] = "";
+    }
+  };
+
+  if (snap.baselineDisplay) {
+    el.style.display = snap.baselineDisplay;
+  } else {
+    el.style.removeProperty("display");
+  }
+  setOrClear("color", snap.baselineColor);
+  setOrClear("fontSize", snap.baselineFontSize);
+  setOrClear("fontWeight", snap.baselineFontWeight);
+  setOrClear("fontFamily", snap.baselineFontFamily);
+  setOrClear("textAlign", snap.baselineTextAlign);
+  setOrClear("whiteSpace", snap.baselineWhiteSpace);
+
+  const anchorEl =
+    el.tagName.toLowerCase() === "a" ? (el as HTMLAnchorElement) : (el.closest("a") as HTMLAnchorElement | null);
+  if (anchorEl) {
+    if (snap.baselineHref !== null) anchorEl.setAttribute("href", snap.baselineHref);
+    if (snap.baselineTarget !== null) {
+      anchorEl.setAttribute("target", snap.baselineTarget);
+    } else {
+      anchorEl.removeAttribute("target");
+    }
+  }
+}
+
+function restoreTextFromSnapshotIfStale(snap: DomAppliedSnapshot) {
+  if (snap.appliedText === undefined || !snap.textTarget || !snap.baselineNodeValues) return;
+  const target = snap.textTarget;
+  if (!target.isConnected) return;
+
+  const textNodes = Array.from(target.childNodes).filter((n) => n.nodeType === Node.TEXT_NODE) as Text[];
+  if (textNodes.length === 0) return;
+
+  if (target.children.length === 0) {
+    // Restore original fragments only if React has not already replaced the primary node with new language copy
+    const primaryVal = textNodes[0].nodeValue ?? "";
+    if (primaryVal === snap.appliedText && snap.baselineNodeValues[0] !== undefined) {
+      textNodes[0].nodeValue = snap.baselineNodeValues[0];
+    }
+    for (let i = 1; i < textNodes.length && i < snap.baselineNodeValues.length; i++) {
+      if ((textNodes[i].nodeValue ?? "") === "" && snap.baselineNodeValues[i] !== "") {
+        textNodes[i].nodeValue = snap.baselineNodeValues[i];
+      }
+    }
+  } else {
+    const currentClean = readCleanEditableText(target);
+    if (currentClean === snap.appliedText.trim()) {
+      for (let i = 0; i < textNodes.length && i < snap.baselineNodeValues.length; i++) {
+        textNodes[i].nodeValue = snap.baselineNodeValues[i];
+      }
+    }
   }
 }
 
@@ -564,6 +717,8 @@ function hydrateAndInsertClone(entry: LiveAddedElement, pathname: string): HTMLE
 export function LiveVisualEditor() {
   const pathname = usePathname();
   const { settings, updateSettings } = useStoreSettings();
+  const { language, setLanguage } = useLanguage();
+  const activeLang: LiveEditorLanguage = language === "ar" ? "ar" : "en";
 
   // Mode States - Strictly false by default so non-admin visitors NEVER see the Live Editor UI
   const [isAdminDetected, setIsAdminDetected] = useState(false);
@@ -589,13 +744,31 @@ export function LiveVisualEditor() {
   const [editFontFamily, setEditFontFamily] = useState("");
   const [editIsHidden, setEditIsHidden] = useState(false);
 
-  // Pending Changes Map
-  const [pendingOverrides, setPendingOverrides] = useState<Record<string, LiveTextOverride>>({});
+  // Pending Changes Map — strictly separated per storefront language
+  const [pendingByLang, setPendingByLang] = useState<{
+    ar: Record<string, LiveTextOverride>;
+    en: Record<string, LiveTextOverride>;
+  }>({ ar: {}, en: {} });
+  const pendingOverrides = pendingByLang[activeLang];
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Hover Outline Target
+  // Hover Outline Target & DOM Snapshot/Key Memory Refs
   const hoveredElementRef = useRef<HTMLElement | null>(null);
+  const appliedSnapshotsRef = useRef<Map<HTMLElement, DomAppliedSnapshot>>(new Map());
+  const resolvedKeyByElRef = useRef<WeakMap<HTMLElement, Partial<Record<LiveEditorLanguage, string>>>>(
+    new WeakMap()
+  );
+  const handledUrlSearchRef = useRef<string | null>(null);
+
+  const rememberElementKey = useCallback(
+    (el: HTMLElement, lang: LiveEditorLanguage, key: string) => {
+      const prev = resolvedKeyByElRef.current.get(el) || {};
+      prev[lang] = key;
+      resolvedKeyByElRef.current.set(el, prev);
+    },
+    []
+  );
 
   // Scan and discover rendered sections dynamically on the current page
   useEffect(() => {
@@ -619,7 +792,17 @@ export function LiveVisualEditor() {
     scanSections();
     const timer = setTimeout(scanSections, 500);
     return () => clearTimeout(timer);
-  }, [pathname, isLiveEdit]);
+  }, [pathname, isLiveEdit, activeLang]);
+
+  // Clear open popover & hover outline when switching active language
+  useEffect(() => {
+    setActiveTarget(null);
+    if (hoveredElementRef.current) {
+      hoveredElementRef.current.style.outline = "";
+      hoveredElementRef.current.style.outlineOffset = "";
+      hoveredElementRef.current = null;
+    }
+  }, [activeLang]);
 
   // Strictly check if admin is logged in (`sulaf_admin_auth === "true"`).
   // Non-admins NEVER see the Live Editor launcher or toolbar, even if URL params are passed.
@@ -637,14 +820,22 @@ export function LiveVisualEditor() {
         return;
       }
 
-      const hasParam =
-        window.location.search.includes("live_edit=1") ||
-        window.location.search.includes("live_edit=true") ||
-        window.location.search.includes("edit=true");
+      const params = new URLSearchParams(window.location.search);
+      const le = params.get("live_edit");
+      const ed = params.get("edit");
+      const isLangEditorParam = le === "ar" || le === "en";
+      const hasParam = isLangEditorParam || le === "1" || le === "true" || ed === "true";
 
       if (hasParam || sessionStorage.getItem("sulaf_live_edit_mode") === "true") {
         setIsLiveEdit(true);
         sessionStorage.setItem("sulaf_live_edit_mode", "true");
+      }
+
+      if (isLangEditorParam && handledUrlSearchRef.current !== window.location.search) {
+        handledUrlSearchRef.current = window.location.search;
+        if (le !== language) {
+          setLanguage(le);
+        }
       }
     };
 
@@ -655,73 +846,159 @@ export function LiveVisualEditor() {
       window.removeEventListener("storage", checkAdminAccess);
       window.removeEventListener("sulaf_admin_auth_changed", checkAdminAccess);
     };
-  }, [pathname]);
+  }, [pathname, language, setLanguage]);
 
-  // Sync session storage when live edit mode changes
-  const toggleLiveEdit = (val: boolean) => {
-    if (!isAdminDetected) return;
-    setIsLiveEdit(val);
-    if (typeof window !== "undefined") {
-      if (val) {
-        sessionStorage.setItem("sulaf_live_edit_mode", "true");
-        showToast("⚡ تم تفعيل وضع التحرير المباشر! انقر على أي نص، زر، أو قسم لتعديله أو إخفائه.");
-      } else {
-        sessionStorage.removeItem("sulaf_live_edit_mode");
-        setActiveTarget(null);
-        setSectionsDrawerOpen(false);
-        showToast("تم إغلاق وضع التحرير المباشر.");
-      }
-    }
-  };
-
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
+  }, []);
+
+  // Switch between Arabic and English dedicated Live Editors cleanly
+  const switchEditorLanguage = useCallback(
+    (targetLang: LiveEditorLanguage) => {
+      if (!isAdminDetected) return;
+      setActiveTarget(null);
+      setIsLiveEdit(true);
+
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("sulaf_live_edit_mode", "true");
+        const url = new URL(window.location.href);
+        if (url.searchParams.has("live_edit")) {
+          url.searchParams.set("live_edit", targetLang);
+          window.history.replaceState(null, "", url.toString());
+          handledUrlSearchRef.current = url.search;
+        }
+      }
+
+      if (targetLang !== activeLang) {
+        setLanguage(targetLang);
+      }
+
+      showToast(
+        targetLang === "ar"
+          ? "🇸🇦 تم فتح محرر النسخة العربية فقط — أي تعديل هنا لن يؤثر على الإنجليزية."
+          : "🇬🇧 تم فتح محرر النسخة الإنجليزية فقط — أي تعديل هنا لن يؤثر على العربية."
+      );
+    },
+    [isAdminDetected, activeLang, setLanguage, showToast]
+  );
+
+  // Sync session storage when live edit mode changes
+  const toggleLiveEdit = (val: boolean, targetLang?: LiveEditorLanguage) => {
+    if (!isAdminDetected) return;
+    if (val) {
+      switchEditorLanguage(targetLang || activeLang);
+      return;
+    }
+
+    setIsLiveEdit(false);
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("sulaf_live_edit_mode");
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("live_edit") || url.searchParams.has("edit")) {
+        url.searchParams.delete("live_edit");
+        url.searchParams.delete("edit");
+        window.history.replaceState(null, "", url.toString());
+        handledUrlSearchRef.current = url.search;
+      }
+    }
+    setActiveTarget(null);
+    setSectionsDrawerOpen(false);
+    showToast("تم إغلاق وضع التحرير المباشر.");
   };
 
-  // Helper to immediately persist updated overrides to context, localStorage, and /api/settings
-  const persistOverridesImmediately = useCallback(
-    async (nextPending: Record<string, LiveTextOverride>) => {
+  // Update settings strictly inside a single language slice (`*Ar` or `*En`)
+  const updateStoreForLang = useCallback(
+    (
+      targetLang: LiveEditorLanguage,
+      mutator: (bucket: {
+        overrides: Record<string, LiveTextOverride>;
+        added: LiveAddedElement[];
+        links: Record<string, string>;
+      }) => {
+        overrides: Record<string, LiveTextOverride>;
+        added: LiveAddedElement[];
+        links: Record<string, string>;
+      }
+    ) => {
       updateSettings((prev) => {
-        const mergedOverrides: Record<string, LiveTextOverride> = {
-          ...(prev.liveTextOverrides || {}),
-          ...nextPending,
+        const base = materializeLegacyLiveEditorState(prev);
+        const currentBucket = {
+          overrides: {
+            ...(targetLang === "ar" ? base.liveTextOverridesAr : base.liveTextOverridesEn),
+          },
+          added: [
+            ...(targetLang === "ar"
+              ? base.liveAddedElementsAr || []
+              : base.liveAddedElementsEn || []),
+          ],
+          links: {
+            ...(targetLang === "ar" ? base.customLinksAr : base.customLinksEn),
+          },
         };
-        const updatedCustomLinks: Record<string, string> = {
-          ...(prev.customLinks || {}),
-        };
-        Object.entries(mergedOverrides).forEach(([k, o]) => {
-          if (o.href) {
-            updatedCustomLinks[k] = o.href;
-          }
-        });
-
+        const nextBucket = mutator(currentBucket);
+        if (targetLang === "ar") {
+          return {
+            ...base,
+            liveTextOverridesAr: nextBucket.overrides,
+            liveAddedElementsAr: nextBucket.added,
+            customLinksAr: nextBucket.links,
+          };
+        }
         return {
-          ...prev,
-          liveTextOverrides: mergedOverrides,
-          customLinks: updatedCustomLinks,
+          ...base,
+          liveTextOverridesEn: nextBucket.overrides,
+          liveAddedElementsEn: nextBucket.added,
+          customLinksEn: nextBucket.links,
         };
       });
     },
     [updateSettings]
   );
 
-  // Apply added elements & saved overrides to DOM safely for ALL visitors and admins
+  // Helper to immediately persist updated overrides to context, localStorage, and /api/settings
+  const persistOverridesImmediately = useCallback(
+    async (targetLang: LiveEditorLanguage, nextPending: Record<string, LiveTextOverride>) => {
+      updateStoreForLang(targetLang, (bucket) => {
+        const mergedOverrides: Record<string, LiveTextOverride> = {
+          ...bucket.overrides,
+          ...nextPending,
+        };
+        const updatedCustomLinks: Record<string, string> = {
+          ...bucket.links,
+        };
+        Object.entries(mergedOverrides).forEach(([k, o]) => {
+          if (o.href) {
+            updatedCustomLinks[k] = o.href;
+          }
+        });
+        return {
+          ...bucket,
+          overrides: mergedOverrides,
+          links: updatedCustomLinks,
+        };
+      });
+    },
+    [updateStoreForLang]
+  );
+
+  // Apply added elements & saved overrides to DOM strictly for the active storefront language
   const applyOverrides = useCallback(() => {
     if (typeof document === "undefined") return;
 
-    // 1. Hydrate any cloned/added elements belonging to this page cleanly in insertion order
-    const addedList = [...(settings.liveAddedElements || [])].sort(
+    // 1. Hydrate any cloned/added elements belonging strictly to activeLang on this route
+    const addedList = [...getLiveAddedElementsForLang(settings, activeLang)].sort(
       (a, b) => (a.insertedAt || 0) - (b.insertedAt || 0)
     );
     const activeCloneIdsOnPage = new Set(
       addedList.filter((e) => e.pathname === pathname).map((e) => e.id)
     );
 
-    // Clean up any stale clones that do not belong to the active list on this route
+    // Clean up any clones belonging to the other language or inactive route
     document.querySelectorAll("[data-live-clone-id]").forEach((node) => {
       const cid = node.getAttribute("data-live-clone-id");
       if (cid && !activeCloneIdsOnPage.has(cid)) {
+        appliedSnapshotsRef.current.delete(node as HTMLElement);
         node.remove();
       }
     });
@@ -732,15 +1009,50 @@ export function LiveVisualEditor() {
       }
     }
 
-    // 2. Apply text, style, link, and visibility overrides (including elements inside new clones)
+    // 2. Gather language-scoped overrides & resolve elements
+    const savedForLang = getLiveTextOverridesForLang(settings, activeLang);
     const allOverrides = {
-      ...(settings.liveTextOverrides || {}),
-      ...pendingOverrides,
+      ...savedForLang,
+      ...(pendingByLang[activeLang] || {}),
     };
+
+    const resolvedTargets: Array<{ el: HTMLElement; key: string; override: LiveTextOverride }> = [];
+    const activeElSet = new Set<HTMLElement>();
 
     Object.entries(allOverrides).forEach(([key, override]) => {
       const el = resolveElementByKey(key, pathname);
       if (!el) return;
+      rememberElementKey(el, activeLang, key);
+      if (!activeElSet.has(el)) {
+        activeElSet.add(el);
+        resolvedTargets.push({ el, key, override });
+      }
+    });
+
+    // 3. Restore any elements previously mutated in the OTHER language (or cleared/reset in current language)
+    Array.from(appliedSnapshotsRef.current.entries()).forEach(([el, prevSnap]) => {
+      if (!el.isConnected) {
+        appliedSnapshotsRef.current.delete(el);
+        return;
+      }
+
+      const stillActiveInLang = activeElSet.has(el);
+      if (!stillActiveInLang || prevSnap.lang !== activeLang) {
+        restoreInlinePropsFromSnapshot(el, prevSnap);
+        restoreTextFromSnapshotIfStale(prevSnap);
+        appliedSnapshotsRef.current.delete(el);
+      }
+    });
+
+    // 4. Apply overrides belonging solely to activeLang
+    resolvedTargets.forEach(({ el, key, override }) => {
+      let snap = appliedSnapshotsRef.current.get(el);
+      if (!snap || snap.lang !== activeLang) {
+        snap = captureSnapshot(el, activeLang, key);
+      } else {
+        // Always reset inline styles back to clean baseline before applying active override fields
+        restoreInlinePropsFromSnapshot(el, snap);
+      }
 
       const isSec = key.startsWith("section::") || !!el.getAttribute("data-live-section");
       const hasLiveKey = !!el.dataset.liveKey;
@@ -749,17 +1061,21 @@ export function LiveVisualEditor() {
       );
       const isContainer = !hasLiveKey && nonSvgChildElements.length > 1;
 
-      // Handle Hide / Delete
       if (override.isHidden || override.isDeleted) {
         el.style.setProperty("display", "none", "important");
+        appliedSnapshotsRef.current.set(el, snap);
         return;
-      } else {
+      } else if (!snap.baselineDisplay) {
         el.style.removeProperty("display");
       }
 
-      // Apply text override safely
+      // Apply text override safely (without clobbering React-managed animations)
       if (!isSec && override.text !== undefined && override.text !== null) {
-        applyTextSafely(el, override.text);
+        const appliedTarget = applyTextSafely(el, override.text);
+        if (appliedTarget) {
+          snap.textTarget = appliedTarget;
+          snap.appliedText = override.text.replace(/\r\n/g, "\n");
+        }
       }
 
       // Handle link destination
@@ -788,20 +1104,26 @@ export function LiveVisualEditor() {
         if (override.fontFamily) el.style.fontFamily = override.fontFamily;
         if (override.textAlign) el.style.textAlign = override.textAlign;
       }
+
+      appliedSnapshotsRef.current.set(el, snap);
     });
-  }, [pathname, settings.liveTextOverrides, settings.liveAddedElements, pendingOverrides]);
+  }, [pathname, activeLang, settings, pendingByLang, rememberElementKey]);
 
   useEffect(() => {
     applyOverrides();
+    const t0 = setTimeout(applyOverrides, 50);
     const t1 = setTimeout(applyOverrides, 150);
     const t2 = setTimeout(applyOverrides, 450);
     const t3 = setTimeout(applyOverrides, 900);
+    const t4 = setTimeout(applyOverrides, 1600);
     const handleReady = () => applyOverrides();
     window.addEventListener("sulaf:ready", handleReady);
     return () => {
+      clearTimeout(t0);
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
+      clearTimeout(t4);
       window.removeEventListener("sulaf:ready", handleReady);
     };
   }, [applyOverrides]);
@@ -811,7 +1133,8 @@ export function LiveVisualEditor() {
     const secId = secEl.getAttribute("data-live-section") || "section";
     const secName = secEl.getAttribute("data-section-name") || secId;
     const key = `section::${secId}`;
-    const existingOv = (settings.liveTextOverrides || {})[key] || pendingOverrides[key] || {};
+    const langOverrides = getLiveTextOverridesForLang(settings, activeLang);
+    const existingOv = pendingOverrides[key] || langOverrides[key] || {};
 
     const rect = secEl.getBoundingClientRect();
     const scrollY = window.scrollY || window.pageYOffset;
@@ -985,7 +1308,10 @@ export function LiveVisualEditor() {
       e.preventDefault();
       e.stopPropagation();
 
-      const key = getElementKey(leafElement, pathname);
+      const rememberedKey = resolvedKeyByElRef.current.get(leafElement)?.[activeLang];
+      const key = rememberedKey || getElementKey(leafElement, pathname);
+      rememberElementKey(leafElement, activeLang, key);
+
       const rect = leafElement.getBoundingClientRect();
       const scrollY = window.scrollY || window.pageYOffset;
       const scrollX = window.scrollX || window.pageXOffset;
@@ -998,7 +1324,8 @@ export function LiveVisualEditor() {
       const currentHref = enclosingLink ? enclosingLink.getAttribute("href") || "" : "";
       const currentTarget = enclosingLink ? enclosingLink.getAttribute("target") || "_self" : "_self";
       const computed = window.getComputedStyle(leafElement);
-      const existingOv = (settings.liveTextOverrides || {})[key] || pendingOverrides[key] || {};
+      const langOverrides = getLiveTextOverridesForLang(settings, activeLang);
+      const existingOv = pendingOverrides[key] || langOverrides[key] || {};
 
       setActiveTarget({
         element: leafElement,
@@ -1048,25 +1375,38 @@ export function LiveVisualEditor() {
         hoveredElementRef.current.style.outlineOffset = "";
       }
     };
-  }, [isLiveEdit, isVisitorPreview, pathname, activeTarget, settings.liveTextOverrides, pendingOverrides]);
+  }, [isLiveEdit, isVisitorPreview, pathname, activeLang, activeTarget, settings, pendingOverrides, rememberElementKey]);
 
-  // Apply Changes from Popover safely and persist immediately to server
+  // Apply Changes from Popover safely and persist strictly for the active language editor
   const handleApplyChanges = () => {
     if (!activeTarget) return;
 
     const { element, key, isLink, isSection, isContainer, canEditText } = activeTarget;
+    const targetLang = activeLang;
     const normalizedEditText = editText.replace(/\r\n/g, "\n");
+
+    // Ensure pristine baseline snapshot exists for this language BEFORE immediate preview mutation
+    if (
+      !appliedSnapshotsRef.current.has(element) ||
+      appliedSnapshotsRef.current.get(element)?.lang !== targetLang
+    ) {
+      appliedSnapshotsRef.current.set(element, captureSnapshot(element, targetLang, key));
+    }
+    const snap = appliedSnapshotsRef.current.get(element)!;
+    restoreInlinePropsFromSnapshot(element, snap);
 
     // Direct DOM preview
     if (!editIsHidden) {
-      element.style.removeProperty("display");
+      if (!snap.baselineDisplay) element.style.removeProperty("display");
 
-      // Apply text ONLY if it's a leaf text element and can edit text safely
       if (canEditText && normalizedEditText.length > 0 && !isSection) {
-        applyTextSafely(element, normalizedEditText);
+        const appliedTarget = applyTextSafely(element, normalizedEditText);
+        if (appliedTarget) {
+          snap.textTarget = appliedTarget;
+          snap.appliedText = normalizedEditText;
+        }
       }
 
-      // Apply link URL to enclosing link if applicable
       if (isLink && editHref) {
         if (element.tagName.toLowerCase() === "a") {
           (element as HTMLAnchorElement).href = editHref;
@@ -1080,7 +1420,6 @@ export function LiveVisualEditor() {
         }
       }
 
-      // Apply typography styles ONLY if it's not a section/container
       if (!isSection && !isContainer) {
         if (editColor) element.style.color = editColor;
         if (editFontSize) element.style.fontSize = editFontSize;
@@ -1092,58 +1431,94 @@ export function LiveVisualEditor() {
       element.style.setProperty("display", "none", "important");
     }
 
+    const baseOverride = {
+      ...(getLiveTextOverridesForLang(settings, targetLang)[key] || {}),
+      ...(pendingByLang[targetLang]?.[key] || {}),
+    };
     const newOverride: LiveTextOverride = {
-      ...((settings.liveTextOverrides || {})[key] || {}),
-      ...(pendingOverrides[key] || {}),
-      ...(canEditText && normalizedEditText.length > 0 && !isSection ? { text: normalizedEditText } : {}),
-      ...(isLink ? { href: editHref, target: editTarget } : {}),
-      ...(!isSection && !isContainer && editColor ? { color: editColor } : {}),
-      ...(!isSection && !isContainer && editFontSize ? { fontSize: editFontSize } : {}),
-      ...(!isSection && !isContainer && editFontWeight ? { fontWeight: editFontWeight } : {}),
-      ...(!isSection && !isContainer && editTextAlign ? { textAlign: editTextAlign } : {}),
-      ...(!isSection && !isContainer && editFontFamily ? { fontFamily: editFontFamily } : {}),
+      ...baseOverride,
       isHidden: editIsHidden,
     };
 
-    const nextPending = {
-      ...pendingOverrides,
+    if (canEditText && normalizedEditText.length > 0 && !isSection) {
+      newOverride.text = normalizedEditText;
+    }
+    if (isLink) {
+      newOverride.href = editHref;
+      newOverride.target = editTarget;
+    }
+    if (!isSection && !isContainer) {
+      if (editColor) newOverride.color = editColor;
+      else delete newOverride.color;
+      if (editFontSize) newOverride.fontSize = editFontSize;
+      else delete newOverride.fontSize;
+      if (editFontWeight) newOverride.fontWeight = editFontWeight;
+      else delete newOverride.fontWeight;
+      if (editTextAlign) newOverride.textAlign = editTextAlign;
+      else delete newOverride.textAlign;
+      if (editFontFamily) newOverride.fontFamily = editFontFamily;
+      else delete newOverride.fontFamily;
+    }
+
+    const nextLangPending = {
+      ...(pendingByLang[targetLang] || {}),
       [key]: newOverride,
     };
-    setPendingOverrides(nextPending);
-    persistOverridesImmediately(nextPending);
+    setPendingByLang((prev) => ({
+      ...prev,
+      [targetLang]: nextLangPending,
+    }));
+    persistOverridesImmediately(targetLang, nextLangPending);
 
-    showToast(`✓ تم تطبيق وحفظ التعديل مباشرة على الموقع`);
+    showToast(
+      targetLang === "ar"
+        ? "✓ تم حفظ التعديل للنسخة العربية فقط (لن يتأثر الإنجليزي)"
+        : "✓ تم حفظ التعديل للنسخة الإنجليزية فقط (لن يتأثر العربي)"
+    );
     setActiveTarget(null);
   };
 
-  // Immediate Hide Action
+  // Immediate Hide Action (strictly scoped to active language)
   const handleQuickHide = () => {
     if (!activeTarget) return;
     const { element, key } = activeTarget;
+    const targetLang = activeLang;
 
+    if (
+      !appliedSnapshotsRef.current.has(element) ||
+      appliedSnapshotsRef.current.get(element)?.lang !== targetLang
+    ) {
+      appliedSnapshotsRef.current.set(element, captureSnapshot(element, targetLang, key));
+    }
     element.style.setProperty("display", "none", "important");
 
     const newOverride: LiveTextOverride = {
-      ...((settings.liveTextOverrides || {})[key] || {}),
-      ...(pendingOverrides[key] || {}),
+      ...(getLiveTextOverridesForLang(settings, targetLang)[key] || {}),
+      ...(pendingByLang[targetLang]?.[key] || {}),
       isHidden: true,
     };
 
-    const nextPending = {
-      ...pendingOverrides,
+    const nextLangPending = {
+      ...(pendingByLang[targetLang] || {}),
       [key]: newOverride,
     };
-    setPendingOverrides(nextPending);
-    persistOverridesImmediately(nextPending);
+    setPendingByLang((prev) => ({
+      ...prev,
+      [targetLang]: nextLangPending,
+    }));
+    persistOverridesImmediately(targetLang, nextLangPending);
 
-    showToast(`👁️ تم إخفاء العنصر وحفظ التغيير مباشرة.`);
+    showToast(
+      `👁️ تم إخفاء العنصر في ${targetLang === "ar" ? "النسخة العربية" : "النسخة الإنجليزية"} فقط.`
+    );
     setActiveTarget(null);
   };
 
-  // Duplicate/Add a New Element of the Same Type inside Repeatable Lists (e.g. Step 04)
+  // Duplicate/Add a New Element strictly inside active language
   const handleDuplicateElement = () => {
     if (!activeTarget?.repeatable) return;
     const { parentEl, parentKey, templateEl, itemLabel, nextOrdinal } = activeTarget.repeatable;
+    const targetLang = activeLang;
 
     const sourceCloneId = templateEl.getAttribute("data-live-clone-id") || undefined;
     let sourceIndex: number | undefined;
@@ -1158,7 +1533,8 @@ export function LiveVisualEditor() {
     }
 
     const newEntry: LiveAddedElement = {
-      id: `live_dup_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
+      id: `live_dup_${targetLang}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
+      language: targetLang,
       pathname,
       parentKey,
       sourceIndex,
@@ -1169,12 +1545,9 @@ export function LiveVisualEditor() {
 
     const insertedClone = hydrateAndInsertClone(newEntry, pathname);
 
-    updateSettings((prev) => ({
-      ...prev,
-      liveAddedElements: [
-        ...(prev.liveAddedElements || []).filter((e) => e.id !== newEntry.id),
-        newEntry,
-      ],
+    updateStoreForLang(targetLang, (bucket) => ({
+      ...bucket,
+      added: [...bucket.added.filter((e) => e.id !== newEntry.id), newEntry],
     }));
 
     setActiveTarget(null);
@@ -1191,77 +1564,104 @@ export function LiveVisualEditor() {
 
     const formattedOrdinal = String(nextOrdinal).padStart(2, "0");
     showToast(
-      `✨ تمت إضافة ${itemLabel} جديدة (${formattedOrdinal}) وحفظها! انقر على عنوانها أو نصها لتعديله.`
+      `✨ تمت إضافة ${itemLabel} جديدة (${formattedOrdinal}) في ${
+        targetLang === "ar" ? "النسخة العربية فقط" : "النسخة الإنجليزية فقط"
+      }!`
     );
   };
 
-  // Immediate Delete Action
+  // Immediate Delete Action (strictly scoped to active language)
   const handleQuickDelete = () => {
     if (!activeTarget) return;
-    if (!confirm("هل أنت متأكد من حذف هذا العنصر نهائياً من العرض؟")) return;
+    const targetLang = activeLang;
+    const langLabel = targetLang === "ar" ? "النسخة العربية" : "النسخة الإنجليزية";
+    if (!confirm(`هل أنت متأكد من حذف هذا العنصر من ${langLabel} فقط؟`)) return;
 
     const { element, key } = activeTarget;
 
-    // If deleting a cloned element root, remove it cleanly from liveAddedElements & DOM
+    // If deleting a cloned element root, remove it cleanly from that language's added list & DOM
     if (key.startsWith("clone::") || element.hasAttribute("data-live-clone-id")) {
       const cloneId = element.getAttribute("data-live-clone-id") || key.replace("clone::", "");
+      appliedSnapshotsRef.current.delete(element);
       element.remove();
 
-      const nextPending = { ...pendingOverrides };
-      Object.keys(nextPending).forEach((k) => {
+      const nextLangPending = { ...(pendingByLang[targetLang] || {}) };
+      Object.keys(nextLangPending).forEach((k) => {
         if (k === key || k.startsWith(`live::${cloneId}__`)) {
-          delete nextPending[k];
+          delete nextLangPending[k];
         }
       });
-      setPendingOverrides(nextPending);
+      setPendingByLang((prev) => ({
+        ...prev,
+        [targetLang]: nextLangPending,
+      }));
 
-      updateSettings((prev) => {
+      updateStoreForLang(targetLang, (bucket) => {
         const cleanedOverrides: Record<string, LiveTextOverride> = {};
-        Object.entries(prev.liveTextOverrides || {}).forEach(([k, v]) => {
+        Object.entries(bucket.overrides).forEach(([k, v]) => {
           if (k !== key && !k.startsWith(`live::${cloneId}__`)) {
             cleanedOverrides[k] = v;
           }
         });
         return {
-          ...prev,
-          liveTextOverrides: cleanedOverrides,
-          liveAddedElements: (prev.liveAddedElements || []).filter((e) => e.id !== cloneId),
+          ...bucket,
+          overrides: cleanedOverrides,
+          added: bucket.added.filter((e) => e.id !== cloneId),
         };
       });
 
-      showToast("🗑️ تم حذف العنصر المضاف نهائياً.");
+      showToast(`🗑️ تم حذف العنصر المضاف نهائياً من ${langLabel}.`);
       setActiveTarget(null);
       return;
     }
 
+    if (
+      !appliedSnapshotsRef.current.has(element) ||
+      appliedSnapshotsRef.current.get(element)?.lang !== targetLang
+    ) {
+      appliedSnapshotsRef.current.set(element, captureSnapshot(element, targetLang, key));
+    }
     element.style.setProperty("display", "none", "important");
 
     const newOverride: LiveTextOverride = {
-      ...((settings.liveTextOverrides || {})[key] || {}),
-      ...(pendingOverrides[key] || {}),
+      ...(getLiveTextOverridesForLang(settings, targetLang)[key] || {}),
+      ...(pendingByLang[targetLang]?.[key] || {}),
       isDeleted: true,
       isHidden: true,
     };
 
-    const nextPending = {
-      ...pendingOverrides,
+    const nextLangPending = {
+      ...(pendingByLang[targetLang] || {}),
       [key]: newOverride,
     };
-    setPendingOverrides(nextPending);
-    persistOverridesImmediately(nextPending);
+    setPendingByLang((prev) => ({
+      ...prev,
+      [targetLang]: nextLangPending,
+    }));
+    persistOverridesImmediately(targetLang, nextLangPending);
 
-    showToast(`🗑️ تم حذف العنصر من الواجهة وحفظ التغيير مباشرة.`);
+    showToast(`🗑️ تم حذف العنصر من ${langLabel} فقط وحفظ التغيير.`);
     setActiveTarget(null);
   };
 
-  // Toggle section visibility from Sections Manager
+  // Toggle section visibility from Sections Manager (strictly for active language)
   const handleToggleSectionKey = (secKey: string) => {
     const key = `section::${secKey}`;
-    const currentOv = pendingOverrides[key] || (settings.liveTextOverrides || {})[key] || {};
+    const targetLang = activeLang;
+    const currentOv =
+      pendingByLang[targetLang]?.[key] ||
+      getLiveTextOverridesForLang(settings, targetLang)[key] ||
+      {};
     const willHide = !currentOv.isHidden && !currentOv.isDeleted;
 
     const secEl = document.querySelector(`[data-live-section="${secKey}"]`) as HTMLElement | null;
     if (secEl) {
+      if (
+        !appliedSnapshotsRef.current.has(secEl) ||
+        appliedSnapshotsRef.current.get(secEl)?.lang !== targetLang
+      ) {
+        appliedSnapshotsRef.current.set(secEl, captureSnapshot(secEl, targetLang, key));
+      }
       if (willHide) {
         secEl.style.setProperty("display", "none", "important");
       } else {
@@ -1275,42 +1675,40 @@ export function LiveVisualEditor() {
       isDeleted: false,
     };
 
-    const nextPending = {
-      ...pendingOverrides,
+    const nextLangPending = {
+      ...(pendingByLang[targetLang] || {}),
       [key]: newOverride,
     };
-    setPendingOverrides(nextPending);
-    persistOverridesImmediately(nextPending);
+    setPendingByLang((prev) => ({
+      ...prev,
+      [targetLang]: nextLangPending,
+    }));
+    persistOverridesImmediately(targetLang, nextLangPending);
 
-    showToast(willHide ? `تم إخفاء القسم "${secKey}" وحفظ التغيير` : `تم إظهار القسم "${secKey}" وحفظ التغيير`);
+    const langTag = targetLang === "ar" ? "النسخة العربية" : "النسخة الإنجليزية";
+    showToast(
+      willHide
+        ? `تم إخفاء القسم "${secKey}" في ${langTag}`
+        : `تم إظهار القسم "${secKey}" في ${langTag}`
+    );
   };
 
-  // Save All Changes to Server & Store Settings
+  // Save All Changes strictly for active language
   const handleSaveAll = async () => {
     setIsSaving(true);
+    const targetLang = activeLang;
     try {
-      const mergedOverrides = {
-        ...(settings.liveTextOverrides || {}),
-        ...pendingOverrides,
-      };
-
-      const updatedCustomLinks: Record<string, string> = {
-        ...(settings.customLinks || {}),
-      };
-
-      Object.entries(mergedOverrides).forEach(([k, o]) => {
-        if (o.href) {
-          updatedCustomLinks[k] = o.href;
-        }
-      });
-
-      updateSettings({
-        liveTextOverrides: mergedOverrides,
-        customLinks: updatedCustomLinks,
-      });
-
-      setPendingOverrides({});
-      showToast("🎉 تم حفظ كافة التعديلات بنجاح! التغييرات حية الآن لجميع زوار المتجر.");
+      const langPending = pendingByLang[targetLang] || {};
+      persistOverridesImmediately(targetLang, langPending);
+      setPendingByLang((prev) => ({
+        ...prev,
+        [targetLang]: {},
+      }));
+      showToast(
+        targetLang === "ar"
+          ? "🎉 تم حفظ كافة تعديلات النسخة العربية بنجاح (منفصلة تماماً عن الإنجليزية)."
+          : "🎉 تم حفظ كافة تعديلات النسخة الإنجليزية بنجاح (منفصلة تماماً عن العربية)."
+      );
     } catch {
       showToast("حدث خطأ أثناء الحفظ، يرجى المحاولة مرة أخرى.");
     } finally {
@@ -1318,50 +1716,72 @@ export function LiveVisualEditor() {
     }
   };
 
-  // Restore All Hidden & Deleted Elements
+  // Restore All Hidden & Deleted Elements strictly for active language
   const handleRestoreAll = () => {
-    if (!confirm("هل تود استعادة وإظهار جميع العناصر والأقسام المخفية؟")) return;
+    const targetLang = activeLang;
+    const langLabel = targetLang === "ar" ? "النسخة العربية" : "النسخة الإنجليزية";
+    if (!confirm(`هل تود استعادة وإظهار جميع العناصر والأقسام المخفية في ${langLabel} فقط؟`)) return;
 
-    const cleanOverrides: Record<string, LiveTextOverride> = {};
-    Object.entries(settings.liveTextOverrides || {}).forEach(([k, v]) => {
-      cleanOverrides[k] = { ...v, isHidden: false, isDeleted: false };
+    updateStoreForLang(targetLang, (bucket) => {
+      const cleanOverrides: Record<string, LiveTextOverride> = {};
+      Object.entries(bucket.overrides).forEach(([k, v]) => {
+        cleanOverrides[k] = { ...v, isHidden: false, isDeleted: false };
+      });
+      return {
+        ...bucket,
+        overrides: cleanOverrides,
+      };
     });
 
-    // Reset DOM styles
     document.querySelectorAll("[data-live-section]").forEach((el) => {
       (el as HTMLElement).style.removeProperty("display");
     });
 
-    updateSettings({
-      liveTextOverrides: cleanOverrides,
-    });
-    setPendingOverrides({});
+    setPendingByLang((prev) => ({
+      ...prev,
+      [targetLang]: {},
+    }));
     setActiveTarget(null);
-    showToast("✓ تم إظهار جميع العناصر والأقسام المخفية.");
-    setTimeout(() => window.location.reload(), 600);
+    showToast(`✓ تم إظهار جميع العناصر والأقسام المخفية في ${langLabel}.`);
   };
 
-  // Reset/Fix All Overrides and restore original HTML text formatting
+  // Reset/Fix All Overrides strictly for active language
   const handleResetAllOverrides = () => {
-    if (!confirm("هل تود مسح كافة تعديلات النصوص والعناصر المضافة وإعادة ضبط الموقع لتنسيقه وتصميمه الأصلي 100%؟")) return;
+    const targetLang = activeLang;
+    const langLabel = targetLang === "ar" ? "النسخة العربية" : "النسخة الإنجليزية";
+    if (
+      !confirm(
+        `هل تود مسح كافة تعديلات (${langLabel}) فقط وإعادة ضبطها للأصل 100%؟ لن تتأثر تعديلات اللغة الأخرى.`
+      )
+    ) {
+      return;
+    }
 
     document.querySelectorAll("[data-live-clone-id]").forEach((node) => node.remove());
 
-    updateSettings((prev) => ({
-      ...prev,
-      liveTextOverrides: {},
-      liveAddedElements: [],
+    updateStoreForLang(targetLang, () => ({
+      overrides: {},
+      added: [],
+      links: {},
     }));
-    setPendingOverrides({});
+
+    setPendingByLang((prev) => ({
+      ...prev,
+      [targetLang]: {},
+    }));
     setActiveTarget(null);
-    showToast("✓ تم إعادة ضبط جميع النصوص للأصل واستعادة التصميم الكامل!");
-    setTimeout(() => window.location.reload(), 600);
+    showToast(`✓ تم إعادة ضبط تعديلات ${langLabel} للأصل فقط (اللغة الأخرى محفوظة كما هي)!`);
   };
 
-  // Discard Unsaved Changes
+  // Discard Unsaved Changes strictly for active language
   const handleResetPending = () => {
-    if (confirm("هل تود التراجع عن التعديلات غير المحفوظة في هذه الجلسة؟")) {
-      setPendingOverrides({});
+    const targetLang = activeLang;
+    const langLabel = targetLang === "ar" ? "النسخة العربية" : "النسخة الإنجليزية";
+    if (confirm(`هل تود التراجع عن التعديلات المعلقة في ${langLabel} فقط؟`)) {
+      setPendingByLang((prev) => ({
+        ...prev,
+        [targetLang]: {},
+      }));
       setActiveTarget(null);
       window.location.reload();
     }
@@ -1369,58 +1789,129 @@ export function LiveVisualEditor() {
 
   const pendingCount = Object.keys(pendingOverrides).length;
   const pageSections = discoveredSections;
+  const isArEditor = activeLang === "ar";
+  const currentLangOverridesMap = getLiveTextOverridesForLang(settings, activeLang);
 
   // CRITICAL SECURITY & UX GUARD:
   // Regular visitors (!isAdminDetected) must NEVER see the Live Editor launcher pill, toolbar, or popovers.
-  // Note: applyOverrides() useEffect above still runs for all visitors so saved edits apply to everyone.
+  // Note: applyOverrides() useEffect above still runs for all visitors so saved edits apply to everyone cleanly per language.
   if (!isAdminDetected) {
     return null;
   }
 
   return (
     <>
-      {/* 1. FLOATING LAUNCHER PILL (When Live Edit is OFF) */}
+      {/* 1. FLOATING DEDICATED LANGUAGE LAUNCHER PILLS (When Live Edit is OFF) */}
       {!isLiveEdit && (
         <div
           data-live-editor-ui="true"
-          className="fixed bottom-6 start-6 z-50 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-3 duration-200"
+          dir="rtl"
+          className="fixed bottom-6 start-6 z-50 flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#18271b]/95 backdrop-blur-md shadow-2xl border-2 border-[#d4af37]/60 font-cairo animate-in fade-in slide-in-from-bottom-3 duration-200"
         >
+          <span className="text-[11px] font-bold text-[#f6f9e6] px-2 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-[#d4af37]" />
+            <span className="hidden sm:inline">المحرر المباشر:</span>
+          </span>
           <button
             type="button"
-            onClick={() => toggleLiveEdit(true)}
-            className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#18271b] via-[#3a4d2c] to-[#18271b] hover:from-[#610b0d] hover:to-[#610b0d] text-[#f6f9e6] text-xs font-bold font-cairo shadow-2xl border-2 border-[#d4af37]/60 hover:border-[#d4af37] transition-all flex items-center gap-2 cursor-pointer group active:scale-95"
-            title="تفعيل وضع التحرير المباشر لتعديل نصوص، روابط، وأقسام المتجر"
+            onClick={() => toggleLiveEdit(true, "ar")}
+            className="px-3 py-1.5 rounded-xl bg-[#3a4d2c] hover:bg-[#485c36] text-white text-xs font-bold border border-emerald-300/30 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+            title="فتح محرر النسخة العربية فقط — تعديلاته منفصلة ولا تؤثر على الإنجليزية"
           >
-            <Sparkles className="w-4 h-4 text-[#d4af37] animate-pulse" />
-            <span>تعديل حي للموقع (Live Edit)</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            <span>🇸🇦</span>
+            <span>محرر العربية</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleLiveEdit(true, "en")}
+            className="px-3 py-1.5 rounded-xl bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white text-xs font-bold border border-blue-300/30 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+            title="فتح محرر النسخة الإنجليزية فقط — تعديلاته منفصلة ولا تؤثر على العربية"
+          >
+            <span>🇬🇧</span>
+            <span>محرر الإنجليزية</span>
           </button>
         </div>
       )}
 
-      {/* 2. TOP FLOATING CONTROL DOCK (When Live Edit is ON) */}
+      {/* 2. TOP FLOATING CONTROL DOCK (Dedicated Visual Theme per Language Editor) */}
       {isLiveEdit && (
         <div
           data-live-editor-ui="true"
-          className="fixed top-3 inset-x-3 sm:inset-x-8 z-[99999] bg-[#18271b]/95 backdrop-blur-md text-[#f6f9e6] rounded-2xl border-2 border-[#d4af37]/70 shadow-2xl p-2.5 sm:px-5 sm:py-3 font-cairo flex flex-col md:flex-row items-center justify-between gap-3 animate-in fade-in slide-in-from-top-3 duration-200"
+          dir="rtl"
+          className={`fixed top-3 inset-x-3 sm:inset-x-8 z-[99999] backdrop-blur-md text-[#f6f9e6] rounded-2xl border-2 shadow-2xl p-2.5 sm:px-5 sm:py-3 font-cairo flex flex-col lg:flex-row items-center justify-between gap-3 animate-in fade-in slide-in-from-top-3 duration-200 ${
+            isArEditor
+              ? "bg-[#18271b]/95 border-[#d4af37]/80"
+              : "bg-[#0f172a]/95 border-blue-400/80"
+          }`}
         >
-          {/* Brand & Status */}
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-white/10 text-[#d4af37] flex items-center justify-center font-bold shrink-0 border border-[#d4af37]/40 shadow-xs">
+          {/* Brand, Active Dedicated Editor Badge & Language Editor Switcher */}
+          <div className="flex items-center gap-3 flex-wrap justify-center lg:justify-start">
+            <div
+              className={`w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center font-bold shrink-0 border shadow-xs ${
+                isArEditor
+                  ? "text-[#d4af37] border-[#d4af37]/40"
+                  : "text-blue-300 border-blue-400/40"
+              }`}
+            >
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="font-amiri font-bold text-sm text-white">سُـلاف | المحرر المرئي المباشر</span>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30">
-                  {isVisitorPreview ? "معاينة كزائر 👁️" : "وضع التحرير نشط 🟢"}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-amiri font-bold text-sm text-white">
+                  {isArEditor ? "🇸🇦 محرر النسخة العربية فقط" : "🇬🇧 محرر النسخة الإنجليزية فقط"}
+                </span>
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                    isVisitorPreview
+                      ? "bg-amber-500/20 text-amber-200 border-amber-400/40"
+                      : isArEditor
+                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                      : "bg-blue-500/25 text-blue-200 border-blue-400/40"
+                  }`}
+                >
+                  {isVisitorPreview
+                    ? "معاينة كزائر 👁️"
+                    : isArEditor
+                    ? "عربي منفصل 🟢"
+                    : "إنجليزي منفصل 🔵"}
                 </span>
               </div>
               <p className="text-[11px] text-gray-300 hidden sm:block">
                 {isVisitorPreview
-                  ? "أنت تشاهد الصفحة كما يراها الزائر بدون إطارات التحرير."
-                  : "انقر على أي نص محدد أو زر لتعديله، أو اضغط Alt+نقر على أي قسم لإدارته وإخفائه."}
+                  ? "أنت تشاهد هذه اللغة كما يراها الزائر بدون إطارات التحرير."
+                  : isArEditor
+                  ? "التعديلات هنا محفوظة للنسخة العربية فقط ولا تؤثر مطلقاً على النسخة الإنجليزية."
+                  : "التعديلات هنا محفوظة للنسخة الإنجليزية فقط ولا تؤثر مطلقاً على النسخة العربية."}
               </p>
+            </div>
+
+            {/* Dedicated Language Editor Switcher */}
+            <div className="flex items-center gap-1 bg-black/35 p-1 rounded-xl border border-white/15">
+              <Globe className="w-3.5 h-3.5 text-white/70 ms-1.5 hidden sm:block" />
+              <button
+                type="button"
+                onClick={() => switchEditorLanguage("ar")}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                  isArEditor
+                    ? "bg-[#485c36] text-white shadow-xs border border-[#d4af37]/50"
+                    : "text-gray-300 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <span>🇸🇦</span>
+                <span>محرر العربية</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => switchEditorLanguage("en")}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                  !isArEditor
+                    ? "bg-blue-600 text-white shadow-xs border border-blue-300/50"
+                    : "text-gray-300 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <span>🇬🇧</span>
+                <span>محرر الإنجليزية</span>
+              </button>
             </div>
           </div>
 
@@ -1435,16 +1926,16 @@ export function LiveVisualEditor() {
                   ? "bg-[#d4af37] text-[#18271b]"
                   : "bg-white/10 hover:bg-white/20 text-white"
               }`}
-              title="إدارة أقسام الصفحة وإخفاؤها أو إظهارها"
+              title="إدارة أقسام الصفحة للغة الحالية"
             >
               <LayoutGrid className="w-3.5 h-3.5" />
-              <span>إدارة الأقسام ({pageSections.length})</span>
+              <span>الأقسام ({pageSections.length})</span>
             </button>
 
             {/* Pending count */}
             {pendingCount > 0 && (
               <span className="px-2.5 py-1 rounded-xl bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/40">
-                ✏️ {pendingCount} تعديل معلق
+                ✏️ {pendingCount} تعديل ({isArEditor ? "عربي" : "إنجليزي"})
               </span>
             )}
 
@@ -1460,7 +1951,7 @@ export function LiveVisualEditor() {
               title={isVisitorPreview ? "إعادة إظهار إطارات التحرير" : "إخفاء إطارات التحرير للمعاينة كزائر"}
             >
               {isVisitorPreview ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">{isVisitorPreview ? "إظهار الإطارات" : "معاينة كزائر"}</span>
+              <span className="hidden sm:inline">{isVisitorPreview ? "إظهار الإطارات" : "معاينة"}</span>
             </button>
 
             {/* Restore Hidden Elements Button */}
@@ -1468,7 +1959,7 @@ export function LiveVisualEditor() {
               type="button"
               onClick={handleRestoreAll}
               className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-blue-500/20 text-blue-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
-              title="إلغاء الإخفاء وإظهار جميع العناصر والأقسام المخفية"
+              title="إلغاء الإخفاء وإظهار العناصر المخفية لهذه اللغة فقط"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">إظهار المخفي</span>
@@ -1479,7 +1970,7 @@ export function LiveVisualEditor() {
               type="button"
               onClick={handleResetAllOverrides}
               className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-amber-500/20 text-amber-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
-              title="إعادة ضبط كافة النصوص للأصل واستعادة التصميم الأولي 100%"
+              title="استعادة النصوص الأصلية لهذه اللغة فقط دون المساس باللغة الأخرى"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">استعادة الأصل</span>
@@ -1491,7 +1982,7 @@ export function LiveVisualEditor() {
                 type="button"
                 onClick={handleResetPending}
                 className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500/20 text-rose-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
-                title="إلغاء التعديلات غير المحفوظة"
+                title="إلغاء التعديلات غير المحفوظة لهذه اللغة"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">تراجع</span>
@@ -1503,10 +1994,14 @@ export function LiveVisualEditor() {
               type="button"
               onClick={handleSaveAll}
               disabled={isSaving || pendingCount === 0}
-              className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-[#485c36] to-[#2f3d23] hover:from-[#3a4d2c] hover:to-[#222e18] disabled:opacity-50 text-white text-xs font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer border border-[#d4af37]/40 active:scale-95"
+              className={`px-4 py-1.5 rounded-xl disabled:opacity-50 text-white text-xs font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer border active:scale-95 ${
+                isArEditor
+                  ? "bg-gradient-to-r from-[#485c36] to-[#2f3d23] hover:from-[#3a4d2c] hover:to-[#222e18] border-[#d4af37]/40"
+                  : "bg-gradient-to-r from-blue-700 to-blue-900 hover:from-blue-600 hover:to-blue-800 border-blue-300/40"
+              }`}
             >
               <Save className="w-3.5 h-3.5 text-[#d4af37]" />
-              <span>{isSaving ? "جاري الحفظ..." : "حفظ التغييرات الآن ✓"}</span>
+              <span>{isSaving ? "جاري الحفظ..." : "حفظ التغييرات ✓"}</span>
             </button>
 
             {/* Exit Mode */}
@@ -1522,17 +2017,23 @@ export function LiveVisualEditor() {
         </div>
       )}
 
-      {/* SECTIONS MANAGER DRAWER (Floating Modal) */}
+      {/* SECTIONS MANAGER DRAWER (Floating Modal, strictly per active language) */}
       {isLiveEdit && sectionsDrawerOpen && (
         <div
           data-live-editor-ui="true"
-          className="fixed top-20 start-6 z-[99999] w-80 bg-[#18271b] border-2 border-[#d4af37] text-white rounded-3xl shadow-2xl p-4 font-cairo space-y-3 animate-in fade-in slide-in-from-top-2"
+          className={`fixed top-20 start-6 z-[99999] w-80 border-2 text-white rounded-3xl shadow-2xl p-4 font-cairo space-y-3 animate-in fade-in slide-in-from-top-2 ${
+            isArEditor
+              ? "bg-[#18271b] border-[#d4af37]"
+              : "bg-[#0f172a] border-blue-400"
+          }`}
           dir="rtl"
         >
           <div className="flex items-center justify-between border-b border-white/10 pb-2">
             <div className="flex items-center gap-2">
               <LayoutGrid className="w-4 h-4 text-[#d4af37]" />
-              <h4 className="font-bold text-xs text-white">أقسام الصفحة الفعلية</h4>
+              <h4 className="font-bold text-xs text-white">
+                أقسام الصفحة ({isArEditor ? "🇸🇦 العربية فقط" : "🇬🇧 الإنجليزية فقط"})
+              </h4>
             </div>
             <button
               type="button"
@@ -1543,7 +2044,7 @@ export function LiveVisualEditor() {
             </button>
           </div>
           <p className="text-[10px] text-gray-300">
-            أقسام الصفحة الحالية المعروضة أمامك الآن، يمكنك إخفاء أو إظهار أي قسم بنقرة:
+            إخفاء أو إظهار الأقسام هنا يطبّق على {isArEditor ? "النسخة العربية فقط" : "النسخة الإنجليزية فقط"}:
           </p>
           <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
             {pageSections.length === 0 ? (
@@ -1553,7 +2054,7 @@ export function LiveVisualEditor() {
                 const secKey = `section::${sec.id}`;
                 const isHidden =
                   pendingOverrides[secKey]?.isHidden ||
-                  (settings.liveTextOverrides || {})[secKey]?.isHidden ||
+                  currentLangOverridesMap[secKey]?.isHidden ||
                   false;
 
                 return (
@@ -1582,7 +2083,7 @@ export function LiveVisualEditor() {
             )}
           </div>
           <p className="text-[10px] text-amber-300/80 pt-1 border-t border-white/10">
-            * اضغط &quot;حفظ التغييرات&quot; في الشريط العلوي لتثبيت إخفاء الأقسام للزوار.
+            * الإعدادات هنا خاصة بالنسخة {isArEditor ? "العربية 🇸🇦" : "الإنجليزية 🇬🇧"} ولن تغيّر النسخة الأخرى.
           </p>
         </div>
       )}
@@ -1592,9 +2093,27 @@ export function LiveVisualEditor() {
         <div
           data-live-editor-ui="true"
           style={{ top: `${popoverPos.y}px`, left: `${popoverPos.x}px` }}
-          className="absolute z-[999999] w-[350px] sm:w-[420px] bg-white rounded-3xl border-2 border-[#485c36] shadow-2xl p-5 text-gray-900 font-cairo space-y-4 animate-in fade-in zoom-in-95 duration-150"
+          className={`absolute z-[999999] w-[350px] sm:w-[420px] bg-white rounded-3xl border-2 shadow-2xl p-5 text-gray-900 font-cairo space-y-4 animate-in fade-in zoom-in-95 duration-150 ${
+            isArEditor ? "border-[#485c36]" : "border-blue-600"
+          }`}
           dir="rtl"
         >
+          {/* Dedicated Language Guard Banner inside Popover */}
+          <div
+            className={`px-3 py-1.5 rounded-xl text-[11px] font-bold flex items-center justify-between ${
+              isArEditor
+                ? "bg-emerald-50 text-emerald-900 border border-emerald-200"
+                : "bg-blue-50 text-blue-900 border border-blue-200"
+            }`}
+          >
+            <span>
+              {isArEditor
+                ? "🇸🇦 تعديل النسخة العربية فقط"
+                : "🇬🇧 تعديل النسخة الإنجليزية فقط (English Only)"}
+            </span>
+            <span className="text-[10px] opacity-75">منفصل</span>
+          </div>
+
           {/* Popover Header */}
           <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
             <div className="flex items-center gap-2">

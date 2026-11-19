@@ -7310,13 +7310,25 @@ export default function AdminPage() {
                   </button>
 
                   <Link
-                    href="/?live_edit=true"
+                    href="/?live_edit=ar"
                     target="_blank"
-                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#485c36] via-[#3a4d2c] to-[#24301a] hover:from-[#610b0d] hover:to-[#610b0d] text-white font-bold text-xs transition-all shadow-md flex items-center gap-1.5 active:scale-95 border border-[#d4af37]/50"
-                    title="فتح المتجر بوضع التحرير المباشر لتعديل أي نص أو رابط بمجرد النقر عليه"
+                    className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#485c36] via-[#3a4d2c] to-[#24301a] hover:from-[#610b0d] hover:to-[#610b0d] text-white font-bold text-xs transition-all shadow-md flex items-center gap-1.5 active:scale-95 border border-[#d4af37]/50"
+                    title="فتح محرر النسخة العربية فقط — تعديلاته منفصلة ولا تؤثر على الإنجليزية"
                   >
+                    <span>🇸🇦</span>
                     <Sparkles className="w-3.5 h-3.5 text-[#d4af37]" />
-                    <span>{adminLang === "ar" ? "⚡ تشغيل المحرر المباشر على المتجر" : "⚡ Launch Live Editor"}</span>
+                    <span>{adminLang === "ar" ? "محرر العربية المباشر" : "Arabic Live Editor"}</span>
+                  </Link>
+
+                  <Link
+                    href="/?live_edit=en"
+                    target="_blank"
+                    className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#1e3a8a] via-[#1d4ed8] to-[#172554] hover:from-[#610b0d] hover:to-[#610b0d] text-white font-bold text-xs transition-all shadow-md flex items-center gap-1.5 active:scale-95 border border-blue-300/40"
+                    title="فتح محرر النسخة الإنجليزية فقط — تعديلاته منفصلة ولا تؤثر على العربية"
+                  >
+                    <span>🇬🇧</span>
+                    <Sparkles className="w-3.5 h-3.5 text-blue-200" />
+                    <span>{adminLang === "ar" ? "محرر الإنجليزية المباشر" : "English Live Editor"}</span>
                   </Link>
 
                   <Link

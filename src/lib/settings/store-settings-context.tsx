@@ -46,12 +46,31 @@ export function StoreSettingsProvider({
         customLinks: {
           ...(initialSettings.customLinks || {}),
         },
+        customLinksAr: {
+          ...(initialSettings.customLinksAr || {}),
+        },
+        customLinksEn: {
+          ...(initialSettings.customLinksEn || {}),
+        },
         liveTextOverrides: {
           ...(initialSettings.liveTextOverrides || {}),
+        },
+        liveTextOverridesAr: {
+          ...(initialSettings.liveTextOverridesAr || {}),
+        },
+        liveTextOverridesEn: {
+          ...(initialSettings.liveTextOverridesEn || {}),
         },
         liveAddedElements: Array.isArray(initialSettings.liveAddedElements)
           ? initialSettings.liveAddedElements
           : [],
+        liveAddedElementsAr: Array.isArray(initialSettings.liveAddedElementsAr)
+          ? initialSettings.liveAddedElementsAr
+          : [],
+        liveAddedElementsEn: Array.isArray(initialSettings.liveAddedElementsEn)
+          ? initialSettings.liveAddedElementsEn
+          : [],
+        liveOverridesMigrated: Boolean(initialSettings.liveOverridesMigrated),
         socialMedia: {
           ...DEFAULT_STORE_SETTINGS.socialMedia,
           ...(initialSettings.socialMedia || {}),
@@ -96,15 +115,44 @@ export function StoreSettingsProvider({
             ...(localLoaded.customLinks || {}),
             ...(initialSettings.customLinks || {}),
           },
+          customLinksAr: {
+            ...(localLoaded.customLinksAr || {}),
+            ...(initialSettings.customLinksAr || {}),
+          },
+          customLinksEn: {
+            ...(localLoaded.customLinksEn || {}),
+            ...(initialSettings.customLinksEn || {}),
+          },
           liveTextOverrides: {
             ...(localLoaded.liveTextOverrides || {}),
             ...(initialSettings.liveTextOverrides || {}),
+          },
+          liveTextOverridesAr: {
+            ...(localLoaded.liveTextOverridesAr || {}),
+            ...(initialSettings.liveTextOverridesAr || {}),
+          },
+          liveTextOverridesEn: {
+            ...(localLoaded.liveTextOverridesEn || {}),
+            ...(initialSettings.liveTextOverridesEn || {}),
           },
           liveAddedElements: Array.isArray(initialSettings.liveAddedElements)
             ? initialSettings.liveAddedElements
             : Array.isArray(localLoaded.liveAddedElements)
             ? localLoaded.liveAddedElements
             : [],
+          liveAddedElementsAr: Array.isArray(initialSettings.liveAddedElementsAr)
+            ? initialSettings.liveAddedElementsAr
+            : Array.isArray(localLoaded.liveAddedElementsAr)
+            ? localLoaded.liveAddedElementsAr
+            : [],
+          liveAddedElementsEn: Array.isArray(initialSettings.liveAddedElementsEn)
+            ? initialSettings.liveAddedElementsEn
+            : Array.isArray(localLoaded.liveAddedElementsEn)
+            ? localLoaded.liveAddedElementsEn
+            : [],
+          liveOverridesMigrated: Boolean(
+            initialSettings.liveOverridesMigrated || localLoaded.liveOverridesMigrated
+          ),
           socialMedia: {
             ...DEFAULT_STORE_SETTINGS.socialMedia,
             ...(localLoaded.socialMedia || {}),
@@ -136,12 +184,31 @@ export function StoreSettingsProvider({
               liveTextOverrides: {
                 ...(serverData.settings.liveTextOverrides || {}),
               },
+              liveTextOverridesAr: {
+                ...(serverData.settings.liveTextOverridesAr || {}),
+              },
+              liveTextOverridesEn: {
+                ...(serverData.settings.liveTextOverridesEn || {}),
+              },
               liveAddedElements: Array.isArray(serverData.settings.liveAddedElements)
                 ? serverData.settings.liveAddedElements
+                : [],
+              liveAddedElementsAr: Array.isArray(serverData.settings.liveAddedElementsAr)
+                ? serverData.settings.liveAddedElementsAr
+                : [],
+              liveAddedElementsEn: Array.isArray(serverData.settings.liveAddedElementsEn)
+                ? serverData.settings.liveAddedElementsEn
                 : [],
               customLinks: {
                 ...(serverData.settings.customLinks || {}),
               },
+              customLinksAr: {
+                ...(serverData.settings.customLinksAr || {}),
+              },
+              customLinksEn: {
+                ...(serverData.settings.customLinksEn || {}),
+              },
+              liveOverridesMigrated: Boolean(serverData.settings.liveOverridesMigrated),
             };
             saveClientSettings(next);
             return next;

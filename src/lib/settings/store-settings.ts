@@ -744,6 +744,7 @@ export interface LiveTextOverride {
 
 export interface LiveAddedElement {
   id: string;
+  language?: "ar" | "en";
   pathname: string;
   parentKey: string;
   sourceIndex?: number;
@@ -863,8 +864,15 @@ export interface StoreSettings {
   checkoutFields?: CheckoutFieldsSettings;
   themeColors?: ThemeColorsSettings;
   customLinks?: Record<string, string>;
+  customLinksAr?: Record<string, string>;
+  customLinksEn?: Record<string, string>;
   liveTextOverrides?: Record<string, LiveTextOverride>;
+  liveTextOverridesAr?: Record<string, LiveTextOverride>;
+  liveTextOverridesEn?: Record<string, LiveTextOverride>;
   liveAddedElements?: LiveAddedElement[];
+  liveAddedElementsAr?: LiveAddedElement[];
+  liveAddedElementsEn?: LiveAddedElement[];
+  liveOverridesMigrated?: boolean;
 
   socialMedia?: SocialMediaSettings;
 
@@ -1119,8 +1127,15 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
 
   themeColors: DEFAULT_THEME_COLORS,
   customLinks: {},
+  customLinksAr: {},
+  customLinksEn: {},
   liveTextOverrides: {},
+  liveTextOverridesAr: {},
+  liveTextOverridesEn: {},
   liveAddedElements: [],
+  liveAddedElementsAr: [],
+  liveAddedElementsEn: [],
+  liveOverridesMigrated: false,
 
   socialMedia: {
     instagram: "https://instagram.com/sulaf.eg",
@@ -1184,8 +1199,15 @@ export function getClientSettings(): StoreSettings {
       customContent: { ...(parsed.customContent || {}) },
       customContentEn: { ...(parsed.customContentEn || {}) },
       customLinks: { ...(parsed.customLinks || {}) },
+      customLinksAr: { ...(parsed.customLinksAr || {}) },
+      customLinksEn: { ...(parsed.customLinksEn || {}) },
       liveTextOverrides: { ...(parsed.liveTextOverrides || {}) },
+      liveTextOverridesAr: { ...(parsed.liveTextOverridesAr || {}) },
+      liveTextOverridesEn: { ...(parsed.liveTextOverridesEn || {}) },
       liveAddedElements: Array.isArray(parsed.liveAddedElements) ? parsed.liveAddedElements : [],
+      liveAddedElementsAr: Array.isArray(parsed.liveAddedElementsAr) ? parsed.liveAddedElementsAr : [],
+      liveAddedElementsEn: Array.isArray(parsed.liveAddedElementsEn) ? parsed.liveAddedElementsEn : [],
+      liveOverridesMigrated: Boolean(parsed.liveOverridesMigrated),
       shipping: {
         ...DEFAULT_STORE_SETTINGS.shipping,
         ...(parsed.shipping || {}),
@@ -1233,4 +1255,107 @@ export function saveClientSettings(settings: StoreSettings): void {
   } catch (e) {
     console.error("Failed to save settings locally", e);
   }
+}
+
+export type LiveEditorLanguage = "ar" | "en";
+
+/**
+ * Splits pre-existing un-partitioned liveTextOverrides into Arabic & English maps
+ * without losing hidden sections or prior edits stored on the live site.
+ */
+export function splitLegacyLiveOverrides(
+  legacy?: Record<string, LiveTextOverride>
+): { ar: Record<string, LiveTextOverride>; en: Record<string, LiveTextOverride> } {
+  const ar: Record<string, LiveTextOverride> = {};
+  const en: Record<string, LiveTextOverride> = {};
+  if (!legacy) return { ar, en };
+
+  Object.entries(legacy).forEach(([key, ov]) => {
+    if (!ov || typeof ov !== "object") return;
+    if (typeof ov.text === "string" && ov.text.trim().length > 0) {
+      if (/[\u0600-\u06FF]/.test(ov.text)) {
+        ar[key] = { ...ov };
+      } else if (/[A-Za-z]/.test(ov.text)) {
+        en[key] = { ...ov };
+      } else {
+        ar[key] = { ...ov };
+        en[key] = { ...ov };
+      }
+    } else {
+      ar[key] = { ...ov };
+      en[key] = { ...ov };
+    }
+  });
+
+  return { ar, en };
+}
+
+/**
+ * Returns live visual editor overrides strictly scoped to the given storefront language.
+ */
+export function getLiveTextOverridesForLang(
+  settings: Partial<StoreSettings> | null | undefined,
+  lang: LiveEditorLanguage
+): Record<string, LiveTextOverride> {
+  const explicit =
+    lang === "ar"
+      ? settings?.liveTextOverridesAr || {}
+      : settings?.liveTextOverridesEn || {};
+
+  if (!settings?.liveOverridesMigrated && settings?.liveTextOverrides) {
+    const legacySplit = splitLegacyLiveOverrides(settings.liveTextOverrides);
+    return { ...legacySplit[lang], ...explicit };
+  }
+
+  return explicit;
+}
+
+/**
+ * Returns live-added elements strictly scoped to the given storefront language.
+ */
+export function getLiveAddedElementsForLang(
+  settings: Partial<StoreSettings> | null | undefined,
+  lang: LiveEditorLanguage
+): LiveAddedElement[] {
+  const explicit =
+    lang === "ar" ? settings?.liveAddedElementsAr : settings?.liveAddedElementsEn;
+
+  if (settings?.liveOverridesMigrated) {
+    return Array.isArray(explicit) ? explicit : [];
+  }
+
+  const defaultLang: LiveEditorLanguage =
+    settings?.defaultLanguage === "ar" ? "ar" : "en";
+  const legacyForLang = (settings?.liveAddedElements || []).filter(
+    (item) => (item.language || defaultLang) === lang
+  );
+
+  if (Array.isArray(explicit) && explicit.length > 0) {
+    const existingIds = new Set(explicit.map((e) => e.id));
+    return [...legacyForLang.filter((e) => !existingIds.has(e.id)), ...explicit];
+  }
+
+  return legacyForLang;
+}
+
+/**
+ * One-time materialization of legacy shared overrides into language-separated maps
+ * so subsequent edits or resets in one language never affect the other.
+ */
+export function materializeLegacyLiveEditorState(prev: StoreSettings): StoreSettings {
+  if (prev.liveOverridesMigrated) return prev;
+  const legacySplit = splitLegacyLiveOverrides(prev.liveTextOverrides);
+  const arOverrides = { ...legacySplit.ar, ...(prev.liveTextOverridesAr || {}) };
+  const enOverrides = { ...legacySplit.en, ...(prev.liveTextOverridesEn || {}) };
+
+  return {
+    ...prev,
+    liveTextOverridesAr: arOverrides,
+    liveTextOverridesEn: enOverrides,
+    liveAddedElementsAr: getLiveAddedElementsForLang(prev, "ar"),
+    liveAddedElementsEn: getLiveAddedElementsForLang(prev, "en"),
+    customLinksAr: { ...(prev.customLinks || {}), ...(prev.customLinksAr || {}) },
+    customLinksEn: { ...(prev.customLinks || {}), ...(prev.customLinksEn || {}) },
+    liveOverridesMigrated: true,
+  };
 }

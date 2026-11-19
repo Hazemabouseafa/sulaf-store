@@ -31,6 +31,25 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       // Clear legacy storage keys from previous builds that locked sessions to Arabic
       localStorage.removeItem("sulaf_selected_language_v1");
 
+      // If opened with an explicit dedicated language editor parameter (?live_edit=ar / ?live_edit=en) or ?lang=ar|en,
+      // respect that language immediately so the Arabic and English editors always launch cleanly separated.
+      const params = new URLSearchParams(window.location.search);
+      const liveEditParam = params.get("live_edit");
+      const langParam = params.get("lang");
+      const forcedLang: Language | null =
+        liveEditParam === "ar" || langParam === "ar"
+          ? "ar"
+          : liveEditParam === "en" || langParam === "en"
+          ? "en"
+          : null;
+
+      if (forcedLang) {
+        setLanguageState(forcedLang);
+        applyDocumentAttributes(forcedLang);
+        localStorage.setItem(STORAGE_KEY, forcedLang);
+        return;
+      }
+
       const saved = localStorage.getItem(STORAGE_KEY) as Language | null;
       if (saved === "ar") {
         setLanguageState("ar");
